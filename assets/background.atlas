@@ -1,0 +1,27 @@
+
+background.png
+size: 16,16
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+bigstar
+  rotate: false
+  xy: 2, 7
+  size: 5, 5
+  orig: 5, 5
+  offset: 0, 0
+  index: -1
+medstar
+  rotate: false
+  xy: 9, 9
+  size: 3, 3
+  orig: 3, 3
+  offset: 0, 0
+  index: -1
+smallstar
+  rotate: false
+  xy: 2, 2
+  size: 3, 3
+  orig: 3, 3
+  offset: 0, 0
+  index: -1

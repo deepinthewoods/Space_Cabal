@@ -1,0 +1,14 @@
+[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
+eclipse.project.name = appName + '-core'
+
+dependencies {
+  compile "com.badlogicgames.gdx:gdx:$gdxVersion"
+  compile "com.badlogicgames.gdx:gdx-freetype:$gdxVersion"
+  compile "com.squidpony:squidlib:$squidLibVersion"
+  compile "com.squidpony:squidlib-util:$squidLibUtilVersion"
+  compile "com.github.tommyettinger:regexodus:$regExodusVersion"
+  compile "com.github.czyzby:noise4j:$noise4jVersion"
+  compile "de.tomgrill.gdxfacebook:gdx-facebook-core:$facebookVersion"
+  compile "net.dermetfan.libgdx-utils:libgdx-utils:$utilsVersion"
+}
+        
