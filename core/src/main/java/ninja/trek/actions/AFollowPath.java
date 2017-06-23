@@ -10,7 +10,7 @@ import ninja.trek.action.Action;
 
 public class AFollowPath extends Action {
 	private static final String TAG = "follow path a";
-	private int pathProgress;
+	transient private int pathProgress;
 	public AFollowPath() {
 		lanes = LANE_ACTING;
 		isBlocking = true;

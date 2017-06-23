@@ -4,6 +4,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.utils.BinaryHeap;
 import com.badlogic.gdx.utils.BinaryHeap.Node;
 import com.badlogic.gdx.utils.IntArray;
+import com.badlogic.gdx.utils.Pools;
 
 /** @author Nathan Sweet */
 public class AStar {
@@ -12,7 +13,7 @@ public class AStar {
 	private final BinaryHeap<PathNode> open;
 	private final PathNode[] nodes;
 	int runID;
-	private final IntArray path = new IntArray();
+	private IntArray path;// = new IntArray();
 	//private int targetX, targetY;
 	private Ship ship;
 	private PathNode goalNode;
@@ -27,6 +28,7 @@ public class AStar {
 
 	/** Returns x,y pairs that are the path from the target to the start. */
 	public IntArray getPath (int startX, int startY, int[] goals, int[] fixOrder) {
+		path = Pools.obtain(IntArray.class);
 		path.clear();
 		open.clear();
 		goalIndex = goals.length;
@@ -112,7 +114,8 @@ public class AStar {
 					int currentBoost = (block & Ship.BLOCK_BOOST_MASK) >> Ship.BLOCK_BOOST_BITS;
 					int currentFire = (block & Ship.BLOCK_FIRE_MASK) >> Ship.BLOCK_FIRE_BITS;
 					int currentDam = (block & Ship.BLOCK_DAMAGE_MASK) >> Ship.BLOCK_DAMAGE_BITS;
-					if (currentFire == 0 && currentDam == 0 && currentBoost == 0)
+					int currentDep = (block & Ship.BLOCK_DATA_MASK) >> Ship.BLOCK_DATA_BITS;
+					if (currentFire == 0 && currentDam == 0 && currentBoost == 0 && currentDep == 0)
 						found = true;
 				}
 				break;
@@ -121,7 +124,8 @@ public class AStar {
 					int currentBoost = (block & Ship.BLOCK_BOOST_MASK) >> Ship.BLOCK_BOOST_BITS;
 					int currentFire = (block & Ship.BLOCK_FIRE_MASK) >> Ship.BLOCK_FIRE_BITS;
 					int currentDam = (block & Ship.BLOCK_DAMAGE_MASK) >> Ship.BLOCK_DAMAGE_BITS;
-					if (currentFire == 0 && currentDam == 0 && currentBoost == 0)
+					int currentDep = (block & Ship.BLOCK_DATA_MASK) >> Ship.BLOCK_DATA_BITS;
+					if (currentFire == 0 && currentDam == 0 && currentBoost == 0 && currentDep == 0)
 						found = true;
 				}
 				break;
@@ -130,7 +134,8 @@ public class AStar {
 					int currentBoost = (block & Ship.BLOCK_BOOST_MASK) >> Ship.BLOCK_BOOST_BITS;
 					int currentFire = (block & Ship.BLOCK_FIRE_MASK) >> Ship.BLOCK_FIRE_BITS;
 					int currentDam = (block & Ship.BLOCK_DAMAGE_MASK) >> Ship.BLOCK_DAMAGE_BITS;
-					if (currentFire == 0 && currentDam == 0 && currentBoost == 0)
+					int currentDep = (block & Ship.BLOCK_DATA_MASK) >> Ship.BLOCK_DATA_BITS;
+					if (currentFire == 0 && currentDam == 0 && currentBoost == 0 && currentDep == 0)
 						found = true;
 				}
 				break;
@@ -139,7 +144,8 @@ public class AStar {
 					int currentBoost = (block & Ship.BLOCK_BOOST_MASK) >> Ship.BLOCK_BOOST_BITS;
 					int currentFire = (block & Ship.BLOCK_FIRE_MASK) >> Ship.BLOCK_FIRE_BITS;
 					int currentDam = (block & Ship.BLOCK_DAMAGE_MASK) >> Ship.BLOCK_DAMAGE_BITS;
-					if (currentFire == 0 && currentDam == 0 && currentBoost == 0)
+					int currentDep = (block & Ship.BLOCK_DATA_MASK) >> Ship.BLOCK_DATA_BITS;
+					if (currentFire == 0 && currentDam == 0 && currentBoost == 0 && currentDep == 0)
 						found = true;
 				}
 				break;
@@ -148,7 +154,8 @@ public class AStar {
 					int currentBoost = (block & Ship.BLOCK_BOOST_MASK) >> Ship.BLOCK_BOOST_BITS;
 					int currentFire = (block & Ship.BLOCK_FIRE_MASK) >> Ship.BLOCK_FIRE_BITS;
 					int currentDam = (block & Ship.BLOCK_DAMAGE_MASK) >> Ship.BLOCK_DAMAGE_BITS;
-					if (currentFire == 0 && currentDam == 0 && currentBoost == 0)
+					int currentDep = (block & Ship.BLOCK_DATA_MASK) >> Ship.BLOCK_DATA_BITS;
+					if (currentFire == 0 && currentDam == 0 && currentBoost == 0 && currentDep == 0)
 						found = true;
 				}
 				break;
@@ -157,8 +164,8 @@ public class AStar {
 				
 				{
 					found = true;
-					Gdx.app.log(TAG, "fire " + (block&Ship.BLOCK_ID_MASK)
-							  + " " + ((block & Ship.BLOCK_FIRE_MASK) >> Ship.BLOCK_FIRE_BITS));
+					//Gdx.app.log(TAG, "fire " + (block&Ship.BLOCK_ID_MASK)
+					//		  + " " + ((block & Ship.BLOCK_FIRE_MASK) >> Ship.BLOCK_FIRE_BITS));
 				}
 				break;
 			

@@ -71,12 +71,14 @@ public class Main extends ApplicationAdapter {
 			e.printStackTrace();
 		}
 		CustomColors.init();
+		Items.init();
 		batch = new SpriteBatch();
 		shape = new ShapeRenderer();
 		
 		viewport = new ScreenViewport();
 		stage = new Stage(viewport );
 		atlas = new TextureAtlas("background.atlas");
+		Sprites.init(atlas);
 		background = new BackgroundRenderer(atlas);
 		planet = new PlanetRenderer(6, 1f);
 		camera = new OrthographicCamera(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
@@ -91,6 +93,8 @@ public class Main extends ApplicationAdapter {
 			public boolean keyDown(int keycode) {
 				if (keycode == Keys.A)
 					world.getPlayerShip().map.boostAll();
+				else if (keycode == Keys.TAB)
+					ui.openInventory(world.getPlayerShip());
 				return false;
 			}
 
@@ -107,6 +111,26 @@ public class Main extends ApplicationAdapter {
 			@Override
 			public boolean touchDown(int screenX, int screenY, int pointer, int button) {
 				//Gdx.app.log(TAG, "touchdown");
+				
+				if (world.targettingIndex != -1){
+					if (button != 0){
+						//world.targettingIndex = -1;
+						world.cancelTarget();
+						return true;
+					}
+					Ship eShip = world.getEnemyShip();
+					v.set(screenX, screenY, 0);
+					eShip.camera.unproject(v);
+					if (v.x < 0 || v.y < 0 || v.x >= eShip.mapWidth || v.y >= eShip.mapHeight){
+						world.cancelTarget();
+						return true;
+					}
+					//TODO unproject and check for vacuum
+					Ship ship = world.getPlayerShip();
+					ship.setWeaponTarget(world.targettingIndex, (int)v.x, (int)v.y);
+					world.targettingIndex = -1;
+					return true;
+				}
 				
 				touches.put(pointer, Pools.obtain(Vector2.class).set(screenX, screenY));
 				touchButtons.put(pointer, button);
@@ -376,6 +400,7 @@ public class Main extends ApplicationAdapter {
 		Sprite pixelSprite = new Sprite(new Texture("pixel.png"));
 		Ship amap = new Ship(new IntPixelMap(256, 256, CHUNK_SIZE), 1, pixelSprite, fontManager, shader);
 		world.addMap(amap);
+		amap.inventory.add(Items.laser1);
 		
 		Ship amap2 = new Ship(new IntPixelMap(128, 256, CHUNK_SIZE), 4, pixelSprite, fontManager, shader);
 		world.addMap(amap2);

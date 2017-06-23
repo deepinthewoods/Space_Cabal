@@ -14,6 +14,7 @@ import com.badlogic.gdx.scenes.scene2d.Touchable;
 import com.badlogic.gdx.scenes.scene2d.ui.ButtonGroup;
 import com.badlogic.gdx.scenes.scene2d.ui.CheckBox;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.ProgressBar;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Slider;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
@@ -39,6 +40,7 @@ import ninja.trek.IntPixelMap;
 import ninja.trek.Main;
 import ninja.trek.Ship;
 import ninja.trek.Ship.EntityArray;
+import ninja.trek.Weapon;
 import ninja.trek.World;
 
 public class UI {
@@ -46,6 +48,7 @@ public class UI {
 	protected static final String TAG = "UI";
 	public static final String[] tileFileLocations = {"balls.png", "bluejunk.png", "chromey.png", "greyJunk.png", "greyShip.png", "redround.png"
 			, "smallred.png", "smallships.png", "sourcegh.png", "weirdgrey.png", "white.png"};
+	private static final int MAX_WEAPON_BUTTONS = 10;
 	private DragAndDrop dnd;
 	private UIActionButton[] buttons = new UIActionButton[EntityAI.names.length];
 	private UISystemButton[] bottomButtons = new UISystemButton[Ship.systemNames.length];
@@ -79,6 +82,10 @@ public class UI {
 	private TextButton saveWButton;
 	public Table table;
 	private Actor topSpacerActor;
+	private WeaponButton[] weaponButtons;
+	private Table weaponTable;
+	private Window invWindow;
+	private ItemDisplay invItemDisplay;
 	public UI(Stage stage, World world) {
 		String uiName = "holo";
 		//Skin skin = new Skin(Gdx.files.internal("skins/" + uiName + "/skin/" + uiName + "-ui.json"));
@@ -532,6 +539,7 @@ public class UI {
 				//stage.addActor(loadWindow);
 				startButton.setChecked(false);
 				world.startTestBattle();
+				set(world.getPlayerShip());
 				super.clicked(event, x, y);
 			}
 		});
@@ -600,8 +608,21 @@ public class UI {
 		});
 		editTable.add(newShipButton);
 		
-		
 		leftTable.row();
+		weaponButtons = new WeaponButton[MAX_WEAPON_BUTTONS];
+		weaponTable = new Table();
+		for (int i = 0; i < MAX_WEAPON_BUTTONS; i++){
+			final int index = i;
+			weaponButtons[i] = new WeaponButton(skin);
+			weaponButtons[i].addListener(new ClickListener(){
+				@Override
+				public void clicked(InputEvent event, float x, float y) {
+					weaponButtons[index].setChecked(false);
+					world.targettingIndex = index;
+					super.clicked(event, x, y);
+				}
+			});
+		}
 		
 		table.setFillParent(true);
 		table.add(actionTable).top();
@@ -612,7 +633,7 @@ public class UI {
 		table.add(new Actor()).expand();
 		table.add(rightTable);
 		table.row();
-		table.add(bottomTable);
+		table.add(bottomTable).left();
 		
 		table.setTouchable(Touchable.enabled);
 		stage.addActor(table);
@@ -620,16 +641,36 @@ public class UI {
 		table.layout();
 		
 		topSpacerActor = new Actor();
+		
+		makeInventoryWindow(skin);
+	}
+
+	private void makeInventoryWindow(Skin skin) {
+		invWindow = new Window("Inventory", skin);
+		invItemDisplay = new ItemDisplay(skin, invWindow);
+		invWindow.add(invItemDisplay);
+	}
+
+	public void openInventory(Ship playerShip) {
+		invItemDisplay.setRight(null);
+		invItemDisplay.setLeft(playerShip);
+		invWindow.pack();
+		invWindow.setPosition(Gdx.graphics.getWidth()/2, Gdx.graphics.getHeight()/2, Align.center);
+		table.addActor(invWindow);		
+		Gdx.app.log(TAG, "open inv");
 	}
 
 	public void set(Ship ship) {
 		bottomTable.clearChildren();
+		bottomTable.add(weaponTable).colspan(10).left();
+		bottomTable.row();
 		
 		for (int i = 0; i < ship.systemButtonOrder.length; i++){
 			bottomTable.add(bottomButtons[ship.systemButtonOrder[i]]);
 		}
 		//currentEntity = e;
 		bottomTable.invalidate();
+		weaponTable.clear();
 		float maxW = 0;
 		for (int i = 0; i < bottomButtons.length; i++){
 			float w = bottomButtons[i].getWidth();
@@ -640,6 +681,22 @@ public class UI {
 			bottomTable.getCell(bottomButtons[i]).width(maxW).pad(0).space(0);
 			bottomButtons[i].getCell(bottomButtons[i].getLabel()).fill();
 		}
+		int i = 0;
+		for (Entity e : ship.getEntities()){
+			//Gdx.app.log(TAG, "look at e " + e.getClass());
+			if (e instanceof Weapon){
+				Weapon w = (Weapon) e;
+				//ship.equippedWeapons[w.index];
+				//Gdx.app.log(TAG, "ADDDD WEAPONNNNNNNNNNNNN");
+				TextButton b = weaponButtons[i];
+				b.setText("weapon " + i);
+				weaponTable.add(b);
+				
+				i++;
+			}
+		}
+		weaponTable.row();
+		weaponTable.layout();
 	}
 
 	public void setEntity(Entity e){
@@ -786,6 +843,18 @@ public class UI {
 			this.f = f;
 			setText(f.name());
 			//setChecked(false);
+		}
+		
+	}
+	private static class WeaponButton extends TextButton{
+
+		private ProgressBar slider;
+
+		public WeaponButton(Skin skin) {
+			super("fjslk", skin);
+			slider = new Slider(0, 1, 0.01f, false, skin);
+			addActorBefore(getLabel(), slider);
+			slider.setValue(0.5f);
 		}
 		
 	}

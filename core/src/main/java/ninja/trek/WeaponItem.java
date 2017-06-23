@@ -1,0 +1,14 @@
+package ninja.trek;
+
+public class WeaponItem extends Item {
+
+	public enum WeaponType {laser, missile};
+	public WeaponType weaponType = WeaponType.laser;
+	public int cost = 500;
+	public float fireWindDownTime = .5f;
+
+	public WeaponItem(String name, String desc) {
+		super(name, desc);
+	}
+
+}

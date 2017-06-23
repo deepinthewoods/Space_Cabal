@@ -14,6 +14,8 @@ import ninja.trek.World;
 public abstract class Action extends BinaryHeap.Node implements Poolable{
     public static final int LANE_DELAY = 1;
 	public static final int LANE_ACTING = 2;
+	public static final int WEAPON_LANE_SHOOTING = 4;
+	public static final int WEAPON_LANE_CHARGE = 8;
     public boolean isBlocking, isFinished;
     public int lanes;
     public transient ActionList parent;

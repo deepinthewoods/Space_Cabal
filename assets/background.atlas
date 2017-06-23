@@ -1,26 +1,33 @@
 
 background.png
-size: 16,16
+size: 16,32
 format: RGBA8888
 filter: Nearest,Nearest
 repeat: none
 bigstar
   rotate: false
-  xy: 2, 7
+  xy: 8, 18
   size: 5, 5
   orig: 5, 5
   offset: 0, 0
   index: -1
+laserbody
+  rotate: false
+  xy: 2, 7
+  size: 4, 16
+  orig: 4, 16
+  offset: 0, 0
+  index: -1
 medstar
   rotate: false
-  xy: 9, 9
+  xy: 2, 2
   size: 3, 3
   orig: 3, 3
   offset: 0, 0
   index: -1
 smallstar
   rotate: false
-  xy: 2, 2
+  xy: 8, 13
   size: 3, 3
   orig: 3, 3
   offset: 0, 0

@@ -1,6 +1,8 @@
 package ninja.trek;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.GridPoint2;
 import com.badlogic.gdx.utils.IntArray;
 import com.badlogic.gdx.utils.Pools;
@@ -51,6 +53,7 @@ public class Entity implements Poolable {
 		}
 		
 	}
+	
 	int[] ret = new int[2];
 	public IntArray path;
 	public int actionIndexForPath;
@@ -105,6 +108,11 @@ public class Entity implements Poolable {
 		x = pos.x;
 		y = pos.y;
 		return this;
+	}
+
+	public void draw(SpriteBatch batch, OrthographicCamera camera, World world) {
+		// TODO Auto-generated method stub
+		
 	}
 	
 }

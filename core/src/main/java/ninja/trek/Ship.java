@@ -23,10 +23,13 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Bits;
 import com.badlogic.gdx.utils.GdxRuntimeException;
+import com.badlogic.gdx.utils.IntArray;
 import com.badlogic.gdx.utils.Pool;
 import com.badlogic.gdx.utils.Pools;
 import com.badlogic.gdx.utils.ScreenUtils;
 
+import ninja.trek.ui.ItemDisplay;
+import ninja.trek.ui.ItemDisplay.ItemButton;
 import ninja.trek.ui.UI;
 
 public class Ship {
@@ -99,6 +102,8 @@ public class Ship {
 	public OuterHull hull = new OuterHull();
 	public Array<GridPoint2>[] systemBlocks = new Array[16];
 	public boolean hasCategorizedBlocks =false;
+	
+	public IntArray inventory = new IntArray(true, 8);
 	
 	public Ship(IntPixelMap map, Sprite pixelSprite, FontManager fonts, ShaderProgram shader){
 		this(map, 10, pixelSprite, fonts, shader);
@@ -331,7 +336,7 @@ public class Ship {
 		
 	}
 	
-	public void drawEntities(SpriteBatch batch){
+	public void drawEntities(SpriteBatch batch, World world){
 		fonts.setZoom(camera);
 		//Gdx.app.log(TAG, "draw entities " + entities.size + "  "  + camera.position);
 		batch.setProjectionMatrix(camera.combined);//.translate(offset.x, offset.y, 0);
@@ -340,12 +345,19 @@ public class Ship {
 		for (Entity e : entities){
 			fonts.draw(e, batch, camera);
 		}
+		
 		if (editMode) fonts.drawSpawn(map.spawn, batch);
+		
+		batch.enableBlending();
+		for (Entity e : entities){
+			e.draw(batch, camera, world);
+		}
+		batch.disableBlending();
 		//batch.end();
 	}
 	private Entity selectedEntity;
 
-	public void drawLines(ShapeRenderer shape, UI ui){
+	public void drawLines(ShapeRenderer shape, UI ui, boolean isSettingTarget){
 		shape.setProjectionMatrix(camera.combined);
 		shape.setColor(.31f, .31f, .31f, 1f);
 		shape.begin(ShapeType.Line);
@@ -419,7 +431,10 @@ public class Ship {
 		if (alignment == Alignment.TOP_RIGHT){
 			//v.set(0, 0, 0);
 			//v2.set(mapWidth, mapHeight, 0);
+			if (isSettingTarget) 
+				shape.line(-GAP-2,-10000,-GAP-2, 1000);
 			shape.line(-GAP,-10000,-GAP, 1000);
+			
 			//shape.line(0,0,0, 1000);
 		}
 		if (selectedEntity != null){
@@ -429,6 +444,29 @@ public class Ship {
 			//Gdx.app.log(TAG, "SELECTED");
 		}
 		
+		
+		shape.end();
+	}
+	Vector2 q = new Vector2(), r = new Vector2();
+	public void drawTargettedLines(ShapeRenderer shape, UI ui, Ship playerShip) {
+		shape.begin(ShapeType.Line);
+		for (Entity e : playerShip.entities){
+			if (e instanceof Weapon){
+				Weapon w = (Weapon) e;
+				if (w.hasTarget){
+					int x = w.target.x, y = w.target.y, size = 10;
+					q.set(size, 0);
+					for (int i = 0; i < 6; i++){
+						q.rotate(60);
+						r.set(q);
+						r.rotate(30);
+						shape.line(q.x + x, q.y + y, r.x + x, r.y + y);
+					}
+					
+				}
+				
+			}
+		}
 		
 		shape.end();
 	}
@@ -692,4 +730,73 @@ public class Ship {
 		selectedEntity = e;
 		//Gdx.app.log(TAG, "select e");
 	}
+
+	public void setWeaponTarget(int index, int x, int y) {
+		Weapon w = getWeapon(index);
+		if (w != null){
+			w.target.set(x, y);
+			w.hasTarget = true;
+		}
+	}
+	
+	public void cancelWeaponTarget(int index){
+		Weapon w = getWeapon(index);
+		if (w != null){
+			w.hasTarget = false;
+		}
+	}
+
+	private Weapon getWeapon(int index) {
+		for (Entity e : entities) {
+			if (e instanceof Weapon){
+				Weapon w = (Weapon) e;
+				if (w.index == index) return w;
+			}
+		}
+		return null;
+	}
+
+	public void equipWeapon(int index, ItemButton item) {
+		unequipWeapon(item.index);
+		Weapon w = getWeapon(item.index);
+		w.equip(item);
+		
+	}
+
+	private void unequipWeapon(int itemIndex) {
+		for (Entity e : entities) {
+			if (e instanceof Weapon){
+				Weapon w = (Weapon) e;
+				if (w.equippedItemIndex == itemIndex){
+					w.unequip();
+				}
+			}
+		}
+	}
+	public Laser[] deployedLasers = new Laser[ItemDisplay.MAX_WEAPONS];
+	
+	public void shoot(WeaponItem weI, GridPoint2 target, Ship map, Weapon w) {
+		switch (weI.weaponType){
+		case laser:
+			//Gdx.app.log(TAG, "shoot");
+			if (deployedLasers[w.index] == null){
+				deployedLasers[w.index] = Pools.obtain(Laser.class);
+				deployedLasers[w.index].index = w.index;
+				deployedLasers[w.index].setDefaultAI();
+				deployedLasers[w.index].target.set(target);
+				deployedLasers[w.index].x = w.x;
+				deployedLasers[w.index].y = w.y;
+				addEntity(deployedLasers[w.index]);
+			}
+			deployedLasers[w.index].time = 0;
+			break;
+		}
+	}
+
+	public void removeLaser(int index, Entity e) {
+		removeEntity(e);
+		deployedLasers[index] = null;
+	}
+
+	
 }

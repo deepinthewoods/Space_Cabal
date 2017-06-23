@@ -63,7 +63,7 @@ public class PlanetRenderer implements RenderableProvider{
 
 	private static final float ROTATION_SPEED = 8;
 
-	private static final int BUFFER_SIZE = 80;
+	private static final int BUFFER_SIZE = 200;
  
     private Map<Long, Integer> middlePointIndexCache = new HashMap<>();
     
@@ -196,7 +196,6 @@ public class PlanetRenderer implements RenderableProvider{
     		Vector3 pos = vertexArray[i];
     		float height = noise.scaled(v.x,  v.y,  v.z, seed, 2f) ;
     		height *= .25f;
-    		
     		
     		pos.nor().scl(8);
     		//pos.scl(1 + height);

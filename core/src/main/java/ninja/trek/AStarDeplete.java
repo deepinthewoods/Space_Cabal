@@ -84,13 +84,16 @@ public class AStarDeplete {
 		
 		int block = ship.map.get(node.x, node.y);
 		int depletion = (block & Ship.BLOCK_DATA_MASK) >> Ship.BLOCK_DATA_BITS;
+		int boost =	(block & Ship.BLOCK_BOOST_MASK) >> Ship.BLOCK_BOOST_BITS;
+		boost += 1;//using as a multiplier
 		int maxToAdd = ship.maxDepletionBySystem[block & Ship.BLOCK_ID_MASK] - depletion;
+		
 		int toAdd = Math.min(maxToAdd, damagePending);
 		if (toAdd == 0) return;
-		//Gdx.app.log(TAG, "DEPLETE " + toAdd);
 		depletion += toAdd;
-		damagePending -= toAdd;
-		block = block & (Ship.BLOCK_DAMAGE_MASK | Ship.BLOCK_FIRE_MASK | Ship.BLOCK_ID_MASK | Ship.BLOCK_AIR_MASK  | Ship.BLOCK_BOOST_MASK);
+		//Gdx.app.log(TAG, "DEPLETE " + depletion);
+		damagePending -= toAdd/boost;
+		block = block & (Ship.BLOCK_DAMAGE_MASK | Ship.BLOCK_FIRE_MASK | Ship.BLOCK_ID_MASK | Ship.BLOCK_AIR_MASK);
 		block |= depletion << Ship.BLOCK_DATA_BITS;
 		ship.map.set(node.x, node.y, block);
 	}

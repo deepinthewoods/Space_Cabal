@@ -11,6 +11,7 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.Pools;
 
+import ninja.trek.Ship.Alignment;
 import ninja.trek.Ship.EntityArray;
 import ninja.trek.ui.UI;
 
@@ -19,7 +20,7 @@ public class World {
 	private Array<Ship> maps = new Array<Ship>(true, 4);
 	private FontManager fonts;
 	private float accum = 0f;
-	private final float timeStep = 1f/60f;
+	public final static float timeStep = 1f/60f;
 	
 	public World(FontManager fontManager) {
 		
@@ -51,9 +52,18 @@ public class World {
 		batch.enableBlending();
 		
 		batch.begin();
-		for (Ship map : maps) map.drawEntities(batch);
+		for (int i = 0; i < maps.size; i++){
+			Ship map = maps.get(i);
+			map.drawEntities(batch, this);
+		}
+//		for (Ship map : maps) 
 		batch.end();
-		for (Ship map : maps) map.drawLines(shape, ui);
+		for (int i = 0; i < maps.size; i++){
+			Ship map = maps.get(i);
+			map.drawLines(shape, ui, targettingIndex != -1);
+			if (map.alignment == Alignment.TOP_RIGHT)
+				map.drawTargettedLines(shape, ui, getPlayerShip());
+		}
 	}
 	
 	public void addMap(Ship map){
@@ -82,6 +92,7 @@ public class World {
 		return closest;
 	}
 	private Vector3 v = new Vector3(), v2 = new Vector3();
+	public int targettingIndex = -1;
 
 	public Ship getPlayerShip() {
 		
@@ -126,6 +137,16 @@ public class World {
 	}
 	public Ship getEnemyShip() {
 		return maps.get(1);
+	}
+	public Ship getEnemy(Ship map) {
+		for (Ship ship : maps){
+			if (ship != map) return ship;
+		}
+		return null;
+	}
+	public void cancelTarget() {
+		getPlayerShip().cancelWeaponTarget(targettingIndex);
+		targettingIndex = -1;
 	}
 	
 }
