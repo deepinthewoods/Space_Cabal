@@ -113,22 +113,18 @@ public class World {
 		maps.get(1).load(map, entities);
 		Data.jsonPool.free(json);
 		
+		//Gdx.app.log(TAG, "IT " + maps.size);
 		for (int i = 0; i < maps.size; i++){
-			maps.get(i).categorizeSystems();
-			boolean hasShipE = false;
-			for (int ce = entities.size - 1; ce > 0; ce--){
-				Entity e = entities.get(ce);
-				if (e instanceof ShipEntity){
-					if (hasShipE) entities.removeValue(e, true);
-					hasShipE = true;
-				} 
+			Ship m = maps.get(i);
+			m.categorizeSystems();
+			
+			
+			if (!m.hasShipEntity()){
+				ShipEntity shipE = Pools.obtain(ShipEntity.class);
+				shipE.setDefaultAI();
+				maps.get(i).addEntity(shipE );
 			}
-			if (!hasShipE ){
-				
-			}
-			ShipEntity shipE = Pools.obtain(ShipEntity.class);
-			shipE.setDefaultAI();
-			maps.get(i).addEntity(shipE );
+			Gdx.app.log(TAG, "size " + i + "  " + maps.get(i).getEntities().size);
 		}
 		Entity e = Pools.obtain(Entity.class);
 		e.pos(maps.get(0).map.spawn);

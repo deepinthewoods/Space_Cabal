@@ -25,5 +25,10 @@ public abstract class EntityAI implements Poolable {
 	}
 
 	public abstract void update(World world, Ship map);
+
+	public void clear() {
+		// TODO Auto-generated method stub
+		
+	}
 		
 }

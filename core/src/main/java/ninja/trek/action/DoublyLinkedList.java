@@ -1,5 +1,7 @@
 package ninja.trek.action;
 
+import com.badlogic.gdx.utils.Pools;
+
 /** Doubly linked list with nodes of type Action storing strings. */
 public class DoublyLinkedList {
   
@@ -105,6 +107,7 @@ public class DoublyLinkedList {
     v.setPrev(null);
     v.setNext(null);
     size--;
+    //Pools.free(v);
   }
   
   /** Returns whether a given node has a previous node */

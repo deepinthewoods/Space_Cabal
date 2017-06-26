@@ -9,6 +9,7 @@ import com.badlogic.gdx.utils.Pools;
 /** @author Nathan Sweet */
 public class AStar {
 	private static final String TAG = "astar";
+	private static final int MAX_ITERATIONS = 10000000;
 	private final int width, height;
 	private final BinaryHeap<PathNode> open;
 	private final PathNode[] nodes;
@@ -50,7 +51,7 @@ public class AStar {
 
 		int lastColumn = width - 1, lastRow = height - 1;
 		int i = 0;
-		while (open.size > 0) {
+		while (open.size > 0 && i < MAX_ITERATIONS) {
 			PathNode node = open.pop();
 			if (checkBlock(node, goals, fixOrder)){//node.x == targetX && node.y == targetY) {
 				actionIndexForPath = getBlockSmallestActionIndex(node, goals, fixOrder);
@@ -81,9 +82,10 @@ public class AStar {
 		PathNode node = goalNode;
 		if (node == null){
 			//Gdx.app.log(TAG, "NULL" + path.size);
-			return path;
+			return null;//path;
 		}
 		actionIndexForPath = getBlockSmallestActionIndex(node, goals, fixOrder);
+		if (actionIndexForPath == -1) return null;
 		while (node != root) {
 			path.add(node.x);
 			path.add(node.y);
@@ -99,6 +101,7 @@ public class AStar {
 	}
 
 	private int getBlockSmallestActionIndex(PathNode node, int[] goals, int[] fixOrder) {
+		if (ship.isReserved(node.x, node.y)) return -1;
 		int block = ship.map.get(node.x, node.y);
 		boolean found = false;
 		for (int i = 0; i < goals.length; i++){

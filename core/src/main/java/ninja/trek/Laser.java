@@ -25,6 +25,7 @@ public class Laser extends Entity {
 	}
 	@Override
 	public Entity setDefaultAI() {
+		resetAI();
 		ActionList playerAction = new ActionList();
 		playerAction.addToStart(Pools.obtain(ALaser.class));
 		setAI(playerAction);
@@ -36,7 +37,7 @@ public class Laser extends Entity {
 	public void draw(SpriteBatch batch, OrthographicCamera camera, World world) {
 		float scale = camera.zoom;
 		//Gdx.app.log(TAG, "djskljfl");
-		Ship enemy = world.getEnemy(map);
+		Ship enemy = world.getEnemy(ship);
 		if (enemy == null) return;
 		Sprite spr = Sprites.laser;
 		v.set(target.x, target.y, 0);

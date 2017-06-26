@@ -175,7 +175,7 @@ public class IntPixelMap{
 		//Gdx.app.log(TAG, "damage " + (b == map[x + y 
 	}
 	public void boostAll() {
-		Gdx.app.log(TAG, "BOOST ALLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL");
+		//Gdx.app.log(TAG, "BOOST ALLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL");
 		for (int x = 0; x < width; x++)
 			for (int y = 0; y < height; y++)
 				boost(x, y);
@@ -212,6 +212,79 @@ public class IntPixelMap{
 		}
 	}
 	Color tmpC = new Color();
+	
+	
+	
+	public void processFloodFillW(IntPixelMap m, int nodeX, int nodeY, int replacement, int stack){
+		if (nodeX >= width || nodeY >= height || nodeX < 0 || nodeY < 0) return;
+		//if (target == replacement) return;
+		
+		int id = (m.get(nodeX, nodeY) & Ship.BLOCK_ID_MASK);
+		if (id == Ship.WALL || id == Ship.VACCUUM) return;
+		if (get(nodeX, nodeY) != 0) return;
+		//f ((get(nodeX, nodeY) & Ship.BLOCK_ID_MASK) != target) return;
+		if (stack > 4000) return;
+		//			3. Set the color of node to replacement-color.
+		set(nodeX, nodeY, replacement);
+		addNode(nodeX, nodeY-1);
+		addNode(nodeX, nodeY+1);
+		addNode(nodeX-1, nodeY);
+		addNode(nodeX+1, nodeY);
+		//			5. Return.
+
+	}
+	private void addNodeW(int x, int y) {
+		GridPoint2 pt = Pools.obtain(GridPoint2.class);
+		pt.set(x, y);
+		floodOpen.add(pt);
+	}
+	public void floodFillWalkable(IntPixelMap m, int nodeX, int nodeY, int replacement){
+		GridPoint2 pt = Pools.obtain(GridPoint2.class);
+		pt.set(nodeX, nodeY);
+		floodOpen.add(pt);
+		while (floodOpen.size > 0){
+			GridPoint2 node = floodOpen.pop();
+			processFloodFillW(m, node.x, node.y, replacement, 0);
+			Pools.free(node);
+		}
+	}
+	public void processFloodFillS(IntPixelMap m, int nodeX, int nodeY, int target, int replacement, int stack){
+		if (nodeX >= width || nodeY >= height || nodeX < 0 || nodeY < 0) return;
+		//if (target == replacement) return;
+		int id = (m.get(nodeX, nodeY) & Ship.BLOCK_ID_MASK);
+		int myid = (get(nodeX, nodeY));
+		if (id != target) return;
+		if (myid != -1){
+			//Gdx.app.log(TAG, "f " + myid);
+			return;
+		}
+		//if (id == Ship.WALL || id == Ship.VACCUUM) return;
+		
+		//if (get(nodeX, nodeY) != 0) return;
+		//f ((get(nodeX, nodeY) & Ship.BLOCK_ID_MASK) != target) return;
+		if (stack > 4000) return;
+		//			3. Set the color of node to replacement-color.
+		set(nodeX, nodeY, replacement);
+		addNode(nodeX, nodeY-1);
+		addNode(nodeX, nodeY+1);
+		addNode(nodeX-1, nodeY);
+		addNode(nodeX+1, nodeY);
+		//			5. Return.
+
+	}
+	
+	public void floodFillSystem(IntPixelMap m, int nodeX, int nodeY, int target, int replacement){
+		GridPoint2 pt = Pools.obtain(GridPoint2.class);
+		pt.set(nodeX, nodeY);
+		floodOpen.add(pt);
+		while (floodOpen.size > 0){
+			GridPoint2 node = floodOpen.pop();
+			processFloodFillS(m, node.x, node.y, target, replacement, 0);
+			Pools.free(node);
+		}
+	}
+	
+	
 	public Color getColor(int block, int x, int y, Ship ship) {
 		//if (block != 0) Gdx.app.log(TAG, "get color " + block);
 		int damage = ((block & Ship.BLOCK_DAMAGE_MASK) >> Ship.BLOCK_DAMAGE_BITS);
@@ -464,5 +537,10 @@ public class IntPixelMap{
 		for (int i = 0; i < map.length; i++){
 			map[i] = 0;
 		}
+	}
+	public void clear(int replacement) {
+		for (int i = 0; i < map.length; i++){
+			map[i] = replacement;
+		}		
 	}
 }

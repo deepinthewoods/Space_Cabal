@@ -95,6 +95,8 @@ public class Main extends ApplicationAdapter {
 					world.getPlayerShip().map.boostAll();
 				else if (keycode == Keys.TAB)
 					ui.openInventory(world.getPlayerShip());
+				else if (keycode == Keys.S)
+					world.getPlayerShip().unReserveAll();
 				return false;
 			}
 
@@ -111,6 +113,9 @@ public class Main extends ApplicationAdapter {
 			@Override
 			public boolean touchDown(int screenX, int screenY, int pointer, int button) {
 				//Gdx.app.log(TAG, "touchdown");
+				touches.put(pointer, Pools.obtain(Vector2.class).set(screenX, screenY));
+				touchButtons.put(pointer, button);
+				Ship ship = world.getPlayerShip();
 				
 				if (world.targettingIndex != -1){
 					if (button != 0){
@@ -126,15 +131,12 @@ public class Main extends ApplicationAdapter {
 						return true;
 					}
 					//TODO unproject and check for vacuum
-					Ship ship = world.getPlayerShip();
+					
 					ship.setWeaponTarget(world.targettingIndex, (int)v.x, (int)v.y);
 					world.targettingIndex = -1;
 					return true;
 				}
 				
-				touches.put(pointer, Pools.obtain(Vector2.class).set(screenX, screenY));
-				touchButtons.put(pointer, button);
-				Ship ship = world.getPlayerShip();
 				if (ship.editMode && ship.placeSpawn == true){
 					v.set(screenX, screenY, 0);
 					ship.camera.unproject(v);

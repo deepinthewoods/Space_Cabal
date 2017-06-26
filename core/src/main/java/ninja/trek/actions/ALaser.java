@@ -14,13 +14,13 @@ public class ALaser extends Action{
 	public void update(float dt, World world, Ship map) {
 		Laser las = (Laser) parent.e;
 		las.time++;
-		if (las.time > 4) isFinished = true;
+		if (las.time > 1) isFinished = true;
 		//Gdx.app.log("laser action", "update " + las.time);
 	}
 
 	@Override
 	public void onEnd(World world, Ship map) {
-		parent.e.map.removeLaser(((Laser)parent.e).index, parent.e);
+		parent.e.ship.removeLaser(((Laser)parent.e).index, parent.e);
 	}
 
 	@Override

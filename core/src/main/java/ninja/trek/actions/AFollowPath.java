@@ -17,7 +17,7 @@ public class AFollowPath extends Action {
 	}
 	@Override
 	public void update(float dt, World world, Ship map) {
-		//Gdx.app.log(TAG, "update " + parent.e);
+		//Gdx.app.log(TAG, "update " + parent.e.path.size + " " + pathProgress);
 		int pathx = 0;//parent.e.path.get(pathProgress<<1);
 		int pathy = 0;//parent.e.path.get((pathProgress<<1)+1);
 		if (parent.e.path.size == 0){
@@ -46,13 +46,12 @@ public class AFollowPath extends Action {
 		}
 		
 		if (pathProgress < 0 ){
-			//Gdx.app.log(TAG, "stop move" + parent.e.x + ", " + parent.e.y + " for " + EntityAI.names[parent.e.buttonOrder[parent.e.actionIndexForPath]]);
 			switch (parent.e.actionIndexForPath){
 			case EntityAI.FIX:
 				AFix aFix = Pools.obtain(AFix.class);
 				if (parent.e.path.size == 0)
-					aFix.target.set(parent.e.x, parent.e.y);					
-				else 
+					aFix.target.set(parent.e.x, parent.e.y);
+				else
 					aFix.target.set(parent.e.path.get(0), parent.e.path.get(1));
 				addBeforeMe(aFix);
 				break;
@@ -70,11 +69,17 @@ public class AFollowPath extends Action {
 			case EntityAI.POWER:
 			case EntityAI.WEAPON:
 				ABoost aBoost = Pools.obtain(ABoost.class);
-				if (parent.e.path.size == 0)
-					aBoost.target.set(parent.e.x, parent.e.y);					
-				else 
+				if (parent.e.path.size == 0){
+					aBoost.target.set(parent.e.x, parent.e.y);
+					//parent.e.ship.unReserve(parent.e.x, parent.e.y);
+					Gdx.app.log(TAG, "0 path"); 
+				}
+				else{ 
 					aBoost.target.set(parent.e.path.get(0), parent.e.path.get(1));
+				}
+				
 				addBeforeMe(aBoost);
+				//Gdx.app.log(TAG, "boost unreserve " + parent.e.x + "," + parent.e.y);
 				
 				break;
 			case EntityAI.SHOOT:
@@ -85,12 +90,44 @@ public class AFollowPath extends Action {
 			Pools.free(parent.e.path);
 			parent.e.path = null;
 			isFinished = true;
+			//Gdx.app.log(TAG, "stop move" + parent.e.x + ", " + parent.e.y + " for " + EntityAI.names[parent.e.buttonOrder[parent.e.actionIndexForPath]]);
+
+				//aBoost.target.set(parent.e.path.get(0), parent.e.path.get(1));
+			
+		} else {
+			/*if (!isStillValid(parent.e.path.get(0), parent.e.path.get(1), parent.e.actionIndexForPath)){
+				parent.e.ship.unReserve(parent.e.path.get(0), parent.e.path.get(1));
+				Pools.free(parent.e.path);
+				parent.e.path = null;
+				isFinished = true;
+			}*/
 		}
 	}
+	/*
+	 * int currentBoost = (block & Ship.BLOCK_BOOST_MASK) >> Ship.BLOCK_BOOST_BITS;
+					int currentFire = (block & Ship.BLOCK_FIRE_MASK) >> Ship.BLOCK_FIRE_BITS;
+					int currentDam = (block & Ship.BLOCK_DAMAGE_MASK) >> Ship.BLOCK_DAMAGE_BITS;
+					int currentDep = (block & Ship.BLOCK_DATA_MASK) >> Ship.BLOCK_DATA_BITS;
+	 */
 
+	private boolean isStillValid(int x, int y, int actionIndexForPath) {
+		int block = parent.e.ship.map.get(x,  y);
+		switch (parent.e.buttonOrder[actionIndexForPath]){
+		case EntityAI.ENGINE:
+		case EntityAI.OXYGEN:
+		case EntityAI.POWER:
+		case EntityAI.SHIELDS:
+		case EntityAI.WEAPON:
+			int currentDep = (block & Ship.BLOCK_DATA_MASK) >> Ship.BLOCK_DATA_BITS;
+			int currentBoost = (block & Ship.BLOCK_BOOST_MASK) >> Ship.BLOCK_BOOST_BITS;
+			if (currentDep == 0 && currentBoost == 0) return true;
+			return false;
+		}
+		return true;
+	}
 	@Override
 	public void onEnd(World world, Ship map) {
-		
+		//Gdx.app.log(TAG, "follow finished " + parent.e.x + "," + parent.e.y + " target " + parent.e.target + "  prog " + pathProgress);
 	}
 
 	@Override

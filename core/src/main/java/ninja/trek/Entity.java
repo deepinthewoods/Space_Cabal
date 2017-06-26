@@ -17,11 +17,11 @@ public class Entity implements Poolable {
 	public String glyph = "A";
 	public int font = 1;
 	private transient EntityAI ai;
-	public transient Ship map;
+	public transient Ship ship;
 	public int[] buttonOrder = new int[EntityAI.names.length];
 	public int[] fixOrder = new int[FIX_ACTIONS_LENGTH];//block ids
 	public static final int FIX_ACTIONS_LENGTH = 5;
-
+	public transient GridPoint2 target = new GridPoint2();
 	public Entity(){
 		reset();
 	}
@@ -32,17 +32,26 @@ public class Entity implements Poolable {
 		return this;
 	}
 	public void update(World world){
-		ai.update(world, map);
+		ai.update(world, ship);
 	};
 	
 	public Entity setAI(EntityAI ai){
+		resetAI();
 		this.ai = ai;
 		ai.setParent(this);
 		return this;
 	}
+	protected void resetAI() {
+		if (this.ai != null){
+			//Gdx.app.log(TAG, "non null ai");
+			ai.clear();
+			Pools.free(ai);
+			ai = null;
+		}		
+	}
+
 	public Entity setMap(Ship map){
-		
-		this.map = map;			
+		this.ship = map;			
 		return this;
 	}
 
@@ -75,7 +84,6 @@ public class Entity implements Poolable {
 		ret[0] = aind;
 		ret[1] = bind;
 		updateFixOrder();
-		
 		return ret;
 	}
 
@@ -94,7 +102,6 @@ public class Entity implements Poolable {
 				case EntityAI.WEAPON:fixOrder[prog++] = Ship.WEAPON;break;
 			}
 		}
-		
 	}
 
 	public Entity setDefaultAI() {

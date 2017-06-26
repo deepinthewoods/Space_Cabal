@@ -12,6 +12,7 @@ public class ShipEntity extends Entity {
 	}
 	@Override
 	public Entity setDefaultAI() {
+		resetAI();
 		ActionList playerAction = new ActionList();
 		playerAction.addToStart(Pools.obtain(ABaseShip.class));
 		setAI(playerAction);

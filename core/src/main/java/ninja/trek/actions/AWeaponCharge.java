@@ -25,18 +25,18 @@ public class AWeaponCharge extends Action {
 		//int ty = MathUtils.random(map.mapHeight-1);
 		Weapon w = (Weapon) parent.e;
 		if (w.equippedItemIndex == -1) return;
-		WeaponItem weI = (WeaponItem) Items.getDef(parent.e.map.inventory.get(w.equippedItemIndex));
+		WeaponItem weI = (WeaponItem) Items.getDef(parent.e.ship.inventory.get(w.equippedItemIndex));
 
 		
 		
 		int damage = weI.cost - w.totalCharge;
 		if (damage <= 0) return;
-		Gdx.app.log(TAG, "damage " + damage + " / " + w.totalCharge); 
+		//Gdx.app.log(TAG, "damage " + damage + " / " + w.totalCharge); 
 		int target = Ship.WEAPON;
 		//int replacement = Ship.WEAPON;
-		int pending = parent.e.map.depleter.getPath(parent.e.x, parent.e.y, target, damage);
+		int pending = parent.e.ship.depleter.getPath(parent.e.x, parent.e.y, target, damage);
 		w.totalCharge = weI.cost - pending;
-		Gdx.app.log(TAG, "charged to " + w.totalCharge + " / " + weI.cost + "  dam " + damage + " pend" + pending);
+		//Gdx.app.log(TAG, "charged to " + w.totalCharge + " / " + weI.cost + "  dam " + damage + " pend" + pending);
 		//parent.e.map.fill.clear();
 		//parent.e.map.fill.floodFillDeplete(parent.e.map.map, parent.e.x, parent.e.y, target, replacement, damage);
 		//wait.to.set(tx, ty);

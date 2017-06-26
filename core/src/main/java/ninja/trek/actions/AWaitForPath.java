@@ -27,19 +27,23 @@ public class AWaitForPath extends Action {
 			hasStartedPath = true;			
 		}
 		if (hasStartedPath){
-			path = parent.e.map.aStar.getPath(parent.e.x, parent.e.y, parent.e.buttonOrder, parent.e.fixOrder);
+			path = parent.e.ship.aStar.getPath(parent.e.x, parent.e.y, parent.e.buttonOrder, parent.e.fixOrder);
 			if (path != null) {
 				//Gdx.app.log(TAG, "path for " + EntityAI.names[parent.e.buttonOrder[parent.e.actionIndexForPath]] + "  size" + path.size);
 				//Gdx.app.log(TAG, "found path, size " + path.size + " to " + to + parent.e.actionIndexForPath);
 				parent.e.path = path;
-				parent.e.actionIndexForPath = parent.e.buttonOrder[parent.e.map.aStar.actionIndexForPath];
+				parent.e.actionIndexForPath = parent.e.buttonOrder[parent.e.ship.aStar.actionIndexForPath];
 				AFollowPath follow = Pools.obtain(AFollowPath.class);
 				addBeforeMe(follow);
 				isFinished = true;
+				
 				if (path.size == 0){
-					//Gdx.app.log(TAG, "0 path " + parent.e);
-					//parent.clear();
-					//parent.addToStart(Pools.obtain(ABase.class));
+					parent.e.target.set(parent.e.x, parent.e.y);
+					parent.e.ship.reserve(parent.e.target.x, parent.e.target.y);
+				} else {
+					parent.e.target.set(parent.e.path.get(0), parent.e.path.get(1));
+					
+					parent.e.ship.reserve(parent.e.target.x, parent.e.target.y);
 				}
 			}
 		}

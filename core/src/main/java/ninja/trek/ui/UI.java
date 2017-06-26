@@ -619,6 +619,7 @@ public class UI {
 				public void clicked(InputEvent event, float x, float y) {
 					weaponButtons[index].setChecked(false);
 					world.targettingIndex = index;
+					world.getPlayerShip().cancelWeaponTarget(index);
 					super.clicked(event, x, y);
 				}
 			});
@@ -657,7 +658,7 @@ public class UI {
 		invWindow.pack();
 		invWindow.setPosition(Gdx.graphics.getWidth()/2, Gdx.graphics.getHeight()/2, Align.center);
 		table.addActor(invWindow);		
-		Gdx.app.log(TAG, "open inv");
+		//Gdx.app.log(TAG, "open inv");
 	}
 
 	public void set(Ship ship) {
@@ -769,7 +770,7 @@ public class UI {
 	}
 
 	public void saveShip(String name, Ship ship) {
-		Gdx.app.log(TAG, "actually save " + name + Main.MAP_FILE_EXTENSION);
+		//Gdx.app.log(TAG, "actually save " + name + Main.MAP_FILE_EXTENSION);
 		FileHandle file = Gdx.files.external(Main.SHIP_SAVE_LOCATION + name + "." + Main.MAP_FILE_EXTENSION);
 		FileHandle entityFile = Gdx.files.external(Main.SHIP_SAVE_LOCATION + name + "." + Main.ENTITY_FILE_EXTENSION);
 		Json json = new Json();

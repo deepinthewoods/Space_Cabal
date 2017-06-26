@@ -18,6 +18,7 @@ import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.math.GridPoint2;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
@@ -83,6 +84,7 @@ public class Ship {
 			, backG = .01f//.31f
 			, backB = .01f;//0.1872974f;
 	public IntPixelMap map, fill, wire;
+	private IntPixelMap room;
 	private transient Bits drawn = new Bits(), hasBuffer = new Bits(), toFree = new Bits();
 	public transient Pool<FrameBuffer> bufferPool;
 	transient Vector3 vec = new Vector3();
@@ -102,8 +104,11 @@ public class Ship {
 	public OuterHull hull = new OuterHull();
 	public Array<GridPoint2>[] systemBlocks = new Array[16];
 	public boolean hasCategorizedBlocks =false;
+	Vector2 q = new Vector2(), r = new Vector2();
 	
 	public IntArray inventory = new IntArray(true, 8);
+	private IntPixelMap systemRooms;
+	private IntArray[] roomsBySystem;
 	
 	public Ship(IntPixelMap map, Sprite pixelSprite, FontManager fonts, ShaderProgram shader){
 		this(map, 10, pixelSprite, fonts, shader);
@@ -123,6 +128,12 @@ public class Ship {
 		this.shader = shader;
 		wire = new IntPixelMap(map);
 		fill = new IntPixelMap(map);
+		room = new IntPixelMap(map);
+		systemRooms = new IntPixelMap(map);
+		roomsBySystem = new IntArray[systemNames.length];
+		for (int i = 0; i < roomsBySystem.length; i++){
+			roomsBySystem[i] = new IntArray();
+		}
 		//Gdx.app.log(TAG, "map width " + chunksX + "  ,  " + chunksY + "  chunksize " + chunkSize + "  w " + mapWidth);
 		chunkBuffer = new FrameBuffer[8 * 8];
 		chunkTextures = new Texture[8 * 8];
@@ -447,7 +458,7 @@ public class Ship {
 		
 		shape.end();
 	}
-	Vector2 q = new Vector2(), r = new Vector2();
+	
 	public void drawTargettedLines(ShapeRenderer shape, UI ui, Ship playerShip) {
 		shape.begin(ShapeType.Line);
 		for (Entity e : playerShip.entities){
@@ -542,7 +553,8 @@ public class Ship {
 	}
 
 	public void removeEntity(Entity entity) {
-		Pools.free(entities .removeValue(entity, true));
+		Pools.free(entities.removeValue(entity, true));
+		
 	}
 
 	public void addEntity(Entity e) {
@@ -627,14 +639,19 @@ public class Ship {
 			mapHeight = map.height;
 			chunksX = mapWidth / chunkSize + (mapWidth % chunkSize == 0?0:1);
 			chunksY = mapHeight / chunkSize + (mapHeight % chunkSize == 0?0:1);
-			
+			Gdx.app.log(TAG, "NEW HELPER CHUNkS");
 		}
 		
 		System.gc();
 		for (Entity e : entities){
-			e.map = this;
-			e.setDefaultAI();
+			if (e instanceof ShipEntity) removeEntity(e);
+			else {
+				e.ship = this;
+				e.setDefaultAI();
+				
+			}
 		}
+		
 		setAllDirty();
 		hasCategorizedBlocks = false;
 		populateRandomChunkOrder();
@@ -651,8 +668,9 @@ public class Ship {
 				pt.set(x, y);
 				chunksInRandomOrder.add(pt);;
 			}
+		
 	}
-
+	
 	public void addWeapon(int x, int y) {
 		Weapon weapon = Pools.obtain(Weapon.class);
 		weapon.clear();
@@ -705,6 +723,38 @@ public class Ship {
 			systemBlocks[i].shuffle();
 		}
 		hasCategorizedBlocks = true;
+		
+		//Gdx.app.log(TAG, "fill ");
+		
+		int roomID = 0, sysRoomID = 0;
+		room.clear(-1);
+		systemRooms.clear(-1);
+		for (int i = 0; i < roomsBySystem.length; i++){
+			roomsBySystem[i].clear();;
+		}
+		for (int x = 1; x < mapWidth - 1; x++)
+			for (int y =1; y < mapHeight-1; y++){
+				int id = map.get(x,  y) & Ship.BLOCK_ID_MASK;
+				int fillB = room.get(x, y) & BLOCK_ID_MASK;
+				if (fillB == -1 && id != Ship.WALL && id != Ship.VACCUUM){
+					//Gdx.app.log(TAG, "fill " + x);
+					room.floodFillWalkable(map, x, y, roomID++);
+				}
+				int sysRoomB = systemRooms.get(x,  y);
+				if (sysRoomB == -1 && id != Ship.WALL && id != Ship.VACCUUM){
+					//Gdx.app.log(TAG, "sysFill " + id);
+					systemRooms.floodFillSystem(map, x, y, id, sysRoomID);
+					roomsBySystem[id].add(sysRoomID);
+					sysRoomID++;
+				}
+			}
+		/*for (;;){
+
+			room[x + y * mapWidth] = roomID;
+		}*/
+		
+		
+		
 	}
 
 	public void selectClosestEntity(int x, int y, UI ui) {
@@ -797,6 +847,35 @@ public class Ship {
 		removeEntity(e);
 		deployedLasers[index] = null;
 	}
+	private Bits reserved = new Bits();
+	public void unReserve(int x, int y) {
+		//Gdx.app.log(TAG, "unresrv " + x + "," + y);
+		//if (!reserved.get(x + y * mapWidth)) Gdx.app.log(TAG, "dfka");
+		reserved.clear(x + y*mapWidth);
+	}
+	public void reserve(int x, int y){
+		//if (reserved.get(x + y * mapWidth)) Gdx.app.log(TAG, "Already reserved" + x + "," + y);
+		//else Gdx.app.log(TAG, "reserve " + x + "," + y);
+		reserved.set(x + y*mapWidth);
+	}
+	public boolean isReserved(int x, int y){
+		return reserved.get(x + y * mapWidth);
+	}
+	public void clearReserved(){
+		reserved.clear();
+	}
 
-	
+	public boolean hasShipEntity() {
+		for (int i = 0; i < entities.size; i++)
+			if (entities.get(i) instanceof ShipEntity) return true;
+		return false;
+	}
+
+	public void unReserveAll() {
+		for (int x = 0; x < mapWidth ; x++)
+			for (int y =0; y < mapHeight; y++){
+				unReserve(x, y);
+			}
+		
+	}
 }

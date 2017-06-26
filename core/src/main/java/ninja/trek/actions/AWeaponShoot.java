@@ -18,20 +18,20 @@ public class AWeaponShoot extends Action {
 		Weapon w = (Weapon) parent.e;
 		if (w.equippedItemIndex == -1) return;
 
-		WeaponItem weI = (WeaponItem) Items.getDef(parent.e.map.inventory.get(w.equippedItemIndex));
+		WeaponItem weI = (WeaponItem) Items.getDef(parent.e.ship.inventory.get(w.equippedItemIndex));
 		
 		w.fireDelay--;
 		if (w.totalCharge >= weI.cost && w.fireDelay <= 0){
 			if (!w.hasTarget) return;
 			w.totalCharge -= weI.cost;
-			Gdx.app.log("aweaponshoot", "shoot");
+			//Gdx.app.log("aweaponshoot", "shoot");
 			shoot(w, weI);
 		}
 
 	}
 	private void shoot(Weapon w, WeaponItem weI) {
 		
-		parent.e.map.shoot(weI, w.target, parent.e.map, w);
+		parent.e.ship.shoot(weI, w.target, parent.e.ship, w);
 		w.fireDelay = (int)(weI.fireWindDownTime / World.timeStep);
 		
 		

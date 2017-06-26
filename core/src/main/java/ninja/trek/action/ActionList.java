@@ -6,13 +6,10 @@ import com.badlogic.gdx.utils.BinaryHeap;
 import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.badlogic.gdx.utils.Pool.Poolable;
 import com.badlogic.gdx.utils.Pools;
-
 import ninja.trek.Entity;
 import ninja.trek.EntityAI;
 import ninja.trek.Ship;
 import ninja.trek.World;
-
-
 
 public class ActionList extends EntityAI implements Poolable{//, KryoSerializable{
 	
@@ -54,44 +51,39 @@ public class ActionList extends EntityAI implements Poolable{//, KryoSerializabl
 				action.onEnd(world, map);
 				actions.remove(action);
 				if ((action.lanes & Action.LANE_DELAY) != 0){
-	            	
 	                delayedActions.remove(action);
 	                action.lanes = 0;
 	            }
                 //iter.remove();
 			}
 			action = next;
-			
 		};
 		//Gdx.app.log(TAG, "update"+actions.size());
 	}
-@Override
-public String toString() {
-	String s = "";
-	if (actions.isEmpty()) return "";
-	Action action = actions.getFirst();
-	while (action.getNext() != null){
-		Action next = action.getNext();
-		
-		s += action.getClass().getSimpleName() + " ";
-		action = next;
-		
-	};
-	return s;
-}
+	@Override
+	public String toString() {
+		String s = "";
+		if (actions.isEmpty()) return "";
+		Action action = actions.getFirst();
+		while (action.getNext() != null){
+			Action next = action.getNext();
+			s += action.getClass().getSimpleName() + " ";
+			action = next;
+		};
+		return s;
+	}
+
     @Override
     public void reset() {
     	//clearWithDelayed();
-    	 
     }
 
     public void addToStart(Action a){
         actions.addFirst(a);
-        
         a.parent = this;
-
         //a.onStart();
     }
+    
     public void addToEnd(Action a){
     	actions.addLast(a);
         a.parent = this;
@@ -187,21 +179,19 @@ public String toString() {
             a = a.getNext();
         }
     }
-    
-    
 
     public void addToStart(Class<? extends Action> clas) {
         addToStart(Pools.obtain(clas));
     }
 
     public void clear() {
+    	if (actions.size == 0) return;
 		Action a = actions.getFirst();
 		 while (a.getNext() != null){
 			 Action nxt = a.getNext();
 			 actions.remove(a);
 			 a = nxt;
        }
-		
 	}
 
 	public int size() {
@@ -241,8 +231,6 @@ public String toString() {
 		}
 	}*/
 
-	
-
 	@Override
 	public void update(World world, Ship map) {
 		update(1, world, map);
@@ -252,7 +240,4 @@ public String toString() {
 		super.setParent(e);
 		this.e = e;
 	}
-	
-	
-
 }

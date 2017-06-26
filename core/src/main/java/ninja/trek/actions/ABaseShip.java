@@ -2,6 +2,7 @@ package ninja.trek.actions;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.GridPoint2;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Pools;
 
@@ -21,14 +22,16 @@ public class ABaseShip extends Action{
 		int power = 10;
 		//Gdx.app.log(TAG, "update " + parent.e);
 		AWaitForPath wait = Pools.obtain(AWaitForPath.class);
-		Ship ship = parent.e.map;
+		Ship ship = parent.e.ship;
 		if (!ship.hasCategorizedBlocks) return;
 		for (int i = 0; i < ship.systemButtonOrder.length; i++){
 			if (power == 0) continue;
 			int system = ship.systemButtonOrder[i];
 			Array<GridPoint2> blocks = ship.systemBlocks[system];
+			int offset = MathUtils.random(blocks.size);
 			for (int r = 0; r < blocks.size; r++){
-				GridPoint2 pt = blocks.get(r);
+				
+				GridPoint2 pt = blocks.get((r + offset) % blocks.size);
 				int block = ship.map.get(pt.x, pt.y);
 				int depletion = (block & Ship.BLOCK_DATA_MASK) >> Ship.BLOCK_DATA_BITS;
 				int toRestore = Math.min(depletion, power);
