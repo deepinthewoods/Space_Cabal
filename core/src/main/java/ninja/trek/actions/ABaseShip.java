@@ -42,6 +42,7 @@ public class ABaseShip extends Action{
 				block = block & (Ship.BLOCK_AIR_MASK | Ship.BLOCK_DAMAGE_MASK | Ship.BLOCK_FIRE_MASK | Ship.BLOCK_ID_MASK | Ship.BLOCK_BOOST_MASK);
 				block |= depletion << Ship.BLOCK_DATA_BITS;
 				ship.map.set(pt.x, pt.y, block);
+				
 			}
 		}
 	}

@@ -126,10 +126,13 @@ public class World {
 			}
 			Gdx.app.log(TAG, "size " + i + "  " + maps.get(i).getEntities().size);
 		}
-		Entity e = Pools.obtain(Entity.class);
-		e.pos(maps.get(0).map.spawn);
-		e.setDefaultAI();
-		maps.get(0).addEntity(e);
+		for (int i = 0; i < 32; i++){
+			Entity e = Pools.obtain(Entity.class);
+			e.pos(maps.get(0).map.spawn);
+			e.setDefaultAI();
+			maps.get(0).addEntity(e);
+			
+		}
 	}
 	public Ship getEnemyShip() {
 		return maps.get(1);

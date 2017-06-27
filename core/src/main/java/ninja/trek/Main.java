@@ -88,7 +88,6 @@ public class Main extends ApplicationAdapter {
 		InputMultiplexer mux = new InputMultiplexer();
 		mux.addProcessor(stage);
 		mux.addProcessor(new InputProcessor(){
-
 			@Override
 			public boolean keyDown(int keycode) {
 				if (keycode == Keys.A)

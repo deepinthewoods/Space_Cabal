@@ -2,7 +2,9 @@ package ninja.trek;
 
 import com.badlogic.gdx.utils.BinaryHeap;
 import com.badlogic.gdx.utils.BinaryHeap.Node;
+import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.badlogic.gdx.utils.IntArray;
+import com.badlogic.gdx.utils.Pools;
 
 /** @author Nathan Sweet */
 public class AStar2 {
@@ -10,7 +12,7 @@ public class AStar2 {
 	private final BinaryHeap<PathNode> open;
 	private final PathNode[] nodes;
 	int runID;
-	private final IntArray path = new IntArray();
+	private IntArray path;// = new IntArray();
 	private int targetX, targetY;
 	private Ship ship;
 
@@ -26,7 +28,8 @@ public class AStar2 {
 	public IntArray getPath (int startX, int startY, int targetX, int targetY) {
 		this.targetX = targetX;
 		this.targetY = targetY;
-
+		path = Pools.obtain(IntArray.class);
+		if (path == null) throw new GdxRuntimeException("jdsflk");
 		path.clear();
 		open.clear();
 
@@ -74,6 +77,7 @@ public class AStar2 {
 			if (y > 0) addNode(node, x, y - 1, 10);
 			i++;
 		}
+		if (path == null) throw new GdxRuntimeException("jdsflk");
 		return path;
 	}
 
@@ -109,10 +113,10 @@ public class AStar2 {
 	
 	protected boolean isValid (int x, int y) {
 		if (x < 0 || y < 0 || x >= width || y >= height) return false;
-		int block = ship.map.get(x, y);
-		if (block == Ship.VACCUUM)
-			return true;
-		return false;
+		int block = ship.map.get(x, y) & Ship.BLOCK_ID_MASK;
+		if (block == Ship.VACCUUM || block == Ship.WALL)
+			return false;
+		return true;
 	}
 
 	public int getWidth () {

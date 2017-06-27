@@ -93,7 +93,7 @@ public class Ship {
 	private EntityArray entities = new EntityArray();
 	private transient FontManager fonts;
 	public float zoom = 1f;
-	public transient final AStar aStar;
+	public transient final AStar2 aStar;
 	private transient Vector3 v = new Vector3(), v2 = new Vector3();
 	public transient OrthographicCamera camera = new OrthographicCamera();
 	public transient boolean drawFill = false;
@@ -156,7 +156,7 @@ public class Ship {
 			}
 			
 		};
-		aStar = new AStar(mapWidth, mapHeight, this);
+		aStar = new AStar2(mapWidth, mapHeight, this);
 		depleter = new AStarDeplete(mapWidth, mapHeight, this);
 
 		for (int i = 0; i < systemButtonOrder.length; i++){
@@ -732,9 +732,13 @@ public class Ship {
 		for (int i = 0; i < roomsBySystem.length; i++){
 			roomsBySystem[i].clear();;
 		}
+		map.setAllBoosted();
 		for (int x = 1; x < mapWidth - 1; x++)
 			for (int y =1; y < mapHeight-1; y++){
 				int id = map.get(x,  y) & Ship.BLOCK_ID_MASK;
+				if (id != Ship.WALL && id != Ship.VACCUUM && id != Ship.FLOOR)
+					map.boosted[id].clear(x + y * mapWidth);
+				
 				int fillB = room.get(x, y) & BLOCK_ID_MASK;
 				if (fillB == -1 && id != Ship.WALL && id != Ship.VACCUUM){
 					//Gdx.app.log(TAG, "fill " + x);
@@ -748,6 +752,9 @@ public class Ship {
 					sysRoomID++;
 				}
 			}
+		
+		
+		
 		/*for (;;){
 
 			room[x + y * mapWidth] = roomID;

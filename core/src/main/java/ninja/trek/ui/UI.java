@@ -28,6 +28,7 @@ import com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop;
 import com.badlogic.gdx.scenes.scene2d.utils.DragListener;
 import com.badlogic.gdx.scenes.scene2d.utils.NinePatchDrawable;
 import com.badlogic.gdx.utils.Align;
+import com.badlogic.gdx.utils.Bits;
 import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.Pool;
@@ -223,7 +224,18 @@ public class UI {
 				int depl = (block & Ship.BLOCK_DATA_MASK) >> Ship.BLOCK_DATA_BITS;
 				int fireI = (block & Ship.BLOCK_FIRE_MASK) >> Ship.BLOCK_FIRE_BITS;
 				boolean fire = fireI > 0;
-				setText("air:"+air + " depl " + depl + " f" + fire + "\ndam:" + dam  + " fps" + Gdx.graphics.getFramesPerSecond() );
+				int fires = 0;
+				bits.clear();
+				bits.or(ship.map.onFire);
+				int fromIndex = 0;
+				while (bits.nextSetBit(fromIndex) != -1){
+					fromIndex = bits.nextSetBit(fromIndex+1);
+					fires++;
+					
+				}
+				
+				setText("air:"+air + " depl " + depl + " f" + fire + "\ndam:" + dam  + " fps" + Gdx.graphics.getFramesPerSecond()
+				+ "\nfires:" + fires);
 				
 				super.draw(batch, parentAlpha);
 			}
@@ -645,6 +657,7 @@ public class UI {
 		
 		makeInventoryWindow(skin);
 	}
+	Bits bits = new Bits();
 
 	private void makeInventoryWindow(Skin skin) {
 		invWindow = new Window("Inventory", skin);

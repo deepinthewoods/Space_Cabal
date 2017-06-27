@@ -72,9 +72,9 @@ public class AFollowPath extends Action {
 				if (parent.e.path.size == 0){
 					aBoost.target.set(parent.e.x, parent.e.y);
 					//parent.e.ship.unReserve(parent.e.x, parent.e.y);
-					Gdx.app.log(TAG, "0 path"); 
 				}
 				else{ 
+					//Gdx.app.log(TAG, "non0 path " + parent.e.path); 
 					aBoost.target.set(parent.e.path.get(0), parent.e.path.get(1));
 				}
 				
@@ -133,7 +133,7 @@ public class AFollowPath extends Action {
 	@Override
 	public void onStart(World world, Ship map) {
 		pathProgress = parent.e.path.size/2-1;
-		
+		//Gdx.app.log(TAG, "follow start " );
 	}
 
 }
