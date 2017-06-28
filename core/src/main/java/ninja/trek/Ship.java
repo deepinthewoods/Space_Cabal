@@ -18,9 +18,9 @@ import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.math.GridPoint2;
-import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.scenes.scene2d.ui.UI;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Bits;
 import com.badlogic.gdx.utils.GdxRuntimeException;
@@ -31,7 +31,6 @@ import com.badlogic.gdx.utils.ScreenUtils;
 
 import ninja.trek.ui.ItemDisplay;
 import ninja.trek.ui.ItemDisplay.ItemButton;
-import ninja.trek.ui.UI;
 
 public class Ship {
 	private static final String TAG = "pixel canvas";
@@ -290,7 +289,7 @@ public class Ship {
 			int width = (int) v.x;
 			Gdx.gl.glScissor(0, 0, width, Gdx.graphics.getHeight());
 		}
-		updateCamera(wcamera);
+		updateCamera(wcamera, world);
 		batch.setProjectionMatrix(camera.combined);
 		batch.setShader(shader);
 		//batch.setShader(null);
@@ -482,7 +481,22 @@ public class Ship {
 		shape.end();
 	}
 
-	public void updateCamera(OrthographicCamera wcamera) {
+	public void updateCamera(OrthographicCamera wcamera, World world) {
+		//camera.zoom = mapHeight / camera.viewportHeight;
+		int otherWidth = 0;
+		if (alignment == Alignment.CENTRE){
+			//Gdx.gl.glEnable(GL20.GL_SCISSOR_TEST);
+			v.set(0, 0, 0);
+			Ship otherShip = world.getEnemyShip();
+			if (otherShip != null){
+				otherShip.camera.project(v);
+				
+				otherWidth = Gdx.graphics.getWidth() - (int) v.x;
+				
+			}
+			//Gdx.gl.glScissor(0, 0, width, Gdx.graphics.getHeight());
+		}
+		
 		camera.setToOrtho(false, wcamera.viewportWidth, wcamera.viewportHeight);
 		//camera.rotate(-90);
 		camera.position.set(wcamera.position);
@@ -497,19 +511,59 @@ public class Ship {
 		float th = camera.viewportHeight * camera.zoom;
 		//w *= camera.zoom;
 		
-		camera.translate(-v.x, -v.y, 0);
+		float dx = (tw - mapWidth)/2;
+		float dy = (th - mapHeight)/2;
 		
+		camera.translate(-v.x, -v.y, 0);
 		switch (alignment){
 		case CENTRE:
+			camera.translate(-dx, -dy, 0);
+			camera.translate(offset);
+			
+			camera.update();
+			int halfX = Gdx.graphics.getWidth() - otherWidth;
+			halfX /= 2;
+			int halfY = Gdx.graphics.getHeight() ;
+			halfY /= 2;
+			
+			v.set(0, 0, 0);
+			
+			camera.project(v);
+			
+			v.y = camera.viewportHeight - v.y -1;
+			//Gdx.app.log(TAG, "translate " + v.x + "  " + halfX + " other " + otherWidth + " diff " + (-( halfX - v.x)));
+			if (v.x > halfX){
+				camera.translate(-( halfX - v.x) * camera.zoom, 0, 0);
+				offset.add(-( halfX - v.x) * camera.zoom, 0);
+			}
+			if (v.y < halfY){
+				camera.translate(0, ( halfY - v.y) * camera.zoom, 0);
+				offset.add(0, ( halfY - v.y) * camera.zoom);
+			}
+			camera.update();
+			v.set(mapWidth, mapHeight, 0);
+			camera.project(v);
+			v.y = camera.viewportHeight - v.y -1;
+			if (v.x < halfX){
+				camera.translate(-( halfX - v.x) * camera.zoom, 0, 0);
+				offset.add(-( halfX - v.x) * camera.zoom, 0);
+			}
+			if (v.y > halfY){
+				camera.translate(0, ( halfY - v.y) * camera.zoom, 0);
+				offset.add(0, ( halfY - v.y) * camera.zoom);
+			}
+			camera.update();
 			
 			break;
 		case TOP_RIGHT:
 			//Gdx.app.log(TAG, "translate offset " + (w) + "  x  " + (h));
-			camera.translate(-(tw - mapWidth) + GAP, -(th - mapHeight) + GAP*8 * camera.zoom, 0);
+			//camera.translate(-(tw - mapWidth) + GAP, -(th - mapHeight) + GAP*8 * camera.zoom, 0);
+			camera.translate(-(tw - mapWidth) + GAP, -(th - mapHeight - (th - mapHeight)/2), 0);
+			camera.translate(offset);
+			camera.update();
 			break;
 		}
-		camera.translate(offset);
-		camera.update();
+		
 	}
 	
 	public void updateDraw(SpriteBatch batch){
@@ -732,12 +786,12 @@ public class Ship {
 		for (int i = 0; i < roomsBySystem.length; i++){
 			roomsBySystem[i].clear();;
 		}
-		map.setAllBoosted();
+		//map.setAllBoosted();
 		for (int x = 1; x < mapWidth - 1; x++)
 			for (int y =1; y < mapHeight-1; y++){
 				int id = map.get(x,  y) & Ship.BLOCK_ID_MASK;
 				if (id != Ship.WALL && id != Ship.VACCUUM && id != Ship.FLOOR)
-					map.boosted[id].clear(x + y * mapWidth);
+					map.needsBoost[id].put(x + y * mapWidth, 0);
 				
 				int fillB = room.get(x, y) & BLOCK_ID_MASK;
 				if (fillB == -1 && id != Ship.WALL && id != Ship.VACCUUM){
@@ -884,5 +938,12 @@ public class Ship {
 				unReserve(x, y);
 			}
 		
+	}
+
+	public ShipEntity getShipEntity() {
+		for (int i = 0; i < entities.size; i++)
+			if (entities.get(i) instanceof ShipEntity) return (ShipEntity) entities.get(i);
+		
+		return null;
 	}
 }

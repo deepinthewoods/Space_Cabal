@@ -1,10 +1,13 @@
 package ninja.trek;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
+import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
+import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator.FreeTypeFontParameter;
 import com.badlogic.gdx.math.GridPoint2;
 
 public class FontManager {
@@ -17,6 +20,16 @@ public class FontManager {
 		fonts[1] = new BitmapFont(Gdx.files.internal("ui/kenpixel_future_square-16.fnt"), atlas.findRegion("fonts"));
 		fonts[2] = new BitmapFont(Gdx.files.internal("ui/lunaboy-16.fnt"), atlas.findRegion("fonts"));
 		fonts[3] = new BitmapFont(Gdx.files.internal("ui/romulus-16.fnt"), atlas.findRegion("fonts"));
+		
+		String fontName = "kenpixel_high";
+		FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("fonts/" + fontName + ".ttf"));
+		FreeTypeFontParameter parameter = new FreeTypeFontParameter();
+		parameter.size = 32;
+		parameter.borderColor = Color.BLACK;
+		parameter.borderWidth = 2f;
+		fonts[0] = generator.generateFont(parameter); // font size 12 pixels
+		generator.dispose(); // don't forget to dispose to avoid memory leaks!
+		
 	}
 
 	public void draw(Entity e, SpriteBatch batch, OrthographicCamera cam) {

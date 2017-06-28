@@ -7,13 +7,13 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.scenes.scene2d.ui.UI;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.Pools;
 
 import ninja.trek.Ship.Alignment;
 import ninja.trek.Ship.EntityArray;
-import ninja.trek.ui.UI;
 
 public class World {
 	private static final String TAG = "world";
@@ -126,8 +126,9 @@ public class World {
 			}
 			Gdx.app.log(TAG, "size " + i + "  " + maps.get(i).getEntities().size);
 		}
-		for (int i = 0; i < 32; i++){
+		for (int i = 0; i < 8; i++){
 			Entity e = Pools.obtain(Entity.class);
+			e.glyph = letters[i % letters.length];
 			e.pos(maps.get(0).map.spawn);
 			e.setDefaultAI();
 			maps.get(0).addEntity(e);
@@ -147,5 +148,5 @@ public class World {
 		getPlayerShip().cancelWeaponTarget(targettingIndex);
 		targettingIndex = -1;
 	}
-	
+	private static String[] letters = {"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"};
 }

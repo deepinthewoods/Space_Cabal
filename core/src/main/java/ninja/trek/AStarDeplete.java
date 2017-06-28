@@ -96,7 +96,7 @@ public class AStarDeplete {
 		block = block & (Ship.BLOCK_DAMAGE_MASK | Ship.BLOCK_FIRE_MASK | Ship.BLOCK_ID_MASK | Ship.BLOCK_AIR_MASK);
 		block |= depletion << Ship.BLOCK_DATA_BITS;
 		ship.map.set(node.x, node.y, block);
-		ship.map.boosted[block & Ship.BLOCK_ID_MASK].clear(node.x + node.y * width);
+		ship.map.needsBoost[block & Ship.BLOCK_ID_MASK].put(node.x + node.y * width, 0);
 	}
 
 

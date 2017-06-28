@@ -17,18 +17,14 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.UI;
 import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.badlogic.gdx.utils.IntIntMap;
 import com.badlogic.gdx.utils.IntMap;
 import com.badlogic.gdx.utils.Pools;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
-import com.badlogic.gdx.utils.viewport.Viewport;
 
 import ninja.trek.Ship.Alignment;
-import ninja.trek.action.ActionList;
-import ninja.trek.actions.ABase;
-import ninja.trek.ai.FungusAI;
-import ninja.trek.ui.UI;
 import ninja.trek.ui.UISystemButton;
 
 public class Main extends ApplicationAdapter {
@@ -281,7 +277,7 @@ public class Main extends ApplicationAdapter {
 
 			@Override
 			public boolean touchDragged(int screenX, int screenY, int pointer) {
-				//Gdx.app.log(TAG, "dragged");
+				//Gdx.app.log(TAG, "dragged " + screenX + "  " + screenY);
 				Ship ship = world.getPlayerShip();
 				if (ship.editMode && touchButtons.get(pointer, 3) == 0 && !ui.fillBtn.isChecked() && !ui.editLineButton.isChecked()){
 					v.set(screenX, screenY, 0);
@@ -364,7 +360,7 @@ public class Main extends ApplicationAdapter {
 					//Gdx.app.log(TAG, "unprojected  " + v);
 					map.camera.zoom *= amount<0? 0.9f : 1f/0.9f;
 					if (map.alignment == Alignment.CENTRE){
-						map.updateCamera(camera);
+						map.updateCamera(camera, world);
 						map.camera.project(v);
 						//Gdx.app.log(TAG, "projected" + v);
 						v2.set(Gdx.input.getX(), Gdx.graphics.getHeight() -1 - Gdx.input.getY(), 0);
@@ -424,7 +420,7 @@ public class Main extends ApplicationAdapter {
 	@Override
 	public void render () {
 		CustomColors.updateColors(Gdx.graphics.getDeltaTime(), shader);
-		//stage.setDebugAll(true);
+		stage.setDebugAll(true);
 		stage.act(Gdx.graphics.getDeltaTime());
 		Gdx.gl.glClearColor(0, 0, 0, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
@@ -443,6 +439,7 @@ public class Main extends ApplicationAdapter {
 	public void resize(int width, int height) {
 		stage.getViewport().update(width, height, true);
 		camera.setToOrtho(false, width, height);
+		ui.resize();
 		//viewport.apply();
 		//stage.setViewport(viewport);
 		//ui.table.invalidate();

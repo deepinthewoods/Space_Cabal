@@ -10,7 +10,7 @@ import ninja.trek.EntityAI;
 public class UIActionButton extends TextButton{
 	public int index;
 	public Table parentTable;
-
+	public float newXScale = 1;
 	public UIActionButton(int index, Skin skin, Table parent) {
 		//super(""+index, skin);
 		this(index, EntityAI.names[index], skin, parent);

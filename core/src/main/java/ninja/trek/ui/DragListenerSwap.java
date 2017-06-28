@@ -1,11 +1,11 @@
 package ninja.trek.ui;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.ui.UI;
 import com.badlogic.gdx.scenes.scene2d.utils.DragListener;
 
 public abstract class DragListenerSwap extends DragListener {
@@ -14,15 +14,20 @@ public abstract class DragListenerSwap extends DragListener {
 	public UI ui;
 	private Table parentTable;
 	private UIActionButton[] buttons;
+	private float forceY;
+	
 
 	public DragListenerSwap(UI ui, Table parentTable, UIActionButton[] buttons) {
+		
 		this.ui = ui;
 		this.parentTable = parentTable;
 		this.buttons = buttons;
 	}
 	@Override
 	public void dragStart(InputEvent event, float x, float y, int pointer) {
-		//Gdx.app.log(TAG, "dragstart. local " + x + ", " + y);			
+		//Gdx.app.log(TAG, "dragstart. local " + x + ", " + y);		
+		forceY = event.getListenerActor().getHeight()/2;
+		y = forceY;
 		Actor hit = parentTable.hit(x, y, true);
 		if (hit != null) {
 			//Gdx.app.log(TAG, "non button hit" + hit.getParent().getClass());
@@ -31,12 +36,17 @@ public abstract class DragListenerSwap extends DragListener {
 				UIActionButton act = (UIActionButton) par;
 				act.dragStart(x, y);
 				currentDragging = act.index;
+			} else if ( hit instanceof UIActionButton){
+				UIActionButton act = (UIActionButton) hit;
+				act.dragStart(x, y);
+				currentDragging = act.index;
 			}
 		}
 		super.dragStart(event, x, y, pointer);
 	}
 	@Override
 	public void dragStop(InputEvent event, float x, float y, int pointer) {
+		y = forceY;
 		//Gdx.app.log(TAG, "dragstop. local " + x + ", " + y);	
 		if (currentDragging != -1){
 			buttons[currentDragging].dragStop(x, y);					
@@ -46,6 +56,7 @@ public abstract class DragListenerSwap extends DragListener {
 	}
 	@Override
 	public void drag(InputEvent event, float x, float y, int pointer) {
+		y = forceY;
 		event.handle();
 		//Gdx.app.log(TAG, "drag. local " + x + ", " + y);	
 		Actor hit = parentTable.hit(x, y, true);
@@ -63,6 +74,7 @@ public abstract class DragListenerSwap extends DragListener {
 				}
 				event.handle();
 			} else if (hit instanceof Label){
+				//Gdx.app.log(TAG, "label hit" + hit.getClass());
 				if (par != null && par instanceof UIActionButton){
 					UIActionButton act = (UIActionButton) par;
 					if (act.index != currentDragging){

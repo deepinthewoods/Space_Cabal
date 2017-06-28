@@ -7,6 +7,8 @@ import ninja.trek.actions.ABaseShip;
 import ninja.trek.actions.AWeaponCharge;
 
 public class ShipEntity extends Entity {
+	public int health = 90;
+	public int totalHealth = 100;
 	public ShipEntity() {
 		glyph = " ";
 	}

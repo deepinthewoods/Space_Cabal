@@ -15,7 +15,7 @@ public class Entity implements Poolable {
 	private static final String TAG = "entity";
 	public int x, y;
 	public String glyph = "A";
-	public int font = 1;
+	public int font = 0;
 	private transient EntityAI ai;
 	public transient Ship ship;
 	public int[] buttonOrder = new int[EntityAI.names.length];

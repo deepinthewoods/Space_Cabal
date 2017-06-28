@@ -4,7 +4,7 @@ import com.badlogic.gdx.utils.Pool.Poolable;
 
 public abstract class EntityAI implements Poolable {
 	protected Entity parent;
-	public static String[] names = {"Shoot", "Fix", "Shield", "WAnder", "Engine", "Fire", "Weapon", "Power", "Oxygen"};
+	public static String[] names = {"Shoot", "Fix", "Shield", "Wander", "Engine", "Fire", "Weapon", "Power", "Oxygen"};
 	
 	public static final int SHOOT = 0;
 	public static final int FIX = 1;
