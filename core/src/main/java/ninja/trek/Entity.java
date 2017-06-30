@@ -22,6 +22,7 @@ public class Entity implements Poolable {
 	public int[] fixOrder = new int[FIX_ACTIONS_LENGTH];//block ids
 	public static final int FIX_ACTIONS_LENGTH = 5;
 	public transient GridPoint2 target = new GridPoint2();
+	public int delayAccumulator;
 	public Entity(){
 		reset();
 	}
@@ -60,12 +61,16 @@ public class Entity implements Poolable {
 		for (int i = 0; i < buttonOrder.length; i++){
 			buttonOrder[i] = i;
 		}
-		
+		delayAccumulator = 0;
+		for (int i = 0; i < speed.length; i++){
+			speed[i] = 90;
+		}
 	}
 	
 	int[] ret = new int[2];
 	public IntArray path;
 	public int actionIndexForPath;
+	public int[] speed = new int[EntityAI.names.length];
 	
 	/**
 	 * @param a value
@@ -108,7 +113,22 @@ public class Entity implements Poolable {
 		ActionList playerAction = new ActionList();
 		playerAction.addToStart(Pools.obtain(ABase.class));
 		setAI(playerAction);
+		setDefaultButtonOrder();
 		return this;
+	}
+
+	private void setDefaultButtonOrder() {
+		buttonOrder[0] = EntityAI.FIRE;
+		buttonOrder[1] = EntityAI.FIX;
+		buttonOrder[2] = EntityAI.SHOOT;
+		buttonOrder[3] = EntityAI.WEAPON;
+		buttonOrder[4] = EntityAI.SHIELDS;
+		buttonOrder[5] = EntityAI.POWER;
+		buttonOrder[6] = EntityAI.ENGINE;
+		buttonOrder[7] = EntityAI.OXYGEN;
+		buttonOrder[8] = EntityAI.WANDER;
+		updateFixOrder();
+		
 	}
 
 	public Entity pos(GridPoint2 pos) {

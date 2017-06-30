@@ -218,7 +218,7 @@ public class ScrollPaneN extends WidgetGroup {
 				resetFade();
 				v.set(getX() + getWidth(), 0);
 				stageToLocalCoordinates(v);
-				Gdx.app.log(TAG, "fdskjl " + Gdx.input.getX() + "  " + v);
+				///Gdx.app.log(TAG, "fdskjl " + Gdx.input.getX() + "  " + v);
 				if (
 						Gdx.input.getX() > 
 						v.x) return false;

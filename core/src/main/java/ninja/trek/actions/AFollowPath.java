@@ -1,6 +1,7 @@
 package ninja.trek.actions;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.badlogic.gdx.utils.Pools;
 
 import ninja.trek.EntityAI;
@@ -44,7 +45,8 @@ public class AFollowPath extends Action {
 			pathProgress--;
 			//Gdx.app.log(TAG, "progress" + pathx + ", " + pathy);
 		}
-		
+		ADelay delay = Pools.obtain(ADelay.class);
+		addBeforeMe(delay);
 		if (pathProgress < 0 ){
 			switch (parent.e.actionIndexForPath){
 			case EntityAI.FIX:
@@ -102,6 +104,7 @@ public class AFollowPath extends Action {
 				isFinished = true;
 			}*/
 		}
+		
 	}
 	/*
 	 * int currentBoost = (block & Ship.BLOCK_BOOST_MASK) >> Ship.BLOCK_BOOST_BITS;
@@ -132,6 +135,8 @@ public class AFollowPath extends Action {
 
 	@Override
 	public void onStart(World world, Ship map) {
+		if (parent.e.path == null) throw new GdxRuntimeException("null path " + EntityAI.names[parent.e.buttonOrder[parent.e.actionIndexForPath]]);
+
 		pathProgress = parent.e.path.size/2-1;
 		//Gdx.app.log(TAG, "follow start " );
 	}

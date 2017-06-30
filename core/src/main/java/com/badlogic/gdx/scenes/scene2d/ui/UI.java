@@ -49,13 +49,13 @@ public class UI {
 	private DragAndDrop dnd;
 	private UIActionButton[] buttons = new UIActionButton[EntityAI.names.length];
 	private UISystemButton[] bottomButtons = new UISystemButton[Ship.systemNames.length];
-	private Table actionTable;
+	private Table entityActionTable;
 	private TextButton dragLabel;
 	Entity currentEntity;
 	protected Vector2 v = new Vector2();
 	private Table leftTable;
 	private Table rightTable;
-	private Table bottomTable;
+	private Table shipSystemTable;
 	public ButtonGroup bottomGroup;
 	public CheckBox xMirrorBtn;
 	private Table editTable;
@@ -111,30 +111,30 @@ public class UI {
 		
 		dnd = new DragAndDrop();
 		table = new Table();
-		actionTable = new Table();
+		entityActionTable = new Table();
 		leftTable = new Table();
 		rightTable = new Table();
-		bottomTable = new Table();
+		shipSystemTable = new Table();
 		
 		
-		DragListener topDragL = new DragListenerSwap(this, actionTable, buttons){
+		DragListener topDragL = new DragListenerSwap(this, entityActionTable, buttons){
 			@Override
 			public void swap(int a, int b) {
 				ui.currentEntity.swap(a, b);
 				ui.setEntity(ui.currentEntity);
 			}};
 		topDragL.setTapSquareSize(0f);
-		actionTable.addListener(topDragL);
-		actionTable.setTouchable(Touchable.enabled);
+		entityActionTable.addListener(topDragL);
+		entityActionTable.setTouchable(Touchable.enabled);
 		for (int i = 0; i < EntityAI.names.length; i++){
-			UIActionButton btn = new UIActionButton(i, skin, actionTable);
+			UIActionButton btn = new UIActionButton(i, skin, entityActionTable);
 			buttons[i] = btn;
-			actionTable.add(btn).left();
+			entityActionTable.add(btn).left();
 			btn.setTouchable(Touchable.enabled);
 		}
 		//actionTable.setBackground(skin.getDrawable("btn_default_pressed"));
 		
-		DragListener bottomDragL = new DragListenerSwap(this, bottomTable, bottomButtons){
+		DragListener bottomDragL = new DragListenerSwap(this, shipSystemTable, bottomButtons){
 			@Override
 			public void swap(int a, int b) {
 				Ship ship = world.getPlayerShip();
@@ -142,14 +142,14 @@ public class UI {
 				ui.set(ship);
 			}};
 		bottomDragL.setTapSquareSize(0f);
-		bottomTable.addListener(bottomDragL);
-		bottomTable.setTouchable(Touchable.enabled);
+		shipSystemTable.addListener(bottomDragL);
+		shipSystemTable.setTouchable(Touchable.enabled);
 		bottomGroup = new ButtonGroup();
 		
 		for (int i = 0; i < Ship.systemNames.length; i++){
-			UISystemButton btn = new UISystemButton(i, skin, bottomTable, this, world);
+			UISystemButton btn = new UISystemButton(i, skin, shipSystemTable, this, world);
 			bottomButtons[i] = btn;
-			bottomTable.add(btn).left();
+			shipSystemTable.add(btn).left();
 			bottomGroup.add(btn);
 			btn.changeFont();
 			btn.setTouchable(Touchable.enabled);
@@ -184,13 +184,13 @@ public class UI {
 		brushSizeSlider = new Slider(1f, 4f, 1f, false, skin){
 			
 		};
-		Label brushSizeLabel = new Label("size 1", skin);
+		Label brushSizeLabel = new Label("1", skin);
 
 		brushSizeSlider.addListener(new ChangeListener(){
 
 			@Override
 			public void changed(ChangeEvent event, Actor actor) {
-				brushSizeLabel.setText("size " + (int)brushSizeSlider.getValue());
+				brushSizeLabel.setText("" + (int)brushSizeSlider.getValue());
 			}
 			
 		});
@@ -618,28 +618,7 @@ public class UI {
 				super.clicked(event, x, y);
 			}
 		});
-		editTable.add(xMirrorBtn).left();
-		editTable.row();
-		editTable.add(fillBtn).left();
-		editTable.row();
-		editTable.add(editLineButton).left();
-		editTable.row();
-		editTable.add(destroyButton).left();
-		editTable.row();
-		editTable.add(fireBtn);
-		editTable.row();
-		editTable.add(brushSizeSlider).colspan(2);
-		editTable.row();
-		editTable.add(weaponButton);
-		//editTable.row();
-		editTable.add(weaponDeleteButton);
-		editTable.row();
-		editTable.add(entitySpawnButton);
-		editTable.row();
-		editTable.add(openHullButton);
-		editTable.row();
-		editTable.add(brushSizeLabel);
-		editTable.row();
+		
 		editTable.add(saveButton);
 		editTable.row();
 		editTable.add(loadButton);
@@ -648,11 +627,31 @@ public class UI {
 		editTable.row();
 		editTable.add(newShipButton);
 		editTable.row();
+		editTable.add(brushSizeSlider).colspan(2);
+		//editTable.row();
+		editTable.add(brushSizeLabel);
+		editTable.row();
+		editTable.add(xMirrorBtn).left();
+		editTable.row();
+		editTable.add(fillBtn).left();
+		editTable.row();
+		editTable.add(editLineButton).left();
+		editTable.row();
+		editTable.add(weaponButton);
+		editTable.row();
+		editTable.add(weaponDeleteButton);
+		editTable.row();
+		editTable.add(entitySpawnButton);
+		editTable.row();
+		editTable.add(destroyButton).left();
+		editTable.row();
+		editTable.add(fireBtn);
+		editTable.row();
+		editTable.add(openHullButton);
+		editTable.row();
 		
 		ScrollPaneN editPane = new ScrollPaneN(emptyEditTable);
 		editPane.setOverscroll(false, true);
-		
-		
 		
 		//leftTable.add(infoLabel).left();
 		//leftTable.add(new Label("", skin)).expandX();
@@ -703,7 +702,7 @@ public class UI {
 		table.setFillParent(true);
 		table.add(topTable).top().left();
 		topTable.add(infoLabel).top().left();
-		topTable.add(actionTable).top();
+		topTable.add(shipSystemTable);
 		
 		//table.row();
 		table.row();
@@ -718,7 +717,7 @@ public class UI {
 		table.add(weaponTable).colspan(10).left();
 
 		table.row();
-		table.add(bottomTable).left();
+		table.add(entityActionTable).left();
 		
 		table.setTouchable(Touchable.enabled);
 		stage.addActor(table);
@@ -753,112 +752,105 @@ public class UI {
 
 	public void set(Ship ship) {
 		this.ship = ship;
-		bottomTable.clearChildren();
-		bottomTable.row();
+		shipSystemTable.clearChildren();
+		//bottomTable.row();
+		if (ship != null){
+			
+			for (int i = 0; i < ship.systemButtonOrder.length; i++){
+				if (ship.editMode || (ship.systemButtonOrder[i] != Ship.VACCUUM && ship.systemButtonOrder[i] != Ship.FLOOR && ship.systemButtonOrder[i] != Ship.WALL)){
+					shipSystemTable.add(bottomButtons[ship.systemButtonOrder[i]]);
+					
+				}
+			}
+			//currentEntity = e;
+			shipSystemTable.invalidate();
+			weaponTable.clearChildren();
+			float maxW = 0, total = 0;
+			for (int i = 0; i < bottomButtons.length; i++){
+				if (ship.editMode || (i != Ship.VACCUUM && i != Ship.FLOOR && i != Ship.WALL))
+				{
+					float w = bottomButtons[i].getWidth();
+					maxW += w;
+					total++;
+				}
+			}
+			maxW = (int) (( Gdx.graphics.getWidth() - infoLabel.getWidth() ) / total);
+			
+			for (int i = 0; i < bottomButtons.length; i++){
+				if (ship.editMode || (ship.systemButtonOrder[i] != Ship.VACCUUM && ship.systemButtonOrder[i] != Ship.FLOOR && ship.systemButtonOrder[i] != Ship.WALL)){
+					if (shipSystemTable.getCell(bottomButtons[ship.systemButtonOrder[i]]) == null) throw new GdxRuntimeException("null " + i);
+					shipSystemTable.getCell(bottomButtons[ship.systemButtonOrder[i]]).width(maxW).pad(0).space(0);
+				}
+			}
+			int i = 0;
+			for (Entity e : ship.getEntities()){
+				//Gdx.app.log(TAG, "look at e " + e.getClass());
+				if (e instanceof Weapon){
+					Weapon w = (Weapon) e;
+					//ship.equippedWeapons[w.index];
+					//Gdx.app.log(TAG, "ADDDD WEAPONNNNNNNNNNNNN");
+					TextButton b = weaponButtons[i];
+					b.setText("weapon " + i);
+					weaponTable.add(b);
+					
+					i++;
+				}
+			}
+			weaponTable.row();
+			weaponTable.layout();
+		}else {
+			shipSystemTable.add(topSpacerActor).expandX();
+		}
 		
-		for (int i = 0; i < ship.systemButtonOrder.length; i++){
-			if (ship.editMode || (ship.systemButtonOrder[i] != Ship.VACCUUM && ship.systemButtonOrder[i] != Ship.FLOOR && ship.systemButtonOrder[i] != Ship.WALL)){
-				bottomTable.add(bottomButtons[ship.systemButtonOrder[i]]);
-				
-			}
-		}
-		//currentEntity = e;
-		bottomTable.invalidate();
-		weaponTable.clear();
-		float maxW = 0, total = 0;
-		for (int i = 0; i < bottomButtons.length; i++){
-			if (ship.editMode || (i != Ship.VACCUUM && i != Ship.FLOOR && i != Ship.WALL))
-			{
-				float w = bottomButtons[i].getWidth();
-				maxW += w;
-				total++;
-			}
-		}
-		maxW = Gdx.graphics.getWidth() / total;
-		for (int i = 0; i < bottomButtons.length; i++){
-			if (ship.editMode || (ship.systemButtonOrder[i] != Ship.VACCUUM && ship.systemButtonOrder[i] != Ship.FLOOR && ship.systemButtonOrder[i] != Ship.WALL)){
-				if (bottomTable.getCell(bottomButtons[ship.systemButtonOrder[i]]) == null) throw new GdxRuntimeException("null " + i);
-				bottomTable.getCell(bottomButtons[ship.systemButtonOrder[i]]).width(maxW).pad(0).space(0);
-			}
-		}
-		int i = 0;
-		for (Entity e : ship.getEntities()){
-			//Gdx.app.log(TAG, "look at e " + e.getClass());
-			if (e instanceof Weapon){
-				Weapon w = (Weapon) e;
-				//ship.equippedWeapons[w.index];
-				//Gdx.app.log(TAG, "ADDDD WEAPONNNNNNNNNNNNN");
-				TextButton b = weaponButtons[i];
-				b.setText("weapon " + i);
-				weaponTable.add(b);
-				
-				i++;
-			}
-		}
-		weaponTable.row();
-		weaponTable.layout();
+		
 	}
 
 	public void setEntity(Entity e){
 		entity = e;
+		Table actionTable = this.entityActionTable;
+		UIActionButton[] buttons2 = buttons;
 		actionTable.clearChildren();
 		if (e != null){
 			for (int i = 0; i < e.buttonOrder.length; i++){
-				buttons[i].getLabel().setFontScale(fontScale);
-				actionTable.add(buttons[e.buttonOrder[i]]);
+				buttons2[i].getLabel().setFontScale(fontScale);
+				actionTable.add(buttons2[e.buttonOrder[i]]);
 			}
 			currentEntity = e;
 			
-			boolean tooBig = true;
 			int maxW, total = 0;
 			//float scale = skin.get("default-font", BitmapFont.class).getData().scaleX;
 			//while (tooBig && scale > .3f)
 			{
-				tooBig = false;
 				maxW = 0;
 				total = 0;
 				
-				for (int i = 0; i < buttons.length; i++){
+				for (int i = 0; i < buttons2.length; i++){
 					{
-						float w = buttons[i].getWidth();
+						float w = buttons2[i].getWidth();
 						//if (buttons[i].getWidth() <= buttons[i].getMinWidth()+1)
-						{
-							tooBig = true;
-							Gdx.app.log(TAG, "TOO BIG" +
-							((buttons[i].getWidth() / buttons[i].getLabel().getWidth()))
-									);
-							//buttons[i].newXScale = (buttons[i].getWidth() / buttons[i].getLabel().getWidth());
-							//actionTable.getCell(buttons[i].getLabel()).
-							
-						}
+						
 						maxW += w;
 						total++;
 					}
 				}
 				
-				if (tooBig){
-					tooBig = false;
-					//scale  *= .9f;
-					//skin.get("default-font", BitmapFont.class).getData().setScale(scale);
-				}
+				
 			}
-			maxW = (int) (( Gdx.graphics.getWidth() - infoLabel.getWidth() ) / total);
+			maxW = (int) (( Gdx.graphics.getWidth()  ) / total);
 			actionTable.layout();
 			table.layout();
 			
 			
-			for (int i = 0; i < buttons.length; i++){
-				actionTable.getCell(buttons[i]).width(maxW).pad(0).space(0);
+			for (int i = 0; i < buttons2.length; i++){
+				actionTable.getCell(buttons2[i]).width(maxW).pad(0).space(0);
 				//buttons[i].getCell(buttons[i].getLabel()).fill();
 				//if (buttons[i].getLabel().getWidth() >= buttons[i].getWidth() - 3)
-				float sc = (maxW / buttons[i].getLabel().getWidth()) * .8f;
+				float sc = (maxW / buttons2[i].getLabel().getWidth()) * .8f;
 				sc = Math.min(1f, sc);
 				sc *= fontScale;
-				buttons[i].getLabel().setFontScaleX(sc);
+				buttons2[i].getLabel().setFontScaleX(sc);
 			}
-		} else {
-			actionTable.add(topSpacerActor).expandX();
-		}
+		} 
 		
 		
 		actionTable.invalidate();

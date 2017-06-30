@@ -5,7 +5,7 @@ import java.util.Iterator;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.GridPoint2;
 import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.utils.Bits;
+import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.badlogic.gdx.utils.IntArray;
 import com.badlogic.gdx.utils.IntIntMap;
 import com.badlogic.gdx.utils.IntIntMap.Entry;
@@ -98,6 +98,8 @@ public class AWaitForPath extends Action {
 						}
 						parent.e.path = path;
 						parent.e.actionIndexForPath = parent.e.buttonOrder[i];
+						//Gdx.app.log(TAG, "foundsystem "  + targetX + ", " + targetY + "  from " + parent.e.x + ", " + parent.e.y + EntityAI.names[parent.e.buttonOrder[parent.e.actionIndexForPath]] );
+
 						AFollowPath follow = Pools.obtain(AFollowPath.class);
 						addBeforeMe(follow);
 						isFinished = true;
@@ -240,8 +242,28 @@ public class AWaitForPath extends Action {
 					
 					break;
 				case EntityAI.WANDER:
+					int targetX = parent.e.x, targetY = parent.e.y;
+					targetX += MathUtils.random(-10, 10);
+					targetY += MathUtils.random(-10, 10);
+					targetX = Math.max(Math.min(targetX,  parent.e.ship.mapHeight-2), 1);
+					targetY = Math.max(Math.min(targetY,  parent.e.ship.mapHeight-2), 1);
+					path = parent.e.ship.aStar.getPath(parent.e.x, parent.e.y, targetX, targetY);
 					
-					break;
+					if (path.size == 0){
+						Pools.free(path);
+						path = null;
+						return;
+					} else {
+						parent.e.actionIndexForPath = parent.e.buttonOrder[i];
+						//Gdx.app.log(TAG, "found"  + targetX + ", " + targetY + "  from " + parent.e.x + ", " + parent.e.y + EntityAI.names[parent.e.buttonOrder[parent.e.actionIndexForPath]] );
+						parent.e.path = path;
+						AFollowPath follow = Pools.obtain(AFollowPath.class);
+						addBeforeMe(follow);
+						isFinished = true;
+						parent.e.target.set(parent.e.path.get(0), parent.e.path.get(1));
+						//parent.e.ship.reserve(parent.e.target.x, parent.e.target.y);
+					}
+					return;
 				}
 			}
 			/*parent.e.actionIndexForPath = parent.e.buttonOrder[actionIndexForPath ];
@@ -279,7 +301,8 @@ public class AWaitForPath extends Action {
 	}
 	@Override
 	public void onEnd(World world, Ship map) {
-		//Gdx.app.log(TAG, "finished");
+		//Gdx.app.log(TAG, "finished " + EntityAI.names[parent.e.buttonOrder[parent.e.actionIndexForPath]] );
+		if (parent.e.path == null) throw new GdxRuntimeException("null path " + parent.e.actionIndexForPath);
 	}
 
 	

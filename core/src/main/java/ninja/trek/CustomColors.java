@@ -8,6 +8,7 @@ import com.badlogic.gdx.math.MathUtils;
 public class CustomColors {
 private static final String TAG = "custom colors";
 public static final Color NO_AIR_FLOOR = new Color(Color.DARK_GRAY);
+private static final float VARIANCE = .25f;
 public static 
 Color 
   ENGINE = new Color(Color.RED)
@@ -21,6 +22,7 @@ Color
 , POWER = new Color(0, .35f, 1, 1f)
 
 ;
+static HSL hc = new HSL();
 public static Color[] color, lerpToColor;
 public static String[] colorNames = {"vaccuum", "engine", "phaser", "shield", "wall", "floor", "oxygen", "power"};
 private static float[] colorFloatArray, lerpFloatArray, flashFloatArray;
@@ -125,6 +127,15 @@ public static void updateColors(float dt, ShaderProgram shader){
 		mapLerpColorsBoost[i].set(color[i]);
 		mapLerpColorsBoost[i].lerp(lerpToColorBoost[i], alpha );
 		
+		hc.fromRGB(color[i]);
+		float s1 = Math.min(hc.s + VARIANCE, 1f);
+		float s0 = s1 - VARIANCE * 2;
+		//s0 = 1;
+		//s1 = 1;
+		hc.h = lerp(hc.h - .02f, hc.h + .02f, alpha);
+		hc.toRGB(mapLerpColorsBoost[i]);
+		//mapLerpColorsBoost[i].set(color[i]);
+		
 		mapFlashColorsFireB[i].set(mapLerpColors[i]);
 		mapFlashColorsFire[i].set(mapLerpColors[i]);
 		//mapLerpColors[i].set(Color.BLACK);
@@ -182,6 +193,9 @@ public static void updateColors(float dt, ShaderProgram shader){
 	//shader.setUniform4fv("u_colors[0]", flashFloatArray, 128, flashFloatArray.length);
 
 	shader.end();
+}
+private static float lerp(float a, float b, float t) {
+    return (1-t)*a + t*b;
 }
 
 }
