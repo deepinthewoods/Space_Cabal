@@ -48,7 +48,7 @@ public class UI {
 	private static final int MAX_WEAPON_BUTTONS = 10;
 	private DragAndDrop dnd;
 	private UIActionButton[] buttons = new UIActionButton[EntityAI.names.length];
-	private UISystemButton[] bottomButtons = new UISystemButton[Ship.systemNames.length];
+	private UISystemButton[] shipSystemottomButtons = new UISystemButton[Ship.systemNames.length];
 	private Table entityActionTable;
 	private TextButton dragLabel;
 	Entity currentEntity;
@@ -134,7 +134,7 @@ public class UI {
 		}
 		//actionTable.setBackground(skin.getDrawable("btn_default_pressed"));
 		
-		DragListener bottomDragL = new DragListenerSwap(this, shipSystemTable, bottomButtons){
+		DragListener bottomDragL = new DragListenerSwap(this, shipSystemTable, shipSystemottomButtons){
 			@Override
 			public void swap(int a, int b) {
 				Ship ship = world.getPlayerShip();
@@ -148,7 +148,7 @@ public class UI {
 		
 		for (int i = 0; i < Ship.systemNames.length; i++){
 			UISystemButton btn = new UISystemButton(i, skin, shipSystemTable, this, world);
-			bottomButtons[i] = btn;
+			shipSystemottomButtons[i] = btn;
 			shipSystemTable.add(btn).left();
 			bottomGroup.add(btn);
 			btn.changeFont();
@@ -758,29 +758,35 @@ public class UI {
 			
 			for (int i = 0; i < ship.systemButtonOrder.length; i++){
 				if (ship.editMode || (ship.systemButtonOrder[i] != Ship.VACCUUM && ship.systemButtonOrder[i] != Ship.FLOOR && ship.systemButtonOrder[i] != Ship.WALL)){
-					shipSystemTable.add(bottomButtons[ship.systemButtonOrder[i]]);
-					
+					shipSystemTable.add(shipSystemottomButtons[ship.systemButtonOrder[i]]);
+					shipSystemottomButtons[i].getLabel().setFontScale(fontScale);
 				}
 			}
 			//currentEntity = e;
-			shipSystemTable.invalidate();
+			shipSystemTable.layout();
 			weaponTable.clearChildren();
 			float maxW = 0, total = 0;
-			for (int i = 0; i < bottomButtons.length; i++){
+			for (int i = 0; i < shipSystemottomButtons.length; i++){
 				if (ship.editMode || (i != Ship.VACCUUM && i != Ship.FLOOR && i != Ship.WALL))
 				{
-					float w = bottomButtons[i].getWidth();
+					float w = shipSystemottomButtons[i].getWidth();
 					maxW += w;
 					total++;
 				}
 			}
 			maxW = (int) (( Gdx.graphics.getWidth() - infoLabel.getWidth() ) / total);
 			
-			for (int i = 0; i < bottomButtons.length; i++){
+			for (int i = 0; i < shipSystemottomButtons.length; i++){
 				if (ship.editMode || (ship.systemButtonOrder[i] != Ship.VACCUUM && ship.systemButtonOrder[i] != Ship.FLOOR && ship.systemButtonOrder[i] != Ship.WALL)){
-					if (shipSystemTable.getCell(bottomButtons[ship.systemButtonOrder[i]]) == null) throw new GdxRuntimeException("null " + i);
-					shipSystemTable.getCell(bottomButtons[ship.systemButtonOrder[i]]).width(maxW).pad(0).space(0);
+					if (shipSystemTable.getCell(shipSystemottomButtons[ship.systemButtonOrder[i]]) == null) throw new GdxRuntimeException("null " + i);
+					shipSystemTable.getCell(shipSystemottomButtons[ship.systemButtonOrder[i]]).width(maxW).pad(0).space(0);
+					
+					float sc = (maxW / shipSystemottomButtons[i].getLabel().getWidth()) * .8f;
+					sc = Math.min(1f, sc);
+					sc *= fontScale;
+					shipSystemottomButtons[i].getLabel().setFontScaleX(sc);
 				}
+				
 			}
 			int i = 0;
 			for (Entity e : ship.getEntities()){
@@ -796,12 +802,12 @@ public class UI {
 					i++;
 				}
 			}
+			
 			weaponTable.row();
 			weaponTable.layout();
 		}else {
 			shipSystemTable.add(topSpacerActor).expandX();
 		}
-		
 		
 	}
 
@@ -816,7 +822,6 @@ public class UI {
 				actionTable.add(buttons2[e.buttonOrder[i]]);
 			}
 			currentEntity = e;
-			
 			int maxW, total = 0;
 			//float scale = skin.get("default-font", BitmapFont.class).getData().scaleX;
 			//while (tooBig && scale > .3f)
@@ -828,12 +833,10 @@ public class UI {
 					{
 						float w = buttons2[i].getWidth();
 						//if (buttons[i].getWidth() <= buttons[i].getMinWidth()+1)
-						
 						maxW += w;
 						total++;
 					}
 				}
-				
 				
 			}
 			maxW = (int) (( Gdx.graphics.getWidth()  ) / total);
