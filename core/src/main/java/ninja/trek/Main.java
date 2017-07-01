@@ -36,12 +36,13 @@ public class Main extends ApplicationAdapter {
 	public static final String MAP_PREVIEW_EXTENSION = ".png";
 	public static final int CHUNK_SIZE = 64;
 	public static final String HULL_SOURCE_FILES_LOCATION = "sources/";
+	public static final String FONT_SAVE_LOCATION = "SpaceCabal/fonts/";
+	public static final String MAP_HULL_EXTENSION = "png";;
 	
 	SpriteBatch batch;
 	TextureAtlas atlas;
 	OrthographicCamera camera;
-	private TextureAtlas uiAtlas;
-	private BitmapFont font;
+	//private TextureAtlas uiAtlas;
 	private FontManager fontManager;
 	
 	private World world;
@@ -68,6 +69,7 @@ public class Main extends ApplicationAdapter {
 		}
 		CustomColors.init();
 		Items.init();
+		makeFonts();
 		batch = new SpriteBatch();
 		shape = new ShapeRenderer();
 		
@@ -169,7 +171,7 @@ public class Main extends ApplicationAdapter {
 					if (ui.fillBtn.isChecked() && !ui.editLineButton.isChecked()){
 						v.set(Gdx.input.getX(), Gdx.input.getY(), 0);
 						ship.camera.unproject(v);
-						UISystemButton btn = (UISystemButton) ui.bottomGroup.getChecked();
+						UISystemButton btn = (UISystemButton) ui.lastPressedShipSystemButton;
 						int block = btn.index;
 						//if (block == 0) block = 0b1000000000000000000000000000000;
 						
@@ -185,7 +187,7 @@ public class Main extends ApplicationAdapter {
 						ship.camera.unproject(v);
 						v.x = Math.min(Math.max(v.x, 1), ship.mapWidth-2);
 						v.y = Math.min(Math.max(v.y, 1), ship.mapHeight-2);
-						UISystemButton btn = (UISystemButton) ui.bottomGroup.getChecked();
+						UISystemButton btn = (UISystemButton) ui.lastPressedShipSystemButton;
 						int block = btn.index;
 						if (block == 0) block = 0b1000000000000000000000000000000;
 						if (ui.fireBtn.isChecked()){
@@ -210,8 +212,12 @@ public class Main extends ApplicationAdapter {
 				} else if (button == 0){
 					
 					v.set(Gdx.input.getX(), Gdx.input.getY(), 0);
+					v2.set(Gdx.input.getX(), Gdx.input.getY(), 0);
 					ship.camera.unproject(v);
-					ship.selectClosestEntity((int)v.x, (int)v.y, ui);
+					Ship shipB = world.getEnemyShip();
+					shipB.camera.unproject(v2);
+					
+					ship.selectClosestEntity((int)v.x, (int)v.y, ui, shipB, (int)v2.x, (int)v2.y);
 					//Gdx.app.log(TAG, "ADD WEAPON");
 				}
 				return false;
@@ -236,7 +242,7 @@ public class Main extends ApplicationAdapter {
 					}
 					v.set(ui.previewB.x, ui.previewB.y, 0);
 
-					UISystemButton btn = (UISystemButton) ui.bottomGroup.getChecked();
+					UISystemButton btn = (UISystemButton) ui.lastPressedShipSystemButton;
 					int block = btn.index;
 					if (block == 0) block = 0b1000000000000000000000000000000;
 
@@ -295,7 +301,7 @@ public class Main extends ApplicationAdapter {
 						ray.next();
 						if (ray.hasNext){//skip last block
 							//if (ship.map.get(ray.x, ray.y) == 1) Gdx.app.log(TAG, "DUPE");
-							UISystemButton btn = (UISystemButton) ui.bottomGroup.getChecked();
+							UISystemButton btn = (UISystemButton) ui.lastPressedShipSystemButton;
 							int block = btn.index;
 							if (block == 0) block = 0b1000000000000000000000000000000;
 							if (ui.fireBtn.isChecked()){
@@ -376,9 +382,9 @@ public class Main extends ApplicationAdapter {
 		
 		Gdx.input.setInputProcessor(mux);
 		
-		uiAtlas = new TextureAtlas(Gdx.files.internal("ui/ui.atlas"));
+		//uiAtlas = new TextureAtlas(Gdx.files.internal("ui/ui.atlas"));
 		
-		fontManager = new FontManager(uiAtlas);
+		fontManager = new FontManager();
 		
 		world = new World(fontManager);
 		
@@ -398,6 +404,7 @@ public class Main extends ApplicationAdapter {
 		Ship amap = new Ship(new IntPixelMap(256, 256, CHUNK_SIZE), 1, pixelSprite, fontManager, shader);
 		world.addMap(amap);
 		amap.inventory.add(Items.laser1);
+		amap.inventory.add(Items.rocket1);
 		
 		Ship amap2 = new Ship(new IntPixelMap(128, 256, CHUNK_SIZE), 4, pixelSprite, fontManager, shader);
 		world.addMap(amap2);
@@ -424,7 +431,7 @@ public class Main extends ApplicationAdapter {
 		stage.act(Gdx.graphics.getDeltaTime());
 		Gdx.gl.glClearColor(0, 0, 0, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-		world.update(batch, camera, world);
+		world.update(batch, camera, world, ui);
 		
 		//batch.begin();
 		//batch.draw(img, 0, 0);
@@ -444,5 +451,25 @@ public class Main extends ApplicationAdapter {
 		//stage.setViewport(viewport);
 		//ui.table.invalidate();
 		super.resize(width, height);
+	}
+	
+	@Override
+	public void dispose() {
+		super.dispose();
+		batch.dispose();
+		atlas.dispose();
+		fontManager.dispose();
+		
+		shader.dispose();
+		stage.dispose();
+		ui.dispose();
+		shape.dispose();
+		background.dispose();
+		planet.dispose();
+		world.dispose();
+	}
+	
+	public void makeFonts(){
+		
 	}
 }

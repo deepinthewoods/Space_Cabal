@@ -1,6 +1,7 @@
 package ninja.trek.actions;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.scenes.scene2d.ui.UI;
 
 import ninja.trek.Laser;
 import ninja.trek.Ship;
@@ -11,7 +12,7 @@ public class ALaser extends Action{
 
 
 	@Override
-	public void update(float dt, World world, Ship map) {
+	public void update(float dt, World world, Ship map, UI ui) {
 		Laser las = (Laser) parent.e;
 		las.time++;
 		if (las.time > 1) isFinished = true;

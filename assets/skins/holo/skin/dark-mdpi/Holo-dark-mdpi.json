@@ -229,6 +229,10 @@ com.badlogic.gdx.scenes.scene2d.ui.List$ListStyle: {
 com.badlogic.gdx.scenes.scene2d.ui.ProgressBar$ProgressBarStyle: {
 	default-horizontal: {
 		background: text_focused
+		knobAfter: btn_default_normal
+	}
+	power-horizontal: {
+		background: text_focused
 		knob: icon-blitz_pressed
 		knobAfter: btn_default_normal
 	}
@@ -365,6 +369,16 @@ com.badlogic.gdx.scenes.scene2d.ui.TextButton$TextButtonStyle: {
 		checked: btn_toggle_on_normal
 		checkedOver: btn_toggle_on_focused
 		disabled: btn_toggle_off_disabled
+	}
+	nonclickable: {
+		font: default-font
+		fontColor: text-dark
+		downFontColor: text-dark
+		overFontColor: text-dark
+		disabledFontColor: text-dark
+		up: btn_default_normal
+		down: btn_default_pressed
+		disabled: btn_default_disabled
 	}
 }
 com.badlogic.gdx.scenes.scene2d.ui.TextField$TextFieldStyle: {

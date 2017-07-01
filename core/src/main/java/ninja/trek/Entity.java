@@ -4,6 +4,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.GridPoint2;
+import com.badlogic.gdx.scenes.scene2d.ui.UI;
 import com.badlogic.gdx.utils.IntArray;
 import com.badlogic.gdx.utils.Pools;
 import com.badlogic.gdx.utils.Pool.Poolable;
@@ -19,10 +20,13 @@ public class Entity implements Poolable {
 	private transient EntityAI ai;
 	public transient Ship ship;
 	public int[] buttonOrder = new int[EntityAI.names.length];
+	public boolean[] disabledButton = new boolean[EntityAI.names.length];
+
 	public int[] fixOrder = new int[FIX_ACTIONS_LENGTH];//block ids
-	public static final int FIX_ACTIONS_LENGTH = 5;
+	public static final int FIX_ACTIONS_LENGTH = 7;
 	public transient GridPoint2 target = new GridPoint2();
 	public int delayAccumulator;
+	public boolean isHostile = false;;
 	public Entity(){
 		reset();
 	}
@@ -32,8 +36,8 @@ public class Entity implements Poolable {
 		this.y = y;
 		return this;
 	}
-	public void update(World world){
-		ai.update(world, ship);
+	public void update(World world, UI ui){
+		ai.update(world, ship, ui);
 	};
 	
 	public Entity setAI(EntityAI ai){
@@ -103,8 +107,10 @@ public class Entity implements Poolable {
 					fixOrder[prog++] = Ship.SHIELD;
 					break;
 				case EntityAI.OXYGEN:fixOrder[prog++] = Ship.OXYGEN;break;
-				case EntityAI.POWER:fixOrder[prog++] = Ship.POWER;break;
+				case EntityAI.DRONE:fixOrder[prog++] = Ship.DRONE;break;
 				case EntityAI.WEAPON:fixOrder[prog++] = Ship.WEAPON;break;
+				case EntityAI.TELEPORTER:fixOrder[prog++] = Ship.TELEPORTER;break;
+				case EntityAI.SCIENCE:fixOrder[prog++] = Ship.SCIENCE;break;
 			}
 		}
 	}
@@ -117,16 +123,18 @@ public class Entity implements Poolable {
 		return this;
 	}
 
-	private void setDefaultButtonOrder() {
+	protected void setDefaultButtonOrder() {
 		buttonOrder[0] = EntityAI.FIRE;
 		buttonOrder[1] = EntityAI.FIX;
 		buttonOrder[2] = EntityAI.SHOOT;
 		buttonOrder[3] = EntityAI.WEAPON;
 		buttonOrder[4] = EntityAI.SHIELDS;
-		buttonOrder[5] = EntityAI.POWER;
+		buttonOrder[5] = EntityAI.DRONE;
 		buttonOrder[6] = EntityAI.ENGINE;
-		buttonOrder[7] = EntityAI.OXYGEN;
-		buttonOrder[8] = EntityAI.WANDER;
+		buttonOrder[7] = EntityAI.SCIENCE;
+		buttonOrder[8] = EntityAI.OXYGEN;
+		buttonOrder[9] = EntityAI.TELEPORTER;
+		buttonOrder[10] = EntityAI.WANDER;
 		updateFixOrder();
 		
 	}

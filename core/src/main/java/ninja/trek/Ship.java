@@ -2,6 +2,7 @@ package ninja.trek;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
+import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
@@ -31,6 +32,8 @@ import com.badlogic.gdx.utils.ScreenUtils;
 
 import ninja.trek.ui.ItemDisplay;
 import ninja.trek.ui.ItemDisplay.ItemButton;
+import ninja.trek.ui.UIActionButton;
+import ninja.trek.ui.UISystemButton;
 
 public class Ship {
 	private static final String TAG = "pixel canvas";
@@ -47,8 +50,8 @@ public class Ship {
 	public enum Alignment {CENTRE, TOP_RIGHT};
 	public Alignment alignment = Alignment.CENTRE;
 	public int[] systemButtonOrder = new int[systemNames.length];
-	public int[] maxDepletionBySystem = {64, 64, 64, 64, 64, 64, 64, 64, 64};
-	public float[] maxDamgeBySystem =   {15, 15, 15, 15, 15, 15, 15, 15, 15};;
+	public int[] maxDepletionBySystem = {63, 63, 63, 63, 63, 63, 63, 63, 63, 63, 63};
+	public float[] maxDamgeBySystem =   {15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15};;
 	Array<GridPoint2> queue = new Array<GridPoint2>();
 	public boolean placeWeapon = false;
 	public boolean deleteWeapon;
@@ -56,7 +59,7 @@ public class Ship {
 	private int cacheProgress;
 	private Array<GridPoint2> chunksInRandomOrder = new Array<GridPoint2>();
 	public int tick;
-	public static String[] systemNames = {"Vac", "Engine", "Weapon", "Shield", "Wall", "Floor", "Oxygen", "Power"};
+	public static String[] systemNames = {"Vac", "Engine", "Weapon", "Shield", "Wall", "Floor", "Oxygen", "Drone", "Teleporter", "Science"};
 	public static final int VACCUUM = 0; 
 	public static final int ENGINE = 1;
 	public static final int WEAPON = 2;
@@ -64,8 +67,10 @@ public class Ship {
 	public static final int WALL = 4;
 	public static final int FLOOR = 5;
 	public static final int OXYGEN = 6;
-	public static final int POWER = 7;
-	protected int[] damageThreshold = {1, 1, 1, 1, 1, 1, 1, 1};
+	public static final int DRONE = 7;
+	public static final int TELEPORTER = 8;
+	public static final int SCIENCE = 9;
+	protected int[] damageThreshold = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
 	public final int chunkSize;
 	public int mapWidth;
 	public int mapHeight;
@@ -108,7 +113,8 @@ public class Ship {
 	public IntArray inventory = new IntArray(true, 8);
 	private IntPixelMap systemRooms;
 	private IntArray[] roomsBySystem;
-	
+	public boolean[] disabledButton = new boolean[systemNames.length];
+	public boolean hullFront;
 	public Ship(IntPixelMap map, Sprite pixelSprite, FontManager fonts, ShaderProgram shader){
 		this(map, 10, pixelSprite, fonts, shader);
 	}
@@ -119,6 +125,9 @@ public class Ship {
 		this.chunkSize = map.chunkSize;
 		this.mapWidth = map.width;
 		this.mapHeight = map.height;
+		shieldRadius = Math.max(mapWidth/2,  mapHeight/2);
+		shieldRadius *= 1.5f;
+		shieldRadius2 = shieldRadius * shieldRadius;
 		this.cacheIterations = cacheIterations;
 		chunksX = mapWidth / chunkSize + (mapWidth % chunkSize == 0?0:1);
 		chunksY = mapHeight / chunkSize + (mapHeight % chunkSize == 0?0:1);
@@ -280,6 +289,7 @@ public class Ship {
 	
 	public void draw(SpriteBatch batch, OrthographicCamera wcamera, World world){
 		//batch.getProjectionMatrix().set(camera.combined);
+		stateTime += Gdx.graphics.getDeltaTime();
 		if (alignment == Alignment.CENTRE){
 			Gdx.gl.glEnable(GL20.GL_SCISSOR_TEST);
 			v.set(-GAP, 0, 0);
@@ -291,6 +301,8 @@ public class Ship {
 		}
 		updateCamera(wcamera, world);
 		batch.setProjectionMatrix(camera.combined);
+		if (!hullFront && showHull)
+			hull.draw(batch, wcamera, world, this);
 		batch.setShader(shader);
 		//batch.setShader(null);
 		drawn.clear();
@@ -320,11 +332,13 @@ public class Ship {
 			nextFreeIndex = toFree.nextSetBit(nextFreeIndex+1);
 		} 
 		
+		if (hullFront && showHull)
+			hull.draw(batch, wcamera, world, this);
 		if (alignment == Alignment.CENTRE){
 			Gdx.gl.glDisable(GL20.GL_SCISSOR_TEST);
 		}
-		
-		hull.draw(batch, wcamera, world, this);
+		//Gdx.gl.glEnable(GL20.GL_BLEND);
+		//Gdx.gl.glDisable(GL20.GL_BLEND);
 	}
 
 	private void drawChunk(int x, int y, SpriteBatch batch, boolean wire, boolean fill) {		
@@ -351,6 +365,15 @@ public class Ship {
 		//Gdx.app.log(TAG, "draw entities " + entities.size + "  "  + camera.position);
 		batch.setProjectionMatrix(camera.combined);//.translate(offset.x, offset.y, 0);
 		batch.setShader(null);
+		if (alignment == Alignment.CENTRE){
+			Gdx.gl.glEnable(GL20.GL_SCISSOR_TEST);
+			v.set(-GAP, 0, 0);
+			Ship otherShip = world.getEnemyShip();
+			otherShip.camera.project(v);
+		
+			int width = (int) v.x;
+			Gdx.gl.glScissor(0, 0, width, Gdx.graphics.getHeight());
+		}
 		
 		for (Entity e : entities){
 			fonts.draw(e, batch, camera);
@@ -364,10 +387,13 @@ public class Ship {
 		}
 		batch.disableBlending();
 		//batch.end();
+		if (alignment == Alignment.CENTRE){
+			Gdx.gl.glDisable(GL20.GL_SCISSOR_TEST);
+		}
 	}
 	private Entity selectedEntity;
 
-	public void drawLines(ShapeRenderer shape, UI ui, boolean isSettingTarget){
+	public void drawLines(ShapeRenderer shape, UI ui, boolean isSettingTarget, OrthographicCamera wcamera){
 		shape.setProjectionMatrix(camera.combined);
 		shape.setColor(.31f, .31f, .31f, 1f);
 		shape.begin(ShapeType.Line);
@@ -377,6 +403,7 @@ public class Ship {
 			shape.line(0, mapHeight, mapWidth, mapHeight);
 			shape.line(mapWidth, 0, mapWidth, mapHeight);
 		}
+		
 		v.set(Gdx.input.getX(), Gdx.input.getY(), 0);
 		camera.unproject(v);
 		v.x = (int)v.x;
@@ -440,24 +467,103 @@ public class Ship {
 		
 		if (alignment == Alignment.TOP_RIGHT){
 			//v.set(0, 0, 0);
-			//v2.set(mapWidth, mapHeight, 0);
+			//v2.set(mapWidth, mapHeight, 0);\
 			if (isSettingTarget) 
 				shape.line(-GAP-2,-10000,-GAP-2, 1000);
 			shape.line(-GAP,-10000,-GAP, 1000);
 			
 			//shape.line(0,0,0, 1000);
 		}
+		
+		
+		
 		if (selectedEntity != null){
 			Entity e = selectedEntity;
 			float w = 20 * camera.zoom, h = w;
 			shape.rect(e.x-w , e.y-h , w*2, h*2);
 			//Gdx.app.log(TAG, "SELECTED");
 		}
+		shape.end();
+		Gdx.gl.glDisable(GL20.GL_BLEND);
+		Gdx.gl.glLineWidth(10f);
+		shape.begin(ShapeType.Line);
+		shape.setColor(CustomColors.SHIELD);
+		shape.setColor(0, 0, .6f, .4f);
+		ShipEntity ship = getShipEntity();
+		if (ship != null){
+			int x = mapWidth/2, y = mapHeight/2, size = (int) shieldRadius, tot = 8;
+			float rotateSpeed = 40f;
+			q.set(size, 0);
+			q.rotate(stateTime * rotateSpeed);
+			for (int i = 0; i < tot; i++){
+				q.rotate(360/tot);
+				r.set(q);
+				r.rotate(360/tot);
+				shape.line(q.x + x, q.y + y, r.x + x, r.y + y);
+			}
+			size += 15;
+			q.set(size, 0);
+			q.rotate(-stateTime * rotateSpeed);
+			for (int i = 0; i < tot; i++){
+				q.rotate(360/tot);
+				r.set(q);
+				r.rotate(360/tot);
+				shape.line(q.x + x, q.y + y, r.x + x, r.y + y);
+			}
+			size += 15;
+			q.set(size, 0);
+			q.rotate(stateTime * rotateSpeed + 180f/tot);
+			for (int i = 0; i < tot; i++){
+				q.rotate(360/tot);
+				r.set(q);
+				r.rotate(360/tot);
+				shape.line(q.x + x, q.y + y, r.x + x, r.y + y);
+			}
+			size += 15;
+			q.set(size, 0);
+			q.rotate(-stateTime * rotateSpeed + 180f/tot);
+			for (int i = 0; i < tot; i++){
+				q.rotate(360/tot);
+				r.set(q);
+				r.rotate(360/tot);
+				shape.line(q.x + x, q.y + y, r.x + x, r.y + y);
+			}
+		}
+
+		shape.end();
+		Gdx.gl.glDisable(GL20.GL_BLEND);
+		Gdx.gl.glLineWidth(1f);
+		shape.setProjectionMatrix(wcamera.combined);
+		shape.setColor(1f, 1f, 1f, 1f);
+		shape.begin(ShapeType.Line);
+		if (alignment == Alignment.CENTRE){
+			UISystemButton button = ui.shipSystemottomButtons[lastPoweredSystem];
+			vec2.set(0, button.getY());
+			button.localToStageCoordinates(vec2);
+			float x0 = vec2.x;
+			float y0 = wcamera.viewportHeight - button.getHeight() - 1;
+			float x1 = x0 + button.getWidth();
+			float y1 = y0;
+			shape.line(x0,  y0, x1, y1);
+		}
+		Entity ent = ui.getEntity();
+		if (ent != null){
+			UIActionButton button = ui.entityActionButtons[ent.actionIndexForPath];
+			vec2.set(0, button.getY());
+			button.localToStageCoordinates(vec2);
+			float x0 = vec2.x;
+			float y0 = button.getHeight() + 1;
+			float x1 = x0 + button.getWidth();
+			float y1 = y0;
+			shape.line(x0,  y0, x1, y1);
+		}
+		
 		
 		
 		shape.end();
+		shape.setProjectionMatrix(camera.combined);
 	}
-	
+	//Vector2 vec2 = new Vector2();
 	public void drawTargettedLines(ShapeRenderer shape, UI ui, Ship playerShip) {
 		shape.begin(ShapeType.Line);
 		for (Entity e : playerShip.entities){
@@ -599,16 +705,18 @@ public class Ship {
 		}
 	}
 	
-	public void updateEntities(World world) {
+	public void updateEntities(World world, UI ui) {
 		tick++;
-		for (Entity e : entities){
-			e.update(world);
+		for (int i = entities.size - 1; i >= 0; i--){
+			entities.get(i).update(world, ui);
 		}
 	}
 
 	public void removeEntity(Entity entity) {
 		Pools.free(entities.removeValue(entity, true));
-		
+	}
+	public void removeEntityNoPool(Entity entity) {
+		entities.removeValue(entity, true);
 	}
 
 	public void addEntity(Entity e) {
@@ -675,15 +783,17 @@ public class Ship {
 		
 		PixmapIO.writePNG(file, pixmap);
 	}
+	
 	public static class EntityArray extends Array<Entity>{
 		
 	}
 
-	public void load(IntPixelMap map2, EntityArray entities2) {
+	public void load(IntPixelMap map2, EntityArray entities2, Texture hull2) {
 		for (Entity e : entities){
 			Pools.free(e);
 		}
 		entities.clear();
+		Pools.free(entities);
 		entities = entities2;
 		map = map2;
 		if (mapWidth != map.width || mapHeight != map.height){
@@ -691,9 +801,16 @@ public class Ship {
 			wire = new IntPixelMap(map);
 			mapWidth = map.width;
 			mapHeight = map.height;
+			shieldRadius = Math.max(mapWidth/2,  mapHeight/2);
+			shieldRadius *= 1.5f;
+			shieldRadius2 = shieldRadius * shieldRadius;
 			chunksX = mapWidth / chunkSize + (mapWidth % chunkSize == 0?0:1);
 			chunksY = mapHeight / chunkSize + (mapHeight % chunkSize == 0?0:1);
 			Gdx.app.log(TAG, "NEW HELPER CHUNkS");
+		}
+		hull.dispose();
+		if (hull2 != null){
+			hull.setTexture(hull2);			
 		}
 		
 		System.gc();
@@ -702,7 +819,6 @@ public class Ship {
 			else {
 				e.ship = this;
 				e.setDefaultAI();
-				
 			}
 		}
 		
@@ -768,9 +884,13 @@ public class Ship {
 			for (int y = 1; y < mapHeight - 1; y++){
 				int block = map.get(x, y);
 				int id = (block & Ship.BLOCK_ID_MASK);
-				GridPoint2 p = Pools.obtain(GridPoint2.class);
-				p.set(x, y);
-				systemBlocks[id].add(p);
+				if (id != VACCUUM && id != FLOOR && id != WALL){
+					
+					GridPoint2 p = Pools.obtain(GridPoint2.class);
+					p.set(x, y);
+					systemBlocks[id].add(p);
+					
+				}
 			}
 		}
 		for (int i = 0; i < Ship.systemNames.length; i++){
@@ -818,12 +938,21 @@ public class Ship {
 		
 	}
 
-	public void selectClosestEntity(int x, int y, UI ui) {
+	public void selectClosestEntity(int x, int y, UI ui, Ship shipB, int x2, int y2) {
 		Entity w = null;
 		float dst = 100000000;
 		vec2.set(x, y);
 		for (Entity e : entities) {
-			
+			if (e.isHostile) continue;
+			float d = vec2.dst2(e.x, e.y);
+			if (d < dst){
+				dst = d;
+				w = e;
+			}
+		}
+		vec2.set(x2, y2);
+		for (Entity e : shipB.entities) {
+			if (!e.isHostile) continue;
 			float d = vec2.dst2(e.x, e.y);
 			if (d < dst){
 				dst = d;
@@ -861,15 +990,17 @@ public class Ship {
 		for (Entity e : entities) {
 			if (e instanceof Weapon){
 				Weapon w = (Weapon) e;
+				//Gdx.app.log(TAG, "look w " + w.index);
 				if (w.index == index) return w;
 			}
 		}
+		//Gdx.app.log(TAG, "get w " + index + "  " + inventory.size);
 		return null;
 	}
 
 	public void equipWeapon(int index, ItemButton item) {
 		unequipWeapon(item.index);
-		Weapon w = getWeapon(item.index);
+		Weapon w = getWeapon(index);
 		w.equip(item);
 		
 	}
@@ -901,6 +1032,16 @@ public class Ship {
 			}
 			deployedLasers[w.index].time = 0;
 			break;
+		case missile:
+			Missile miss = Pools.obtain(Missile.class);
+			miss.x = w.x;
+			miss.y = w.y;
+			miss.position.set(w.x, w.y);;
+			miss.target.set(target.x, target.y);
+			miss.setDefaultAI();
+			miss.weeaponItemID = w.equippedItemID;
+			addEntity(miss);
+			break;
 		}
 	}
 
@@ -909,6 +1050,10 @@ public class Ship {
 		deployedLasers[index] = null;
 	}
 	private Bits reserved = new Bits();
+	private int lastPoweredSystem;
+	public float stateTime;
+	public float shieldRadius2, shieldRadius;
+	public boolean showHull;
 	public void unReserve(int x, int y) {
 		//Gdx.app.log(TAG, "unresrv " + x + "," + y);
 		//if (!reserved.get(x + y * mapWidth)) Gdx.app.log(TAG, "dfka");
@@ -946,4 +1091,27 @@ public class Ship {
 		
 		return null;
 	}
+
+	public void setSystemMarker(int maxSystem) {
+		lastPoweredSystem = maxSystem;
+		
+	}
+
+	public void dispose() {
+		hull.dispose();
+		
+	}
+
+	public int getReservedCount() {
+		int ind = reserved.nextSetBit(0), count =0;;
+		while (ind != -1){
+			ind = reserved.nextSetBit(ind+1);
+			count++;
+		}
+		return count;
+	}
+
+	
+
+	
 }

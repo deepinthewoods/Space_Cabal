@@ -2,6 +2,7 @@ package ninja.trek.action;
 
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.scenes.scene2d.ui.UI;
 import com.badlogic.gdx.utils.BinaryHeap;
 import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.badlogic.gdx.utils.Pool.Poolable;
@@ -24,7 +25,7 @@ public class ActionList extends EntityAI implements Poolable{//, KryoSerializabl
 		actions = new DoublyLinkedList();;
 	}
 	
-	public void update(float dt, World world, Ship map){
+	public void update(float dt, World world, Ship map, UI ui){
 		//Gdx.app.log(TAG, "updating");
 		currentTime += dt;
 		lanes = Action.LANE_DELAY;
@@ -42,7 +43,7 @@ public class ActionList extends EntityAI implements Poolable{//, KryoSerializabl
 				action.first = false;
 				action.onStart(world, map);
 			}
-			action.update(dt, world, map);
+			action.update(dt, world, map, ui);
 			//Gdx.app.log(TAG, "updated");
 			if (action.isBlocking)
 				lanes |= action.lanes;
@@ -232,8 +233,8 @@ public class ActionList extends EntityAI implements Poolable{//, KryoSerializabl
 	}*/
 
 	@Override
-	public void update(World world, Ship map) {
-		update(1, world, map);
+	public void update(World world, Ship map, UI ui) {
+		update(1, world, map, ui);
 	}
 	@Override
 	public void setParent(Entity e) {

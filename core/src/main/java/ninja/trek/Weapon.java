@@ -12,7 +12,7 @@ public class Weapon extends Entity {
 	public int index;
 	public GridPoint2 target = new GridPoint2();
 	public boolean hasTarget = false;
-	public int equippedItemIndex;
+	public int equippedItemIndex = -1;
 	public int equippedItemID;
 	public int totalCharge;
 	public int fireDelay;
@@ -45,7 +45,12 @@ public class Weapon extends Entity {
 		equippedItemID = -1;//item.itemID;
 		
 	}
-
+@Override
+public void reset() {
+	equippedItemID = -1;
+	equippedItemIndex = -1;
+	super.reset();
+}
 	
 	 
 }

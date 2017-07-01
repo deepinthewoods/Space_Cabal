@@ -2,6 +2,7 @@ package ninja.trek.actions;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.GridPoint2;
+import com.badlogic.gdx.scenes.scene2d.ui.UI;
 
 import ninja.trek.Ship;
 import ninja.trek.World;
@@ -17,9 +18,9 @@ public class AFightFire extends Action {
 	}
 
 	@Override
-	public void update(float dt, World world, Ship map) {
+	public void update(float dt, World world, Ship map, UI ui) {
 		map.map.fightFire(target.x, target.y);
-		//Gdx.app.log("fix action", "FIX " + target);
+		Gdx.app.log("fix action", "FIRE " + target);
 		isFinished = true;
 	}
 

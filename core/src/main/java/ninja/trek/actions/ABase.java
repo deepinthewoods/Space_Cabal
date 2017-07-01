@@ -2,6 +2,7 @@ package ninja.trek.actions;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.scenes.scene2d.ui.UI;
 import com.badlogic.gdx.utils.Pools;
 
 import ninja.trek.Ship;
@@ -16,7 +17,7 @@ public class ABase extends Action {
 		//isBlocking = true;
 	}
 	@Override
-	public void update(float dt, World world, Ship map) {
+	public void update(float dt, World world, Ship map, UI ui) {
 		//Gdx.app.log(TAG, "update " + parent.e);
 		AWaitForPath wait = Pools.obtain(AWaitForPath.class);
 		int tx = MathUtils.random(map.mapWidth-1);

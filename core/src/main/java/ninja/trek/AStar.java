@@ -132,8 +132,8 @@ public class AStar {
 						found = true;
 				}
 				break;
-			case EntityAI.POWER:
-				if ((block & Ship.BLOCK_ID_MASK) == Ship.POWER){
+			case EntityAI.DRONE:
+				if ((block & Ship.BLOCK_ID_MASK) == Ship.DRONE){
 					int currentBoost = (block & Ship.BLOCK_BOOST_MASK) >> Ship.BLOCK_BOOST_BITS;
 					int currentFire = (block & Ship.BLOCK_FIRE_MASK) >> Ship.BLOCK_FIRE_BITS;
 					int currentDam = (block & Ship.BLOCK_DAMAGE_MASK) >> Ship.BLOCK_DAMAGE_BITS;

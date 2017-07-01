@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.UI;
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle;
 
 import ninja.trek.CustomColors;
 import ninja.trek.Ship;
@@ -21,10 +22,12 @@ public class UISystemButton extends UIActionButton {
 		this.ui = ui;
 		this.world = world;
 		//this.getStyle().downFontColor = Color.GRAY;
+		setStyle(skin.get("nonclickable", TextButtonStyle.class));
 		this.getStyle().checkedFontColor = Color.GRAY;
 		
 		this.getStyle().font.getData().markupEnabled = true;
 		this.setText("[" + CustomColors.colorNames[index] + "]" + getText());
+
 	}
 	
 	@Override

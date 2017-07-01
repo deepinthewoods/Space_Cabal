@@ -1,5 +1,6 @@
 package ninja.trek.ui;
 
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.scenes.scene2d.Touchable;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
@@ -13,13 +14,17 @@ public class UIActionButton extends TextButton{
 	public float newXScale = 1;
 	public UIActionButton(int index, Skin skin, Table parent) {
 		//super(""+index, skin);
-		this(index, EntityAI.names[index], skin, parent);
+		this(index, EntityAI.names[index],  skin, parent);
+		setStyle(skin.get("nonclickable", TextButtonStyle.class));
+		
 	}
 
 	public UIActionButton(int index, String string, Skin skin, Table parent) {
 		super(string, skin);
 		this.index = index;
 		this.parentTable = parent;
+		this.getStyle().checkedFontColor = Color.GRAY;
+
 	}
 
 	public void dragStart(float x, float y) {

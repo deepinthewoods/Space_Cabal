@@ -107,7 +107,7 @@ public class IntPixelMap{
 		
 		for (int i = 0; i < needsBoost.length; i++){
 			needsBoost[i] = new IntIntMap();
-			
+			damaged[i] = new IntIntMap();
 		}
 	}
 	public IntPixelMap(IntPixelMap map) {
@@ -117,10 +117,14 @@ public class IntPixelMap{
 		for (int i = 0; i < 1000; i++){
 			//set(MathUtils.random(width-1), MathUtils.random(height)-1, MathUtils.random(4));
 		}
+		for (int i = 0; i < needsBoost.length; i++){
+			needsBoost[i] = new IntIntMap();
+			damaged[i] = new IntIntMap();
+		}
 	}
 	public int get(int x, int y) {
 		//Gdx.app.log(TAG, "get " + x + ", " + y);
-		if (x >= width || y >= height || x < 0 || y < 0) return 0;
+		if (x >= width || y >= height || x < 0 || y < 0) return Ship.VACCUUM;
 		int blockIndex = (x) + (y) * chunksX * chunkSize;
 		
 		
@@ -147,10 +151,11 @@ public class IntPixelMap{
 		currentDam += dam;
 		currentDam = Math.min(Ship.MAX_DAMAGE, currentDam);
 		map[index] = b & (Ship.BLOCK_AIR_MASK | Ship.BLOCK_DATA_MASK | Ship.BLOCK_FIRE_MASK | Ship.BLOCK_ID_MASK) | (currentDam << Ship.BLOCK_DAMAGE_BITS);
-		markDamagedIndex(index, id);
+		markDamagedIndex(x + y * width, id);
 		ShipEntity se = ship.getShipEntity();
 		se.health--;
 		//skip boost
+		needsBoost[id].remove(x + y * width, 0);
 		//Gdx.app.log(TAG, "damage " + (b == map[x + y * chunkSize * chunksX]));
 	}
 	
@@ -174,7 +179,9 @@ public class IntPixelMap{
 		currentDam = 0;
 		currentDam = Math.min(Ship.MAX_DAMAGE, currentDam);
 		map[index] = b & (Ship.BLOCK_AIR_MASK | Ship.BLOCK_DATA_MASK | Ship.BLOCK_FIRE_MASK | Ship.BLOCK_ID_MASK | Ship.BLOCK_BOOST_MASK) | (currentDam << Ship.BLOCK_DAMAGE_BITS);
-		unmarkDamaged(index, id);
+		unmarkDamaged(x + y * width, id);
+		//if ((b & Ship.BLOCK_DATA_MASK) == 0)
+			//needsBoost[id].put(x + y * width, 0);
 		//Gdx.app.log(TAG, "damage " + (b == map[x + y 
 	}
 	public void fightFire(int x, int y) {
@@ -191,7 +198,7 @@ public class IntPixelMap{
 		map[index] = b & (Ship.BLOCK_AIR_MASK | Ship.BLOCK_DATA_MASK | Ship.BLOCK_DAMAGE_MASK | Ship.BLOCK_ID_MASK | Ship.BLOCK_BOOST_MASK) 
 				//| (currentFire << Ship.BLOCK_FIRE_BITS)
 				;
-		onFire.remove(index, 0);
+		onFire.remove(x + y * width, 0);
 		//Gdx.app.log(TAG, "damage " + (b == map[x + y 
 	}
 	public void boost(int x, int y) {
@@ -322,7 +329,30 @@ public class IntPixelMap{
 		}
 	}
 	
+	public void processFloodFillNoVac(IntPixelMap m, int nodeX, int nodeY, int replacement, int stack){
+		if (nodeX >= width || nodeY >= height || nodeX < 0 || nodeY < 0) return;
+		//if (target == replacement) return;
+		int id = (m.get(nodeX, nodeY) & Ship.BLOCK_ID_MASK);
+		//int myid = (get(nodeX, nodeY));
+		if (id == Ship.VACCUUM) return;
+		if (get(nodeX, nodeY) == replacement) return;
+		set(nodeX, nodeY, replacement);
+		addNode(nodeX, nodeY-1);
+		addNode(nodeX, nodeY+1);
+		addNode(nodeX-1, nodeY);
+		addNode(nodeX+1, nodeY);
+	}
 	
+	public void floodFillNonVaccuum(IntPixelMap m, int nodeX, int nodeY, int replacement){
+		GridPoint2 pt = Pools.obtain(GridPoint2.class);
+		pt.set(nodeX, nodeY);
+		floodOpen.add(pt);
+		while (floodOpen.size > 0){
+			GridPoint2 node = floodOpen.pop();
+			processFloodFillNoVac(m, node.x, node.y, replacement, 0);
+			Pools.free(node);
+		}
+	}
 	public Color getColor(int block, int x, int y, Ship ship) {
 		//if (block != 0) Gdx.app.log(TAG, "get color " + block);
 		int damage = ((block & Ship.BLOCK_DAMAGE_MASK) >> Ship.BLOCK_DAMAGE_BITS);
@@ -430,7 +460,7 @@ public class IntPixelMap{
 				int self = (block & (Ship.BLOCK_DAMAGE_MASK | Ship.BLOCK_DATA_MASK | Ship.BLOCK_ID_MASK | Ship.BLOCK_BOOST_MASK));
 				//self |= (2 << Ship.BLOCK_FIRE_BITS);
 				set(x, y, self);
-				onFire.clear(x + y * width);
+				onFire.remove(x + y * width, 0);
 				return;
 			}
 			
@@ -457,7 +487,7 @@ public class IntPixelMap{
 				self &= Ship.BLOCK_AIR_MASK;
 				self |= (block & (Ship.BLOCK_DAMAGE_MASK | Ship.BLOCK_DATA_MASK | Ship.BLOCK_ID_MASK | Ship.BLOCK_BOOST_MASK));
 				set(x, y, self);
-				onFire.clear(x + y * width);
+				onFire.remove(x + y * width, 0);
 	
 				otherAir += diff;
 				otherAir = Math.min(63,  otherAir);
@@ -466,7 +496,7 @@ public class IntPixelMap{
 				otherAir &= Ship.BLOCK_AIR_MASK;
 				otherAir |= (otherb & (Ship.BLOCK_DAMAGE_MASK | Ship.BLOCK_DATA_MASK | Ship.BLOCK_ID_MASK | Ship.BLOCK_BOOST_MASK));
 				set(x+dx, y+dy, otherAir);
-				onFire.clear(x + dx + (y + dy) * width);
+				onFire.remove(x + dx + (y + dy) * width, 0);
 
 			}
 		} else if (selfFire == 1){
@@ -479,7 +509,7 @@ public class IntPixelMap{
 				if (self < FIRE_THRESHOLD){
 					self = (block & (Ship.BLOCK_DAMAGE_MASK | Ship.BLOCK_DATA_MASK | Ship.BLOCK_ID_MASK | Ship.BLOCK_BOOST_MASK));
 					set(x, y, self);
-					onFire.clear(x + y * width);
+					onFire.remove(x + y * width, 0);
 					ship.setDirty(x,  y);
 					//Gdx.app.log(TAG, "reset air");
 					return;
@@ -499,7 +529,7 @@ public class IntPixelMap{
 				//self |= (2 << Ship.BLOCK_FIRE_BITS);
 
 				set(x, y, self);
-				onFire.clear(x + y * width);
+				onFire.remove(x + y * width, 0);
 				ship.setDirty(x,  y);
 				return;
 			}
@@ -510,7 +540,7 @@ public class IntPixelMap{
 				if (self < FIRE_THRESHOLD){
 					self = (block & (Ship.BLOCK_DAMAGE_MASK | Ship.BLOCK_DATA_MASK | Ship.BLOCK_ID_MASK | Ship.BLOCK_BOOST_MASK));
 					set(x, y, self);
-					onFire.clear(x + y * width);
+					onFire.remove(x + y * width, 0);
 					//Gdx.app.log(TAG, "reset air SPREAD");
 					ship.setDirty(x,  y);
 					return;
@@ -547,7 +577,7 @@ public class IntPixelMap{
 				if (self < FIRE_THRESHOLD){
 					self = (block & (Ship.BLOCK_DAMAGE_MASK | Ship.BLOCK_DATA_MASK | Ship.BLOCK_ID_MASK | Ship.BLOCK_BOOST_MASK));
 					set(x, y, self);
-					onFire.clear(x + y * width);
+					onFire.remove(x + y * width, 0);
 					//Gdx.app.log(TAG, "reset air");
 					ship.setDirty(x,  y);
 					return;

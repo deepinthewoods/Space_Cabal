@@ -1,6 +1,7 @@
 package ninja.trek.actions;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.scenes.scene2d.ui.UI;
 
 import ninja.trek.Ship;
 import ninja.trek.World;
@@ -13,7 +14,7 @@ public class AWander extends Action {
 		lanes = LANE_DELAY | LANE_ACTING;
 	}
 	@Override
-	public void update(float dt, World world, Ship map) {
+	public void update(float dt, World world, Ship map, UI ui) {
 		Gdx.app.log(TAG, "update " + parent.e);
 		
 	}

@@ -85,5 +85,9 @@ public class BackgroundRenderer {
 			Gdx.gl.glDisable(GL20.GL_SCISSOR_TEST);
 		}
 	}
+	public void dispose() {
+		// TODO Auto-generated method stub
+		
+	}
 
 }

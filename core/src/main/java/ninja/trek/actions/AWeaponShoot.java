@@ -1,6 +1,7 @@
 package ninja.trek.actions;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.scenes.scene2d.ui.UI;
 
 import ninja.trek.Items;
 import ninja.trek.Ship;
@@ -14,7 +15,7 @@ public class AWeaponShoot extends Action {
 		lanes = Action.WEAPON_LANE_SHOOTING;
 	}
 	@Override
-	public void update(float dt, World world, Ship map) {
+	public void update(float dt, World world, Ship map, UI ui) {
 		Weapon w = (Weapon) parent.e;
 		if (w.equippedItemIndex == -1) return;
 

@@ -327,5 +327,13 @@ public class PlanetRenderer implements RenderableProvider{
 		
 		
 	}
+
+	public void dispose() {
+		mesh.dispose();
+		texture.dispose();
+		pixmap.dispose();
+		this.buffer.dispose();
+		this.modelBatch.dispose();
+	}
  
 }

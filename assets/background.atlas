@@ -1,33 +1,152 @@
 
 background.png
-size: 16,32
+size: 256,32
 format: RGBA8888
 filter: Nearest,Nearest
 repeat: none
 bigstar
   rotate: false
-  xy: 8, 18
+  xy: 2, 4
   size: 5, 5
   orig: 5, 5
   offset: 0, 0
   index: -1
 laserbody
   rotate: false
-  xy: 2, 7
-  size: 4, 16
-  orig: 4, 16
+  xy: 230, 17
+  size: 11, 13
+  orig: 11, 13
   offset: 0, 0
   index: -1
 medstar
   rotate: false
-  xy: 2, 2
+  xy: 205, 10
   size: 3, 3
   orig: 3, 3
   offset: 0, 0
   index: -1
+projectile0
+  rotate: false
+  xy: 179, 15
+  size: 15, 15
+  orig: 15, 15
+  offset: 0, 0
+  index: 0
+projectile0
+  rotate: false
+  xy: 196, 15
+  size: 15, 15
+  orig: 15, 15
+  offset: 0, 0
+  index: 1
+projectile0
+  rotate: false
+  xy: 213, 15
+  size: 15, 15
+  orig: 15, 15
+  offset: 0, 0
+  index: 2
+projectile1
+  rotate: false
+  xy: 2, 11
+  size: 19, 19
+  orig: 19, 19
+  offset: 0, 0
+  index: 0
+projectile1
+  rotate: false
+  xy: 23, 11
+  size: 19, 19
+  orig: 19, 19
+  offset: 0, 0
+  index: 1
+projectile1
+  rotate: false
+  xy: 44, 11
+  size: 19, 19
+  orig: 19, 19
+  offset: 0, 0
+  index: 2
+projectile2
+  rotate: false
+  xy: 65, 11
+  size: 19, 19
+  orig: 19, 19
+  offset: 0, 0
+  index: 0
+projectile2
+  rotate: false
+  xy: 65, 11
+  size: 19, 19
+  orig: 19, 19
+  offset: 0, 0
+  index: 2
+projectile2
+  rotate: false
+  xy: 86, 11
+  size: 19, 19
+  orig: 19, 19
+  offset: 0, 0
+  index: 1
+projectile3
+  rotate: false
+  xy: 243, 19
+  size: 11, 11
+  orig: 11, 11
+  offset: 0, 0
+  index: 0
+projectile3
+  rotate: false
+  xy: 243, 6
+  size: 11, 11
+  orig: 11, 11
+  offset: 0, 0
+  index: 1
+projectile3
+  rotate: false
+  xy: 179, 2
+  size: 11, 11
+  orig: 11, 11
+  offset: 0, 0
+  index: 2
+projectile3
+  rotate: false
+  xy: 192, 2
+  size: 11, 11
+  orig: 11, 11
+  offset: 0, 0
+  index: 3
+projectile4
+  rotate: false
+  xy: 107, 14
+  size: 16, 16
+  orig: 16, 16
+  offset: 0, 0
+  index: 0
+projectile4
+  rotate: false
+  xy: 125, 14
+  size: 16, 16
+  orig: 16, 16
+  offset: 0, 0
+  index: 1
+projectile4
+  rotate: false
+  xy: 143, 14
+  size: 16, 16
+  orig: 16, 16
+  offset: 0, 0
+  index: 2
+projectile4
+  rotate: false
+  xy: 161, 14
+  size: 16, 16
+  orig: 16, 16
+  offset: 0, 0
+  index: 3
 smallstar
   rotate: false
-  xy: 8, 13
+  xy: 9, 6
   size: 3, 3
   orig: 3, 3
   offset: 0, 0

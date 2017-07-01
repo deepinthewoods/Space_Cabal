@@ -1,5 +1,6 @@
 package ninja.trek.action;
 
+import com.badlogic.gdx.scenes.scene2d.ui.UI;
 import com.badlogic.gdx.utils.BinaryHeap;
 import com.badlogic.gdx.utils.Pools;
 import com.badlogic.gdx.utils.Pool.Poolable;
@@ -29,7 +30,7 @@ public abstract class Action extends BinaryHeap.Node implements Poolable{
     }
 
 
-    public abstract void update(float dt, World world, Ship map);
+    public abstract void update(float dt, World world, Ship map, UI ui);
 
     public abstract void onEnd(World world, Ship map);
 

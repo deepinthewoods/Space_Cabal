@@ -1,6 +1,7 @@
 package ninja.trek.actions;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.scenes.scene2d.ui.UI;
 import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.badlogic.gdx.utils.Pools;
 
@@ -17,7 +18,7 @@ public class AFollowPath extends Action {
 		isBlocking = true;
 	}
 	@Override
-	public void update(float dt, World world, Ship map) {
+	public void update(float dt, World world, Ship map, UI ui) {
 		//Gdx.app.log(TAG, "update " + parent.e.path.size + " " + pathProgress);
 		int pathx = 0;//parent.e.path.get(pathProgress<<1);
 		int pathy = 0;//parent.e.path.get((pathProgress<<1)+1);
@@ -68,16 +69,18 @@ public class AFollowPath extends Action {
 			case EntityAI.ENGINE:
 			case EntityAI.SHIELDS:
 			case EntityAI.OXYGEN:
-			case EntityAI.POWER:
+			case EntityAI.DRONE:
 			case EntityAI.WEAPON:
+			case EntityAI.TELEPORTER:
+			case EntityAI.SCIENCE:
 				ABoost aBoost = Pools.obtain(ABoost.class);
 				if (parent.e.path.size == 0){
-					aBoost.target.set(parent.e.x, parent.e.y);
+					parent.e.target.set(parent.e.x, parent.e.y);
 					//parent.e.ship.unReserve(parent.e.x, parent.e.y);
 				}
 				else{ 
 					//Gdx.app.log(TAG, "non0 path " + parent.e.path); 
-					aBoost.target.set(parent.e.path.get(0), parent.e.path.get(1));
+					parent.e.target.set(parent.e.path.get(0), parent.e.path.get(1));
 				}
 				
 				addBeforeMe(aBoost);
@@ -89,7 +92,7 @@ public class AFollowPath extends Action {
 			case EntityAI.WANDER:
 				break;
 			}
-			Pools.free(parent.e.path);
+			//Pools.free(parent.e.path);
 			parent.e.path = null;
 			isFinished = true;
 			//Gdx.app.log(TAG, "stop move" + parent.e.x + ", " + parent.e.y + " for " + EntityAI.names[parent.e.buttonOrder[parent.e.actionIndexForPath]]);
@@ -118,9 +121,11 @@ public class AFollowPath extends Action {
 		switch (parent.e.buttonOrder[actionIndexForPath]){
 		case EntityAI.ENGINE:
 		case EntityAI.OXYGEN:
-		case EntityAI.POWER:
+		case EntityAI.DRONE:
 		case EntityAI.SHIELDS:
 		case EntityAI.WEAPON:
+		case EntityAI.TELEPORTER:
+		case EntityAI.SCIENCE:
 			int currentDep = (block & Ship.BLOCK_DATA_MASK) >> Ship.BLOCK_DATA_BITS;
 			int currentBoost = (block & Ship.BLOCK_BOOST_MASK) >> Ship.BLOCK_BOOST_BITS;
 			if (currentDep == 0 && currentBoost == 0) return true;

@@ -6,6 +6,8 @@ public class WeaponItem extends Item {
 	public WeaponType weaponType = WeaponType.laser;
 	public int cost = 500;
 	public float fireWindDownTime = .5f;
+	public int chargeDrawLimit = 100;
+	public int variantIndex;
 
 	public WeaponItem(String name, String desc) {
 		super(name, desc);

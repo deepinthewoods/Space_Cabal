@@ -44,7 +44,7 @@ public class ItemDisplay extends Table {
 	public boolean showActionButtons = true;
 	public TextButton[] weaponEquipButtons = new TextButton[MAX_WEAPONS];
 	private Comparator<Weapon> weaponComparator;
-	private ButtonGroup itemButtonGroup;
+	private ButtonGroup<ItemButton> itemButtonGroup;
 	private TextButton closeButton;
 	private Actor spacerActor;
 	public ItemDisplay(Skin skin, Window window){
@@ -104,8 +104,8 @@ public class ItemDisplay extends Table {
 				@Override
 				public void clicked(InputEvent event, float x, float y) {
 					but.setChecked(false);
-					Button currentSelectedItem = itemButtonGroup.getChecked();
-					left.equipWeapon(index, (ItemButton) currentSelectedItem );
+					ItemButton currentSelectedItem = itemButtonGroup.getChecked();
+					left.equipWeapon(index, currentSelectedItem );
 					super.clicked(event, x, y);
 				}
 			});

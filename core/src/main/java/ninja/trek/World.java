@@ -4,6 +4,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector3;
@@ -28,15 +29,16 @@ public class World {
 		
 
 	}
-	public void update(SpriteBatch batch, Camera camera, World world){
+	public void update(SpriteBatch batch, Camera camera, World world, UI ui){
 		
 		accum += Gdx.graphics.getDeltaTime();
 		while (accum > timeStep){
 			accum -= timeStep;
 			for (Ship map : maps)
 				map.updateBlocks();
-			for (Ship map : maps)
-				map.updateEntities(world);
+			//for (Ship map : maps)
+			for (int i = 0; i < maps.size; i++)	
+				maps.get(i).updateEntities(world, ui);
 			
 		}
 		
@@ -60,7 +62,7 @@ public class World {
 		batch.end();
 		for (int i = 0; i < maps.size; i++){
 			Ship map = maps.get(i);
-			map.drawLines(shape, ui, targettingIndex != -1);
+			map.drawLines(shape, ui, targettingIndex != -1, camera);
 			if (map.alignment == Alignment.TOP_RIGHT)
 				map.drawTargettedLines(shape, ui, getPlayerShip());
 		}
@@ -105,12 +107,15 @@ public class World {
 	public void startTestBattle() {
 		Json json = Data.jsonPool.obtain();
 		FileHandle f = Gdx.files.external(Main.SHIP_SAVE_LOCATION + "test" + "." + Main.MAP_FILE_EXTENSION);
-
 		IntPixelMap map = json.fromJson(IntPixelMap.class, f.readString());
 		FileHandle entityFile = Gdx.files.external(f.pathWithoutExtension() + "." + Main.ENTITY_FILE_EXTENSION);
+		FileHandle hullFile = Gdx.files.external(f.pathWithoutExtension() + "." + Main.MAP_HULL_EXTENSION);
 		EntityArray entities = json.fromJson(EntityArray.class, entityFile.readString());
 		//EntityArray entities = Pools.obtain(EntityArray.class);
-		maps.get(1).load(map, entities);
+		Texture hull = null;
+		if (hullFile.exists())
+			hull = new Texture(hullFile);
+		maps.get(1).load(map, entities, hull);
 		Data.jsonPool.free(json);
 		
 		//Gdx.app.log(TAG, "IT " + maps.size);
@@ -126,7 +131,7 @@ public class World {
 			}
 			Gdx.app.log(TAG, "size " + i + "  " + maps.get(i).getEntities().size);
 		}
-		for (int i = 0; i < 8; i++){
+		for (int i = 0; i < 1; i++){
 			Entity e = Pools.obtain(Entity.class);
 			e.glyph = letters[i % letters.length];
 			e.pos(maps.get(0).map.spawn);
@@ -134,6 +139,46 @@ public class World {
 			maps.get(0).addEntity(e);
 			
 		}
+		
+	}
+	
+	
+	public void startNewGameMenu() {
+		Json json = Data.jsonPool.obtain();
+		FileHandle f = Gdx.files.external(Main.SHIP_SAVE_LOCATION + "test" + "." + Main.MAP_FILE_EXTENSION);
+		IntPixelMap map = json.fromJson(IntPixelMap.class, f.readString());
+		FileHandle entityFile = Gdx.files.external(f.pathWithoutExtension() + "." + Main.ENTITY_FILE_EXTENSION);
+		FileHandle hullFile = Gdx.files.external(f.pathWithoutExtension() + "." + Main.MAP_HULL_EXTENSION);
+		EntityArray entities = json.fromJson(EntityArray.class, entityFile.readString());
+		//EntityArray entities = Pools.obtain(EntityArray.class);
+		Texture hull = null;
+		if (hullFile.exists())
+			hull = new Texture(hullFile);
+		maps.get(1).load(map, entities, hull);
+		Data.jsonPool.free(json);
+		
+		//Gdx.app.log(TAG, "IT " + maps.size);
+		for (int i = 0; i < maps.size; i++){
+			Ship m = maps.get(i);
+			m.categorizeSystems();
+			
+			
+			if (!m.hasShipEntity()){
+				ShipEntity shipE = Pools.obtain(ShipEntity.class);
+				shipE.setDefaultAI();
+				maps.get(i).addEntity(shipE );
+			}
+			Gdx.app.log(TAG, "size " + i + "  " + maps.get(i).getEntities().size);
+		}
+		for (int i = 0; i < 1; i++){
+			Entity e = Pools.obtain(Entity.class);
+			e.glyph = letters[i % letters.length];
+			e.pos(maps.get(0).map.spawn);
+			e.setDefaultAI();
+			maps.get(0).addEntity(e);
+			
+		}
+		
 	}
 	public Ship getEnemyShip() {
 		return maps.get(1);
@@ -149,4 +194,15 @@ public class World {
 		targettingIndex = -1;
 	}
 	private static String[] letters = {"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"};
+
+	public void switchToEnemyShip(Missile miss) {
+		Ship enemyShip = getEnemy(miss.ship);
+		miss.ship.removeEntityNoPool(miss);
+		enemyShip.addEntity(miss);
+	}
+	public void dispose() {
+		for (int i = 0; i < maps.size; i++)
+			maps.get(i).dispose();
+		
+	}
 }

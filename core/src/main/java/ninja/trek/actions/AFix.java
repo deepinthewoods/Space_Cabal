@@ -2,6 +2,7 @@ package ninja.trek.actions;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.GridPoint2;
+import com.badlogic.gdx.scenes.scene2d.ui.UI;
 
 import ninja.trek.Ship;
 import ninja.trek.World;
@@ -17,7 +18,7 @@ public class AFix extends Action {
 	}
 
 	@Override
-	public void update(float dt, World world, Ship map) {
+	public void update(float dt, World world, Ship map, UI ui) {
 		map.map.fix(target.x, target.y);
 		Gdx.app.log("fix action", "FIX " + target);
 		isFinished = true;
@@ -25,7 +26,7 @@ public class AFix extends Action {
 
 	@Override
 	public void onEnd(World world, Ship map) {
-		// TODO Auto-generated method stub
+		parent.e.ship.unReserve(parent.e.target.x, parent.e.target.y);
 
 	}
 

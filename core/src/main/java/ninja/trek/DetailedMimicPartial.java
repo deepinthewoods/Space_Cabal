@@ -486,8 +486,8 @@ public class DetailedMimicPartial {
         return result;
     }
 
-    Color c = new Color();
-    private boolean isBlackPixel(int i) {
+    static Color c = new Color();
+    public static  boolean isBlackPixel(int i) {
 		c.set(i);
 		if (c.a < .1f) return true;
 		return c.r < .1f && c.g < .1f && c.b < 0.1f ;

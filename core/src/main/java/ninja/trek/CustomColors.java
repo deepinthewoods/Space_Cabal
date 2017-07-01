@@ -15,16 +15,18 @@ Color
 , WALL = new Color(Color.LIGHT_GRAY)
 , PHASER = new Color(Color.CYAN)
 //, TORPEDO = new Color()
-, SHIELD = new Color(Color.CORAL)
+, DRONE = new Color(Color.CORAL)
 , FLOOR = new Color(.25f, .25f, .25f, 1f)
 , VACCUUM = new Color(Color.BLACK)
 , OXYGEN = new Color(Color.LIME)
-, POWER = new Color(0, .35f, 1, 1f)
+, SHIELD = new Color(0, .35f, 1, 1f)
+, TELEPORTER = new Color(1, .35f, 1, 1f)
+, SCIENCE = new Color(.25f, 1, .35f, 1f)
 
 ;
 static HSL hc = new HSL();
 public static Color[] color, lerpToColor;
-public static String[] colorNames = {"vaccuum", "engine", "phaser", "shield", "wall", "floor", "oxygen", "power"};
+public static String[] colorNames = {"vaccuum", "engine", "phaser", "shield", "wall", "floor", "oxygen", "drone", "teleporter", "science"};
 private static float[] colorFloatArray, lerpFloatArray, flashFloatArray;
 public static Color[] mapDrawColors = new Color[128]
 		, mapLerpColors = new Color[16]
@@ -63,7 +65,19 @@ public static void init(){
 	color[Ship.WALL] = WALL;
 	color[Ship.FLOOR] = FLOOR;
 	color[Ship.OXYGEN] = OXYGEN;
-	color[Ship.POWER] = POWER;
+	color[Ship.DRONE] = DRONE;
+	color[Ship.TELEPORTER] = TELEPORTER;
+	color[Ship.SCIENCE] = SCIENCE;
+	for (int i = 0; i < color.length; i++){
+		hc.fromRGB(color[i]);
+		//
+		if (i != Ship.FLOOR && i != Ship.WALL){
+			//hc.s = 1f;
+			//hc.l = .65f;
+		}
+		
+		hc.toRGB(color[i]);
+	}
 	
 	Colors.put("vaccuum", Color.WHITE);
 	Colors.put("engine", color[Ship.ENGINE]);
@@ -73,7 +87,9 @@ public static void init(){
 	//Colors.put("torpedo", lightColor[Ship.TORPEDO]);
 	Colors.put("floor", Color.WHITE);
 	Colors.put("oxygen", color[Ship.OXYGEN]);
-	Colors.put("power", color[Ship.POWER]);
+	Colors.put("drone", color[Ship.DRONE]);
+	Colors.put("teleporter", color[Ship.TELEPORTER]);
+	Colors.put("science", color[Ship.SCIENCE]);
 
 	
 	colorFloatArray = new float[512];
@@ -109,13 +125,14 @@ public static float[] getFloatColorArray() {
 
 public static void updateColors(float dt, ShaderProgram shader){
 	time += dt;
-	int index = (int)((time % 1f) * 6);
-	if (time > 1f){
+	int index = (int)((time % 1f) * 12);
+	if (time > .5f){
 		time = 0f;
 		for (int i = 0; i < lerpToColor.length; i++) lerpToColor[i].set(Color.RED).lerp(Color.YELLOW, MathUtils.random(.2f, .8f));
 	}
-	float alpha = time * 2;
+	float alpha = time * 4;
 	if (alpha > 1f) alpha = 2f - alpha;
+	alpha = alpha * alpha * (3-2*alpha);
 	//Gdx.app.log(TAG, "alpha " + alpha);
 	//if (time % 1f < .5f) alpha = 1f-alpha;
 	
@@ -132,7 +149,10 @@ public static void updateColors(float dt, ShaderProgram shader){
 		float s0 = s1 - VARIANCE * 2;
 		//s0 = 1;
 		//s1 = 1;
-		hc.h = lerp(hc.h - .02f, hc.h + .02f, alpha);
+		//hc.h = lerp(hc.h - .02f, hc.h + .02f, alpha);
+		hc.s = lerp(.75f, 1, alpha);
+		//hc.l = lerp(hc.l, hc.l - .2f, alpha);
+		
 		hc.toRGB(mapLerpColorsBoost[i]);
 		//mapLerpColorsBoost[i].set(color[i]);
 		

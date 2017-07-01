@@ -1,10 +1,17 @@
 package com.badlogic.gdx.scenes.scene2d.ui;
 
+import javax.swing.GroupLayout.Alignment;
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.files.FileHandle;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.PixmapIO;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Actor;
@@ -19,7 +26,6 @@ import com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop;
 import com.badlogic.gdx.scenes.scene2d.utils.DragListener;
 import com.badlogic.gdx.scenes.scene2d.utils.NinePatchDrawable;
 import com.badlogic.gdx.utils.Align;
-import com.badlogic.gdx.utils.Bits;
 import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.Pool;
@@ -29,6 +35,7 @@ import ninja.trek.Data;
 import ninja.trek.Entity;
 import ninja.trek.EntityAI;
 import ninja.trek.IntPixelMap;
+import ninja.trek.Items;
 import ninja.trek.Main;
 import ninja.trek.Ship;
 import ninja.trek.Ship.EntityArray;
@@ -47,8 +54,8 @@ public class UI {
 			, "smallred.png", "smallships.png", "sourcegh.png", "weirdgrey.png", "white.png"};
 	private static final int MAX_WEAPON_BUTTONS = 10;
 	private DragAndDrop dnd;
-	private UIActionButton[] buttons = new UIActionButton[EntityAI.names.length];
-	private UISystemButton[] shipSystemottomButtons = new UISystemButton[Ship.systemNames.length];
+	public UIActionButton[] entityActionButtons = new UIActionButton[EntityAI.names.length];
+	public UISystemButton[] shipSystemottomButtons = new UISystemButton[Ship.systemNames.length];
 	private Table entityActionTable;
 	private TextButton dragLabel;
 	Entity currentEntity;
@@ -56,7 +63,6 @@ public class UI {
 	private Table leftTable;
 	private Table rightTable;
 	private Table shipSystemTable;
-	public ButtonGroup bottomGroup;
 	public CheckBox xMirrorBtn;
 	private Table editTable;
 	public CheckBox destroyButton;
@@ -71,7 +77,7 @@ public class UI {
 	private TextButton loadCancelInWindow;
 	public TextButton fireBtn;
 	private CheckBox editButton;
-	private ProgressBar infoLabel;
+	public ProgressBar infoLabel;
 	private TextField fileNameInput;
 	private Window overConfirmSaveWindow;
 	private Label errorLabel;
@@ -79,12 +85,13 @@ public class UI {
 	private TextButton saveWButton;
 	public Table table;
 	private Actor topSpacerActor;
-	private WeaponButton[] weaponButtons;
+	public WeaponButton[] weaponButtons;
 	private Table weaponTable;
 	private Window invWindow;
 	private ItemDisplay invItemDisplay;
 	private Skin skin;
-	float fontScale = 2f;
+	float fontScale = 1.5f;
+	private Window middleTable;
 	public UI(Stage stage, World world) {
 		String uiName = "holo"
 				, fontName = "kenpixel_high"
@@ -117,7 +124,7 @@ public class UI {
 		shipSystemTable = new Table();
 		
 		
-		DragListener topDragL = new DragListenerSwap(this, entityActionTable, buttons){
+		DragListener topDragL = new DragListenerSwap(this, entityActionTable, entityActionButtons){
 			@Override
 			public void swap(int a, int b) {
 				ui.currentEntity.swap(a, b);
@@ -128,9 +135,19 @@ public class UI {
 		entityActionTable.setTouchable(Touchable.enabled);
 		for (int i = 0; i < EntityAI.names.length; i++){
 			UIActionButton btn = new UIActionButton(i, skin, entityActionTable);
-			buttons[i] = btn;
+			entityActionButtons[i] = btn;
 			entityActionTable.add(btn).left();
+			btn.addListener(new ClickListener(){
+				@Override
+				public void clicked(InputEvent event, float x, float y) {
+					UIActionButton uiBtn = (UIActionButton) event.getListenerActor();
+					entity.disabledButton[uiBtn.index] = uiBtn.isChecked();
+					//Gdx.app.log(TAG, "entity disable " + uiBtn.index + entity.disabledButton[uiBtn.index]);
+					super.clicked(event, x, y);
+				}
+			});
 			btn.setTouchable(Touchable.enabled);
+			Gdx.app.log(TAG, "butt " + i);
 		}
 		//actionTable.setBackground(skin.getDrawable("btn_default_pressed"));
 		
@@ -144,17 +161,25 @@ public class UI {
 		bottomDragL.setTapSquareSize(0f);
 		shipSystemTable.addListener(bottomDragL);
 		shipSystemTable.setTouchable(Touchable.enabled);
-		bottomGroup = new ButtonGroup();
 		
 		for (int i = 0; i < Ship.systemNames.length; i++){
 			UISystemButton btn = new UISystemButton(i, skin, shipSystemTable, this, world);
 			shipSystemottomButtons[i] = btn;
 			shipSystemTable.add(btn).left();
-			bottomGroup.add(btn);
+			btn.addListener(new ClickListener(){
+				@Override
+				public void clicked(InputEvent event, float x, float y) {
+					UISystemButton uiBtn = (UISystemButton) event.getListenerActor();
+					ship.disabledButton[uiBtn.index] = uiBtn.isChecked();
+					lastPressedShipSystemButton = uiBtn;
+					super.clicked(event, x, y);
+				}
+			});
+			//bottomGroup.add(btn);
 			btn.changeFont();
 			btn.setTouchable(Touchable.enabled);
 		}
-		
+		lastPressedShipSystemButton = shipSystemottomButtons[0];
 		/*Actor viewFillButton = new CheckBox("show fill", skin);
 		viewFillButton.addListener(new ClickListener(){
 			@Override
@@ -218,8 +243,8 @@ public class UI {
 			}
 		};
 		//leftTable.row();
-		/*
-		 infoLabel =new Label("", skin){
+		
+		 Label infoTextLabel = new Label("", skin){
 			Vector3 v = new Vector3();
 			@Override
 			public void draw(Batch batch, float parentAlpha) {
@@ -233,24 +258,19 @@ public class UI {
 				int depl = (block & Ship.BLOCK_DATA_MASK) >> Ship.BLOCK_DATA_BITS;
 				int fireI = (block & Ship.BLOCK_FIRE_MASK) >> Ship.BLOCK_FIRE_BITS;
 				boolean fire = fireI > 0;
-				int fires = 0;
-				bits.clear();
-				bits.or(ship.map.onFire);
-				int fromIndex = 0;
-				while (bits.nextSetBit(fromIndex) != -1){
-					fromIndex = bits.nextSetBit(fromIndex+1);
-					fires++;
-					
-				}
+				int fires = ship.map.onFire.size;
 				
-				setText("air:"+air + " depl " + depl + " f" + fire + "\ndam:" + dam  + " fps" + Gdx.graphics.getFramesPerSecond()
-				+ "\nfires:" + fires);
+				
+				//setText("fires:" + fires);
+				//int boost = ship.getReservedCount();
+				int boost = ship.map.needsBoost[Ship.WEAPON].size;
+				setText("needboost:" + boost);
 				
 				super.draw(batch, parentAlpha);
 			}
 		};
 		  
-		 */
+		 
 		
 		
 		
@@ -335,19 +355,7 @@ public class UI {
 			hullWindow.add(b).colspan(2);
 			hullWindow.row();
 		}
-		TextButton hullCalcButton = new TextButton("Generate", skin);
-		hullCalcButton.addListener(new ClickListener(){
-			@Override
-			public void clicked(InputEvent event, float x, float y) {
-				hullCalcButton.setChecked(false);
-				Ship ship = world.getPlayerShip();
-				CharSequence name = ((TextButton)hullGroup.getChecked()).getText();
-				int reps = (int) hullRepsSlider.getValue();
-				int radius = (int) hullRadiusSlider.getValue();
-				ship.hull.calculate(ship, name.toString(), reps, radius);
-				super.clicked(event, x, y);
-			}
-		});
+		
 		
 		TextButton hullCloseButton = new TextButton("Close", skin);
 		hullCloseButton.addListener(new ClickListener(){
@@ -378,9 +386,95 @@ public class UI {
 				hullRadiusLabel.setText("radius(" + (int)hullRadiusSlider.getValue() + ")");
 			}
 		});
+		
+		
+		
+		
+		Slider hullXRadiusSlider = new Slider(1, 32, 1, false, skin);
+		Label hullXRadiusSliderLabel = new Label("expand X(1)", skin);
+		Slider hullPlusRadiusSlider = new Slider(1, 32, 1, false, skin);
+		Label hullPlusRadiusSliderLabel = new Label("expand +(1)", skin);
+		hullXRadiusSlider.addListener(new ChangeListener(){
+			@Override
+			public void changed(ChangeEvent event, Actor actor) {
+				hullXRadiusSliderLabel.setText("expand X(" + (int)hullXRadiusSlider.getValue() + ")");
+			}
+		});
+		
+		hullPlusRadiusSlider.addListener(new ChangeListener(){
+			@Override
+			public void changed(ChangeEvent event, Actor actor) {
+				hullPlusRadiusSliderLabel.setText("expand +(" + (int)hullPlusRadiusSlider.getValue() + ")");
+			}
+		});
+		
+		Slider hullFadeLengthSlider = new Slider(0, 32, 1, false, skin);
+		Label hullFadeLengthSliderLabel = new Label("fade (1)", skin);
+		hullFadeLengthSlider.addListener(new ChangeListener(){
+			@Override
+			public void changed(ChangeEvent event, Actor actor) {
+				hullFadeLengthSliderLabel.setText("fade (" + (int)hullFadeLengthSlider.getValue() + ")");
+			}
+		});
+		
+		hullWindow.row();
+		hullWindow.add(hullXRadiusSliderLabel);
+		hullWindow.add(hullXRadiusSlider);
+		hullXRadiusSlider.setValue(10);
+		hullWindow.row();
+		hullWindow.add(hullPlusRadiusSliderLabel);
+		hullWindow.add(hullPlusRadiusSlider);
+		hullPlusRadiusSlider.setValue(12);
+		hullWindow.row();
+		hullWindow.add(hullFadeLengthSliderLabel);
+		hullWindow.add(hullFadeLengthSlider);
+		
+		
+		
+		
+		
+		
+		TextButton hullCalcButton = new TextButton("Generate", skin);
+		hullCalcButton.addListener(new ClickListener(){
+			@Override
+			public void clicked(InputEvent event, float x, float y) {
+				hullCalcButton.setChecked(false);
+				Ship ship = world.getPlayerShip();
+				CharSequence name = ((TextButton)hullGroup.getChecked()).getText();
+				int reps = (int) hullRepsSlider.getValue();
+				int radius = (int) hullRadiusSlider.getValue();
+				int expandX = (int) hullXRadiusSlider.getValue();
+				int expandPlus = (int) hullPlusRadiusSlider.getValue();
+				int fadeSize = (int) hullFadeLengthSlider.getValue();
+				
+				ship.hull.calculate(ship, name.toString(), reps, radius, expandX, expandPlus, fadeSize);
+				super.clicked(event, x, y);
+			}
+		});
+		hullWindow.row();
+		TextButton deleteContigButton = new TextButton("delete non-contiguous", skin);
+		deleteContigButton.addListener(new ClickListener(){
+			@Override
+			public void clicked(InputEvent event, float x, float y) {
+				ship.fill.floodFillNonVaccuum(ship.map, ship.map.spawn.x, ship.map.spawn.y, Ship.WALL);
+				for (int ax = 0; ax < ship.mapWidth; ax++)
+					for (int ay = 0; ay < ship.mapHeight; ay++){
+						if (ship.fill.get(ax, ay) != Ship.WALL)
+							ship.map.set(ax, ay, Ship.VACCUUM);
+					}
+				ship.fill.clear();
+				deleteContigButton.setChecked(false);
+				super.clicked(event, x, y);
+			}
+		});
+		hullWindow.add(deleteContigButton);
 		hullWindow.row();
 		hullWindow.add(hullCalcButton);
 		hullWindow.add(hullCloseButton);
+		
+		
+		
+		
 		hullWindow.pack();
 		
 		//editTable.row();/////////////////////////////////////////////////////////////////////////
@@ -590,7 +684,7 @@ public class UI {
 				int h = (int)ySlider.getValue() * Main.CHUNK_SIZE;
 				
 				EntityArray entities = Pools.obtain(EntityArray.class);
-				world.getPlayerShip().load(new IntPixelMap(w, h, Main.CHUNK_SIZE), entities );
+				world.getPlayerShip().load(new IntPixelMap(w, h, Main.CHUNK_SIZE), entities, null);
 				super.clicked(event, x, y);
 			}
 		});
@@ -604,6 +698,7 @@ public class UI {
 			}
 		});
 		newShipWindow.row();
+		newShipWindow.row();
 		newShipWindow.add(createShipButtonInWindow);
 		newShipWindow.add(cancelCreateShipButtonInWindow);
 		newShipWindow.pack();
@@ -615,6 +710,28 @@ public class UI {
 				//populateLoadWindow(loadWindow);
 				stage.addActor(newShipWindow);
 				
+				super.clicked(event, x, y);
+			}
+		});
+		
+		
+		CheckBox hullShowButton = new CheckBox("show hull", skin);
+		hullShowButton.addListener(new ClickListener(){
+			@Override
+			public void clicked(InputEvent event, float x, float y) {
+				ship.showHull = !ship.showHull;
+				hullShowButton.setChecked(ship.showHull);
+				event.handle();
+				super.clicked(event, x, y);
+			}
+		});
+		CheckBox hullBackToggleButton = new CheckBox("hull behind", skin);
+		hullBackToggleButton.addListener(new ClickListener(){
+			@Override
+			public void clicked(InputEvent event, float x, float y) {
+				ship.hullFront = !ship.hullFront;
+				hullBackToggleButton.setChecked(ship.hullFront);
+				event.handle();
 				super.clicked(event, x, y);
 			}
 		});
@@ -646,6 +763,10 @@ public class UI {
 		editTable.add(destroyButton).left();
 		editTable.row();
 		editTable.add(fireBtn);
+		editTable.row();
+		editTable.add(hullShowButton);
+		editTable.row();
+		editTable.add(hullBackToggleButton);
 		editTable.row();
 		editTable.add(openHullButton);
 		editTable.row();
@@ -687,7 +808,7 @@ public class UI {
 		weaponTable = new Table();
 		for (int i = 0; i < MAX_WEAPON_BUTTONS; i++){
 			final int index = i;
-			weaponButtons[i] = new WeaponButton(skin);
+			weaponButtons[i] = new WeaponButton(skin, i);
 			weaponButtons[i].addListener(new ClickListener(){
 				@Override
 				public void clicked(InputEvent event, float x, float y) {
@@ -699,28 +820,67 @@ public class UI {
 			});
 		}
 		Table topTable = new Table();
-		table.setFillParent(true);
-		table.add(topTable).top().left();
 		topTable.add(infoLabel).top().left();
 		topTable.add(shipSystemTable);
+		topTable.row();
+		topTable.add(weaponTable).colspan(10).right();
+		topTable.row();
+		topTable.add(infoTextLabel).colspan(3).left();
 		
+		
+		middleTable = new Window("Space Cabal", skin);
+		middleTable.setTouchable(Touchable.childrenOnly);
+		middleTable.getTitleTable().setTouchable(Touchable.disabled);
+		
+		TextButton newGameButton = new TextButton("New Game", skin);
+		newGameButton.addListener(new ClickListener(){
+			@Override
+			public void clicked(InputEvent event, float x, float y) {
+				world.startNewGameMenu();
+				set(world.getPlayerShip());
+				middleTable.remove();        
+				newGameButton.setChecked(false);
+				super.clicked(event, x, y);
+			}
+		});
+		Table middleMenuTable = new Table();
+		middleTable.add(middleMenuTable).center();
+		middleMenuTable.add(newGameButton);
+		middleMenuTable.row();
+		TextButton customShipButton = new TextButton("Ship Editor", skin);
+		customShipButton.addListener(new ClickListener(){
+			@Override
+			public void clicked(InputEvent event, float x, float y) {
+				customShipButton.setChecked(false);
+				middleTable.remove();
+				super.clicked(event, x, y);
+			}
+		});
+		middleMenuTable.add(customShipButton);
+		middleMenuTable.row();
+		middleTable.pack();
+		middleTable.setPosition(Gdx.graphics.getWidth()/2, Gdx.graphics.getHeight()/2, Align.center);
 		//table.row();
+		table.setFillParent(true);
+		table.add(topTable).top().left();
 		table.row();
 		//table.add(new Actor()).expand();
 		//table.row();
 		
 		table.add(leftTable).left().top();
+		
+		
 		table.add(new Actor()).expand();
 		table.add(rightTable);
 		table.row();
 		//table.add(bottomWeaponTable).left();
-		table.add(weaponTable).colspan(10).left();
 
 		table.row();
 		table.add(entityActionTable).left();
 		
 		table.setTouchable(Touchable.enabled);
 		stage.addActor(table);
+		stage.addActor(middleTable);
 		//stage.addActor(dragLabel);
 		table.layout();
 		
@@ -729,11 +889,11 @@ public class UI {
 		makeInventoryWindow(skin);
 		
 		
-
+		
 	}
-	Bits bits = new Bits();
 	private Ship ship;
 	private Entity entity;
+	public UISystemButton lastPressedShipSystemButton;
 
 	private void makeInventoryWindow(Skin skin) {
 		invWindow = new Window("Inventory", skin);
@@ -785,6 +945,7 @@ public class UI {
 					sc = Math.min(1f, sc);
 					sc *= fontScale;
 					shipSystemottomButtons[i].getLabel().setFontScaleX(sc);
+					shipSystemottomButtons[i].setChecked(ship.disabledButton[i]);;
 				}
 				
 			}
@@ -795,9 +956,13 @@ public class UI {
 					Weapon w = (Weapon) e;
 					//ship.equippedWeapons[w.index];
 					//Gdx.app.log(TAG, "ADDDD WEAPONNNNNNNNNNNNN");
-					TextButton b = weaponButtons[i];
-					b.setText("weapon " + i);
+					WeaponButton b = weaponButtons[i];
+					if (w.equippedItemID != -1){
+						b.setText(Items.getDef(w.equippedItemID).name);
+						
+					}
 					weaponTable.add(b);
+					
 					
 					i++;
 				}
@@ -814,7 +979,7 @@ public class UI {
 	public void setEntity(Entity e){
 		entity = e;
 		Table actionTable = this.entityActionTable;
-		UIActionButton[] buttons2 = buttons;
+		UIActionButton[] buttons2 = entityActionButtons;
 		actionTable.clearChildren();
 		if (e != null){
 			for (int i = 0; i < e.buttonOrder.length; i++){
@@ -845,13 +1010,22 @@ public class UI {
 			
 			
 			for (int i = 0; i < buttons2.length; i++){
-				actionTable.getCell(buttons2[i]).width(maxW).pad(0).space(0);
+				Cell<UIActionButton> cell = actionTable.getCell(buttons2[i]);
+				if (cell != null){
+					cell.width(maxW).pad(0).space(0);
+					
+				} else {
+					Gdx.app.log(TAG, "no cell " + i + "  ");
+				}
+				
 				//buttons[i].getCell(buttons[i].getLabel()).fill();
 				//if (buttons[i].getLabel().getWidth() >= buttons[i].getWidth() - 3)
 				float sc = (maxW / buttons2[i].getLabel().getWidth()) * .8f;
 				sc = Math.min(1f, sc);
 				sc *= fontScale;
 				buttons2[i].getLabel().setFontScaleX(sc);
+				
+				buttons2[i].setChecked(e.disabledButton[i]);;
 			}
 		} 
 		
@@ -908,12 +1082,21 @@ public class UI {
 		//Gdx.app.log(TAG, "actually save " + name + Main.MAP_FILE_EXTENSION);
 		FileHandle file = Gdx.files.external(Main.SHIP_SAVE_LOCATION + name + "." + Main.MAP_FILE_EXTENSION);
 		FileHandle entityFile = Gdx.files.external(Main.SHIP_SAVE_LOCATION + name + "." + Main.ENTITY_FILE_EXTENSION);
-		Json json = new Json();
+		Json json = Pools.obtain(Json.class);
 		String string = json.toJson(ship.map);
 		String entities = json.toJson(ship.getEntities());
+		Gdx.app.log(TAG, "writing ship ");
 		file.writeString(string, false);
+		Gdx.app.log(TAG, "writing entities ");
 		entityFile.writeString(entities, false);
+		Gdx.app.log(TAG, "writing hull ");
+		FileHandle hullFile = Gdx.files.external(Main.SHIP_SAVE_LOCATION + name + "." + Main.MAP_HULL_EXTENSION);
+		
+		Pixmap hullPix =ship.hull.getPixmap();;
+		if (hullPix != null)
+			PixmapIO.writePNG(hullFile, hullPix );
 		//savePreview(name, ship);
+		Pools.free(json);
 	}
 	
 	private void savePreview(String name, Ship ship) {
@@ -941,6 +1124,8 @@ public class UI {
 		table.invalidate();
 		set(ship);
 		setEntity(entity);
+		middleTable.pack();
+		middleTable.setPosition(Gdx.graphics.getWidth()/2, Gdx.graphics.getHeight()/2, Align.center);
 	}
 
 	private static class LoadLabelPool extends Pool<LoadLabel>{
@@ -976,8 +1161,12 @@ public class UI {
 			Json json = Data.jsonPool.obtain();
 			IntPixelMap map = json.fromJson(IntPixelMap.class, f.readString());
 			FileHandle entityFile = Gdx.files.external(f.pathWithoutExtension() + "." + Main.ENTITY_FILE_EXTENSION);
+			FileHandle hullFile = Gdx.files.external(f.pathWithoutExtension() + "." + Main.MAP_HULL_EXTENSION);
 			EntityArray entities = json.fromJson(EntityArray.class, entityFile.readString());
-			ship.load(map, entities);
+			Texture hull = null;
+			if (hullFile.exists())
+				hull = new Texture(hullFile);
+			ship.load(map, entities, hull);
 			Data.jsonPool.free(json);
 		}
 
@@ -988,17 +1177,42 @@ public class UI {
 		}
 		
 	}
-	private static class WeaponButton extends TextButton{
+	public static class WeaponButton extends TextButton{
 
-		private ProgressBar slider;
+		public ProgressBar slider;
+		private int index;
 
-		public WeaponButton(Skin skin) {
+		public WeaponButton(Skin skin, int i) {
 			super("fjslk", skin);
-			slider = new Slider(0, 1, 0.01f, false, skin);
+			index = i;
+			slider = new ProgressBar(0, 1, 0.01f, false, skin);
+			slider.setFillParent(true);
+			getLabel().setColor(Color.BLACK);
 			
 			addActorBefore(getLabel(), slider);
+			//slider.setHeight(getHeight());
+			slider.getStyle().background.setMinHeight(getHeight());;
+			slider.getStyle().knobAfter.setMinHeight(getHeight());;
+			slider.getStyle().knobAfter.setMinWidth(0);;
+			//slider.getStyle().knobAfter.setRightWidth(0f);;
+			slider.setColor(Color.GRAY);
+			
 			slider.setValue(0.5f);
+			
 		}
+		@Override
+		public void draw(Batch batch, float parentAlpha) {
+			//slider.setHeight(getHeight());
+			super.draw(batch, parentAlpha);
+		}
+	}
+	public Entity getEntity() {
+		// TODO Auto-generated method stub
+		return entity;
+	}
+
+	public void dispose() {
+		skin.dispose();
 		
 	}
 }
