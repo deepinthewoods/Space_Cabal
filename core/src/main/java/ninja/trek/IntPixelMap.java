@@ -153,7 +153,7 @@ public class IntPixelMap{
 		map[index] = b & (Ship.BLOCK_AIR_MASK | Ship.BLOCK_DATA_MASK | Ship.BLOCK_FIRE_MASK | Ship.BLOCK_ID_MASK) | (currentDam << Ship.BLOCK_DAMAGE_BITS);
 		markDamagedIndex(x + y * width, id);
 		ShipEntity se = ship.getShipEntity();
-		se.health--;
+		if (se != null) se.health--;
 		//skip boost
 		needsBoost[id].remove(x + y * width, 0);
 		//Gdx.app.log(TAG, "damage " + (b == map[x + y * chunkSize * chunksX]));

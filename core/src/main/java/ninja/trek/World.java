@@ -49,22 +49,32 @@ public class World {
 	
 	public void draw(SpriteBatch batch, OrthographicCamera camera, ShapeRenderer shape, UI ui){
 		
-		batch.disableBlending();
-		for (Ship map : maps) map.draw(batch, camera, this);
-		batch.enableBlending();
 		
-		batch.begin();
+		
+		 
+		
+		
 		for (int i = 0; i < maps.size; i++){
 			Ship map = maps.get(i);
+			map.enableScissor(this);
+			batch.disableBlending();
+			
+			map.draw(batch, camera, this);
+			batch.begin();
+			batch.enableBlending();
 			map.drawEntities(batch, this);
-		}
-//		for (Ship map : maps) 
-		batch.end();
-		for (int i = 0; i < maps.size; i++){
-			Ship map = maps.get(i);
-			map.drawLines(shape, ui, targettingIndex != -1, camera);
+			map.drawLines(shape, ui, targettingIndex != -1, camera, this);
 			if (map.alignment == Alignment.TOP_RIGHT)
 				map.drawTargettedLines(shape, ui, getPlayerShip());
+			batch.end();
+			
+		}
+//		for (Ship map : maps) 
+		Ship.disableScissor();
+		for (int i = 0; i < maps.size; i++){
+			Ship map = maps.get(i);
+			
+			
 		}
 	}
 	

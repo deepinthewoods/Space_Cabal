@@ -91,7 +91,7 @@ public class Main extends ApplicationAdapter {
 				if (keycode == Keys.A)
 					world.getPlayerShip().map.boostAll();
 				else if (keycode == Keys.TAB)
-					ui.openInventory(world.getPlayerShip());
+					ui.toggleInventory(world.getPlayerShip());
 				else if (keycode == Keys.S)
 					world.getPlayerShip().unReserveAll();
 				return false;

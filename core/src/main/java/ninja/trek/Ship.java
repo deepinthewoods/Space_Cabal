@@ -79,6 +79,7 @@ public class Ship {
 	private final int cacheIterations;
 	private static final int MAP_EXTRA_PIXELS = 64;
 	static final float GAP = 10;
+	private static final int SHIELD_SPACING = 12;
 	private transient FrameBuffer[] chunkBuffer, fillBuffer, wireBuffer;
 	private transient Texture[] chunkTextures, fillTextures, wireTextures;;
 	private transient boolean[] dirtyChunk;
@@ -290,15 +291,7 @@ public class Ship {
 	public void draw(SpriteBatch batch, OrthographicCamera wcamera, World world){
 		//batch.getProjectionMatrix().set(camera.combined);
 		stateTime += Gdx.graphics.getDeltaTime();
-		if (alignment == Alignment.CENTRE){
-			Gdx.gl.glEnable(GL20.GL_SCISSOR_TEST);
-			v.set(-GAP, 0, 0);
-			Ship otherShip = world.getEnemyShip();
-			otherShip.camera.project(v);
 		
-			int width = (int) v.x;
-			Gdx.gl.glScissor(0, 0, width, Gdx.graphics.getHeight());
-		}
 		updateCamera(wcamera, world);
 		batch.setProjectionMatrix(camera.combined);
 		if (!hullFront && showHull)
@@ -334,9 +327,7 @@ public class Ship {
 		
 		if (hullFront && showHull)
 			hull.draw(batch, wcamera, world, this);
-		if (alignment == Alignment.CENTRE){
-			Gdx.gl.glDisable(GL20.GL_SCISSOR_TEST);
-		}
+		
 		//Gdx.gl.glEnable(GL20.GL_BLEND);
 		//Gdx.gl.glDisable(GL20.GL_BLEND);
 	}
@@ -359,12 +350,13 @@ public class Ship {
 		}
 		
 	}
+	public static void disableScissor(){
+		
+		Gdx.gl.glDisable(GL20.GL_SCISSOR_TEST);
+		
+	}
 	
-	public void drawEntities(SpriteBatch batch, World world){
-		fonts.setZoom(camera);
-		//Gdx.app.log(TAG, "draw entities " + entities.size + "  "  + camera.position);
-		batch.setProjectionMatrix(camera.combined);//.translate(offset.x, offset.y, 0);
-		batch.setShader(null);
+	public void enableScissor(World world){
 		if (alignment == Alignment.CENTRE){
 			Gdx.gl.glEnable(GL20.GL_SCISSOR_TEST);
 			v.set(-GAP, 0, 0);
@@ -373,7 +365,22 @@ public class Ship {
 		
 			int width = (int) v.x;
 			Gdx.gl.glScissor(0, 0, width, Gdx.graphics.getHeight());
+		} else {
+			Gdx.gl.glEnable(GL20.GL_SCISSOR_TEST);
+			v.set(-GAP, 0, 0);
+			camera.project(v);
+		
+			int width = (int) v.x;
+			Gdx.gl.glScissor(width, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		}
+	}
+	public void drawEntities(SpriteBatch batch, World world){
+		fonts.setZoom(camera);
+		//Gdx.app.log(TAG, "draw entities " + entities.size + "  "  + camera.position);
+		batch.setProjectionMatrix(camera.combined);//.translate(offset.x, offset.y, 0);
+		batch.setShader(null);
+		
+		
 		
 		for (Entity e : entities){
 			fonts.draw(e, batch, camera);
@@ -387,16 +394,17 @@ public class Ship {
 		}
 		batch.disableBlending();
 		//batch.end();
-		if (alignment == Alignment.CENTRE){
-			Gdx.gl.glDisable(GL20.GL_SCISSOR_TEST);
-		}
+		
 	}
 	private Entity selectedEntity;
 
-	public void drawLines(ShapeRenderer shape, UI ui, boolean isSettingTarget, OrthographicCamera wcamera){
+	public void drawLines(ShapeRenderer shape, UI ui, boolean isSettingTarget, OrthographicCamera wcamera, World world){
 		shape.setProjectionMatrix(camera.combined);
 		shape.setColor(.31f, .31f, .31f, 1f);
 		shape.begin(ShapeType.Line);
+		
+		
+		
 		if (editMode){
 			shape.line(0, 0, 0, mapHeight);
 			shape.line(0, 0, mapWidth, 0);
@@ -484,50 +492,31 @@ public class Ship {
 			//Gdx.app.log(TAG, "SELECTED");
 		}
 		shape.end();
-		Gdx.gl.glDisable(GL20.GL_BLEND);
-		Gdx.gl.glLineWidth(10f);
+		Gdx.gl.glEnable(GL20.GL_BLEND);
+		Gdx.gl.glLineWidth(8f);
 		shape.begin(ShapeType.Line);
 		shape.setColor(CustomColors.SHIELD);
-		shape.setColor(0, 0, .6f, .4f);
+		shape.setColor(.0f, .12f, .6f, .474f);
 		ShipEntity ship = getShipEntity();
 		if (ship != null){
 			int x = mapWidth/2, y = mapHeight/2, size = (int) shieldRadius, tot = 8;
-			float rotateSpeed = 40f;
-			q.set(size, 0);
-			q.rotate(stateTime * rotateSpeed);
-			for (int i = 0; i < tot; i++){
-				q.rotate(360/tot);
-				r.set(q);
-				r.rotate(360/tot);
-				shape.line(q.x + x, q.y + y, r.x + x, r.y + y);
+			for (int i = 0; i < ship.shield; i++){
+				float rotateSpeed = 40f;
+				q.set(size + i * SHIELD_SPACING, 0);
+				int dir = 1;
+				if (i % 2 == 0) dir = -1;
+				q.rotate((stateTime * rotateSpeed + (((360f/tot)/ship.shield)/1)*i ) * dir);
+				for (int k = 0; k < tot; k++){
+					q.rotate(360/tot);
+					r.set(q);
+					r.rotate(360/tot);
+					shape.line(q.x + x, q.y + y, r.x + x, r.y + y);
+				}
 			}
-			size += 15;
-			q.set(size, 0);
-			q.rotate(-stateTime * rotateSpeed);
-			for (int i = 0; i < tot; i++){
-				q.rotate(360/tot);
-				r.set(q);
-				r.rotate(360/tot);
-				shape.line(q.x + x, q.y + y, r.x + x, r.y + y);
-			}
-			size += 15;
-			q.set(size, 0);
-			q.rotate(stateTime * rotateSpeed + 180f/tot);
-			for (int i = 0; i < tot; i++){
-				q.rotate(360/tot);
-				r.set(q);
-				r.rotate(360/tot);
-				shape.line(q.x + x, q.y + y, r.x + x, r.y + y);
-			}
-			size += 15;
-			q.set(size, 0);
-			q.rotate(-stateTime * rotateSpeed + 180f/tot);
-			for (int i = 0; i < tot; i++){
-				q.rotate(360/tot);
-				r.set(q);
-				r.rotate(360/tot);
-				shape.line(q.x + x, q.y + y, r.x + x, r.y + y);
-			}
+			
+			
+			
+			
 		}
 
 		shape.end();
@@ -546,6 +535,7 @@ public class Ship {
 			float y1 = y0;
 			shape.line(x0,  y0, x1, y1);
 		}
+		
 		Entity ent = ui.getEntity();
 		if (ent != null){
 			UIActionButton button = ui.entityActionButtons[ent.actionIndexForPath];
@@ -562,6 +552,8 @@ public class Ship {
 		
 		shape.end();
 		shape.setProjectionMatrix(camera.combined);
+		
+		
 	}
 	//Vector2 vec2 = new Vector2();
 	public void drawTargettedLines(ShapeRenderer shape, UI ui, Ship playerShip) {

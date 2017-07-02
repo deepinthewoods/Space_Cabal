@@ -10,7 +10,6 @@ import ninja.trek.action.Action;
 
 public class AFightFire extends Action {
 
-	public GridPoint2 target = new GridPoint2();;
 	
 	public AFightFire(){
 		lanes = LANE_ACTING;
@@ -19,14 +18,15 @@ public class AFightFire extends Action {
 
 	@Override
 	public void update(float dt, World world, Ship map, UI ui) {
-		map.map.fightFire(target.x, target.y);
-		Gdx.app.log("fix action", "FIRE " + target);
+		map.map.fightFire(parent.e.target.x, parent.e.target.y);
+		Gdx.app.log("fix action", "FIRE " + parent.e.target);
 		isFinished = true;
 	}
 
 	@Override
 	public void onEnd(World world, Ship map) {
-		// TODO Auto-generated method stub
+		parent.e.ship.unReserve(parent.e.target.x, parent.e.target.y);
+
 
 	}
 

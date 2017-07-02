@@ -216,12 +216,11 @@ public class ScrollPaneN extends WidgetGroup {
 		addListener(new InputListener() {
 			public boolean scrolled (InputEvent event, float x, float y, int amount) {
 				resetFade();
-				v.set(getX() + getWidth(), 0);
-				stageToLocalCoordinates(v);
-				///Gdx.app.log(TAG, "fdskjl " + Gdx.input.getX() + "  " + v);
-				if (
-						Gdx.input.getX() > 
-						v.x) return false;
+				v.set(x, y);
+				//localToStageCoordinates(v);
+				//Gdx.app.log(TAG, "fdskjl " + getWidth() + "  " + v);
+				if (v.x < 0 || v.y < 0 || v.x > getWidth() || v.y > getHeight()) return false;
+				
 				if (scrollY)
 					setScrollY(amountY + getMouseWheelY() * amount);
 				else if (scrollX) //

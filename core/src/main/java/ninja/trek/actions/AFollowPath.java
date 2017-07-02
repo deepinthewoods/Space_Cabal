@@ -52,18 +52,22 @@ public class AFollowPath extends Action {
 			switch (parent.e.actionIndexForPath){
 			case EntityAI.FIX:
 				AFix aFix = Pools.obtain(AFix.class);
-				if (parent.e.path.size == 0)
-					aFix.target.set(parent.e.x, parent.e.y);
-				else
-					aFix.target.set(parent.e.path.get(0), parent.e.path.get(1));
+				if (parent.e.path.size == 0){
+					parent.e.target.set(parent.e.x, parent.e.y);
+				}
+				else{ 
+					parent.e.target.set(parent.e.path.get(0), parent.e.path.get(1));
+				}
 				addBeforeMe(aFix);
 				break;
 			case EntityAI.FIRE:
 				AFightFire aFire = Pools.obtain(AFightFire.class);
-				if (parent.e.path.size == 0)
-					aFire.target.set(parent.e.x, parent.e.y);					
-				else 
-					aFire.target.set(parent.e.path.get(0), parent.e.path.get(1));
+				if (parent.e.path.size == 0){
+					parent.e.target.set(parent.e.x, parent.e.y);
+				}
+				else{ 
+					parent.e.target.set(parent.e.path.get(0), parent.e.path.get(1));
+				}
 				addBeforeMe(aFire);
 				break;
 			case EntityAI.ENGINE:
@@ -76,16 +80,12 @@ public class AFollowPath extends Action {
 				ABoost aBoost = Pools.obtain(ABoost.class);
 				if (parent.e.path.size == 0){
 					parent.e.target.set(parent.e.x, parent.e.y);
-					//parent.e.ship.unReserve(parent.e.x, parent.e.y);
 				}
 				else{ 
-					//Gdx.app.log(TAG, "non0 path " + parent.e.path); 
 					parent.e.target.set(parent.e.path.get(0), parent.e.path.get(1));
 				}
-				
 				addBeforeMe(aBoost);
 				//Gdx.app.log(TAG, "boost unreserve " + parent.e.x + "," + parent.e.y);
-				
 				break;
 			case EntityAI.SHOOT:
 				break;

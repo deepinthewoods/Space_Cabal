@@ -10,7 +10,6 @@ import ninja.trek.action.Action;
 
 public class AFix extends Action {
 
-	public GridPoint2 target = new GridPoint2();;
 	
 	public AFix(){
 		lanes = LANE_ACTING;
@@ -19,8 +18,8 @@ public class AFix extends Action {
 
 	@Override
 	public void update(float dt, World world, Ship map, UI ui) {
-		map.map.fix(target.x, target.y);
-		Gdx.app.log("fix action", "FIX " + target);
+		map.map.fix(parent.e.target.x, parent.e.target.y);
+		//Gdx.app.log("fix action", "FIX " + parent.e.target);
 		isFinished = true;
 	}
 

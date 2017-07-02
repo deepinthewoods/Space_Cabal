@@ -56,7 +56,7 @@ public class AWaitForPath extends Action {
 				int[] fixOrder;
 				switch (action){
 				
-				//case EntityAI.FIRE:
+				case EntityAI.FIRE:
 				case EntityAI.ENGINE:
 				case EntityAI.OXYGEN:
 				case EntityAI.DRONE:
