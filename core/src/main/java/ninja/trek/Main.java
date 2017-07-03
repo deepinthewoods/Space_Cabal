@@ -34,10 +34,11 @@ public class Main extends ApplicationAdapter {
 	public static final String MAP_FILE_EXTENSION = "map";
 	public static final String ENTITY_FILE_EXTENSION = "entities";
 	public static final String MAP_PREVIEW_EXTENSION = ".png";
-	public static final int CHUNK_SIZE = 64;
+	
 	public static final String HULL_SOURCE_FILES_LOCATION = "sources/";
 	public static final String FONT_SAVE_LOCATION = "SpaceCabal/fonts/";
-	public static final String MAP_HULL_EXTENSION = "png";;
+	public static final String MAP_HULL_EXTENSION = "png";
+	public static final String MAP_BLOCKS_FILE_EXTENSION = "blk";;
 	
 	SpriteBatch batch;
 	TextureAtlas atlas;
@@ -113,6 +114,12 @@ public class Main extends ApplicationAdapter {
 				touches.put(pointer, Pools.obtain(Vector2.class).set(screenX, screenY));
 				touchButtons.put(pointer, button);
 				Ship ship = world.getPlayerShip();
+				
+				if (world.planetSelectOn){
+					planet.click(screenX / (float)Gdx.graphics.getHeight(), screenY / (float)Gdx.graphics.getHeight(), ui);
+					
+					return true;
+				}
 				
 				if (world.targettingIndex != -1){
 					if (button != 0){
@@ -386,7 +393,8 @@ public class Main extends ApplicationAdapter {
 		
 		fontManager = new FontManager();
 		
-		world = new World(fontManager);
+		Sprite pixelSprite = new Sprite(new Texture("pixel.png"));
+		world = new World(fontManager, shader, pixelSprite, planet);
 		
 		if (!Gdx.files.internal("lighting.vert").exists()) throw new GdxRuntimeException("kdls");
 		shader = new ShaderProgram(Gdx.files.internal("lighting.vert"), Gdx.files.internal("lighting.frag"));
@@ -400,13 +408,12 @@ public class Main extends ApplicationAdapter {
 		shader.end();
 		
 		batch.setShader(shader);
-		Sprite pixelSprite = new Sprite(new Texture("pixel.png"));
-		Ship amap = new Ship(new IntPixelMap(256, 256, CHUNK_SIZE), 1, pixelSprite, fontManager, shader);
+		Ship amap = new Ship(new IntPixelMap(256, 256), 1, pixelSprite, fontManager, shader);
 		world.addMap(amap);
 		amap.inventory.add(Items.laser1);
 		amap.inventory.add(Items.rocket1);
 		
-		Ship amap2 = new Ship(new IntPixelMap(128, 256, CHUNK_SIZE), 4, pixelSprite, fontManager, shader);
+		Ship amap2 = new Ship(new IntPixelMap(128, 256), 4, pixelSprite, fontManager, shader);
 		world.addMap(amap2);
 		
 		
@@ -421,7 +428,7 @@ public class Main extends ApplicationAdapter {
 		
 		ui = new UI(stage, world);
 		ui.setEntity(null);
-		ui.set(world.getPlayerShip());
+		ui.set(null);//world.getPlayerShip());
 	}
 
 	@Override
@@ -431,12 +438,12 @@ public class Main extends ApplicationAdapter {
 		stage.act(Gdx.graphics.getDeltaTime());
 		Gdx.gl.glClearColor(0, 0, 0, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-		world.update(batch, camera, world, ui);
+		world.update(batch, camera, world, ui, background, planet, stage);
 		
 		//batch.begin();
 		//batch.draw(img, 0, 0);
 		background.draw(world);
-		planet.draw(batch);
+		planet.draw(batch, shape);
 		world.draw(batch, camera, shape, ui);
 		//batch.end();
 		//stage.getBatch().disableBlending();

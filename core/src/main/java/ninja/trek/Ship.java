@@ -19,6 +19,7 @@ import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.math.GridPoint2;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.ui.UI;
@@ -30,6 +31,7 @@ import com.badlogic.gdx.utils.Pool;
 import com.badlogic.gdx.utils.Pools;
 import com.badlogic.gdx.utils.ScreenUtils;
 
+import ninja.trek.Ship.EntityArray;
 import ninja.trek.ui.ItemDisplay;
 import ninja.trek.ui.ItemDisplay.ItemButton;
 import ninja.trek.ui.UIActionButton;
@@ -71,7 +73,7 @@ public class Ship {
 	public static final int TELEPORTER = 8;
 	public static final int SCIENCE = 9;
 	protected int[] damageThreshold = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
-	public final int chunkSize;
+	public static final int CHUNKSIZE = 64;
 	public int mapWidth;
 	public int mapHeight;
 	public int chunksX;
@@ -116,6 +118,7 @@ public class Ship {
 	private IntArray[] roomsBySystem;
 	public boolean[] disabledButton = new boolean[systemNames.length];
 	public boolean hullFront;
+	public Array<GridPoint2> roomCentres = new Array<GridPoint2>();
 	public Ship(IntPixelMap map, Sprite pixelSprite, FontManager fonts, ShaderProgram shader){
 		this(map, 10, pixelSprite, fonts, shader);
 	}
@@ -123,15 +126,15 @@ public class Ship {
 	public Ship(IntPixelMap map, int cacheIterations, Sprite pixelSprite, FontManager fonts, ShaderProgram shader){
 		if (pixelSprite.getHeight() != pixelSprite.getWidth()) throw new GdxRuntimeException(" prites not square");
 		pixelSize = (int) pixelSprite.getHeight();
-		this.chunkSize = map.chunkSize;
+		
 		this.mapWidth = map.width;
 		this.mapHeight = map.height;
 		shieldRadius = Math.max(mapWidth/2,  mapHeight/2);
 		shieldRadius *= 1.5f;
 		shieldRadius2 = shieldRadius * shieldRadius;
 		this.cacheIterations = cacheIterations;
-		chunksX = mapWidth / chunkSize + (mapWidth % chunkSize == 0?0:1);
-		chunksY = mapHeight / chunkSize + (mapHeight % chunkSize == 0?0:1);
+		chunksX = mapWidth /CHUNKSIZE + (mapWidth %CHUNKSIZE == 0?0:1);
+		chunksY = mapHeight /CHUNKSIZE + (mapHeight %CHUNKSIZE == 0?0:1);
 		this.fonts = fonts;
 		this.map = map;
 		this.shader = shader;
@@ -143,7 +146,7 @@ public class Ship {
 		for (int i = 0; i < roomsBySystem.length; i++){
 			roomsBySystem[i] = new IntArray();
 		}
-		//Gdx.app.log(TAG, "map width " + chunksX + "  ,  " + chunksY + "  chunksize " + chunkSize + "  w " + mapWidth);
+		//Gdx.app.log(TAG, "map width " + chunksX + "  ,  " + chunksY + "  chunksize " + CHUNKSIZE + "  w " + mapWidth);
 		chunkBuffer = new FrameBuffer[8 * 8];
 		chunkTextures = new Texture[8 * 8];
 		fillBuffer = new FrameBuffer[8 * 8];
@@ -160,7 +163,7 @@ public class Ship {
 
 			@Override
 			protected FrameBuffer newObject() {
-				FrameBuffer buff = new FrameBuffer(Format.RGB888, chunkSize * pixelSize, chunkSize * pixelSize, false);
+				FrameBuffer buff = new FrameBuffer(Format.RGB888, CHUNKSIZE * pixelSize, CHUNKSIZE * pixelSize, false);
 				return buff;
 			}
 			
@@ -242,19 +245,19 @@ public class Ship {
 		Gdx.gl.glClearColor(backR, backG, backB , 1f);
 
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-		batch.getProjectionMatrix().setToOrtho2D(0, 0, chunkSize, chunkSize);
+		batch.getProjectionMatrix().setToOrtho2D(0, 0, CHUNKSIZE, CHUNKSIZE);
 		batch.setColor(Color.WHITE);
 		
 		batch.begin();
-		for (int xx = 0; xx < chunkSize; xx++)
-			for (int yy = 0; yy < chunkSize; yy++){
-				//int blockIndex = (x*chunkSize + xx) + (y * chunkSize + yy) * chunksX * chunkSize;
+		for (int xx = 0; xx < CHUNKSIZE; xx++)
+			for (int yy = 0; yy < CHUNKSIZE; yy++){
+				//int blockIndex = (x*CHUNKSIZE + xx) + (y * CHUNKSIZE + yy) * chunksX * CHUNKSIZE;
 				//Gdx.app.log(TAG, "cache block" + blockIndex + "," + x + "," + xx + "," + y + "," + yy + "," );
 				//switch (chunkData[blockIndex]){
-				int ax = x*chunkSize + xx , ay =  y * chunkSize + yy;
+				int ax = x*CHUNKSIZE + xx , ay =  y * CHUNKSIZE + yy;
 				int block = map.get(ax, ay);
 				batch.setColor(map.getColor(block, ax, ay, this));
-				batch.draw(pixel, xx, chunkSize - yy-1, 1, 1);
+				batch.draw(pixel, xx, CHUNKSIZE - yy-1, 1, 1);
 				//if (block != 0) Gdx.app.log(TAG, "col " + map.getColor(block));
 			}
 		batch.end();
@@ -268,7 +271,7 @@ public class Ship {
 	 */
 	public void setDirty(int x, int y){
 		if (x >= mapWidth || y >= mapHeight || x < 0 || y < 0) return;
-		int chunkX = x / chunkSize, chunkY = y / chunkSize, chunkIndex = chunkX + chunkY * chunksX;
+		int chunkX = x / CHUNKSIZE, chunkY = y / CHUNKSIZE, chunkIndex = chunkX + chunkY * chunksX;
 		dirtyChunk[chunkIndex] = true;
 	}
 	
@@ -279,8 +282,8 @@ public class Ship {
 	 * @param y1
 	 */
 	public void setDirty(int x0, int y0, int x1, int y1){
-		int chunkX0 = x0 / chunkSize, chunkY0 = y0 / chunkSize;
-		int chunkX1 = x1 / chunkSize, chunkY1 = y1 / chunkSize;
+		int chunkX0 = x0 / CHUNKSIZE, chunkY0 = y0 / CHUNKSIZE;
+		int chunkX1 = x1 / CHUNKSIZE, chunkY1 = y1 / CHUNKSIZE;
 		for (int chunkX = chunkX0; chunkX <= chunkX1; chunkX++)
 			for (int chunkY = chunkY0; chunkY <= chunkY1; chunkY++){
 				int chunkIndex = chunkX + chunkY * chunksX;
@@ -294,8 +297,11 @@ public class Ship {
 		
 		updateCamera(wcamera, world);
 		batch.setProjectionMatrix(camera.combined);
-		if (!hullFront && showHull)
+		if (!hullFront && showHull){
+			//batch.enableBlending();
 			hull.draw(batch, wcamera, world, this);
+			
+		}
 		batch.setShader(shader);
 		//batch.setShader(null);
 		drawn.clear();
@@ -325,8 +331,11 @@ public class Ship {
 			nextFreeIndex = toFree.nextSetBit(nextFreeIndex+1);
 		} 
 		
-		if (hullFront && showHull)
+		if (hullFront && showHull){
+			//batch.enableBlending();
 			hull.draw(batch, wcamera, world, this);
+			
+		}
 		
 		//Gdx.gl.glEnable(GL20.GL_BLEND);
 		//Gdx.gl.glDisable(GL20.GL_BLEND);
@@ -336,16 +345,16 @@ public class Ship {
 		//Gdx.app.log(TAG, "draw chunk" + x + "," + y + "   " + x * CHUNK_SIZE+ "   " + y * CHUNK_SIZE+ "   " + CHUNK_SIZE+ "   " + CHUNK_SIZE);
 		//batch.setColor(MathUtils.random());
 		Texture texx = chunkTextures[x + y * chunksX];
-		if (texx != null) batch.draw(texx, (float)x * chunkSize, y * chunkSize, chunkSize, chunkSize);
+		if (texx != null) batch.draw(texx, (float)x * CHUNKSIZE, y * CHUNKSIZE, CHUNKSIZE, CHUNKSIZE);
 		if (wire){
 			Texture tex = wireTextures[x + y * chunksX];
-			if (tex != null) batch.draw(tex,  (float)x * chunkSize, y * chunkSize, chunkSize, chunkSize);
+			if (tex != null) batch.draw(tex,  (float)x * CHUNKSIZE, y * CHUNKSIZE, CHUNKSIZE, CHUNKSIZE);
 		}
 		if (editMode){
 			Texture tex = fillTextures[x + y * chunksX];
 			if (tex != null){
 				//Gdx.app.log(TAG, "draw fill");
-				batch.draw(tex, (float)x * chunkSize, y * chunkSize, chunkSize, chunkSize);
+				batch.draw(tex, (float)x * CHUNKSIZE, y * CHUNKSIZE, CHUNKSIZE, CHUNKSIZE);
 			}
 		}
 		
@@ -386,12 +395,12 @@ public class Ship {
 			fonts.draw(e, batch, camera);
 		}
 		
-		if (editMode) fonts.drawSpawn(map.spawn, batch);
 		
 		batch.enableBlending();
 		for (Entity e : entities){
 			e.draw(batch, camera, world);
 		}
+		if (editMode) fonts.drawSpawn(map.spawn, batch);
 		batch.disableBlending();
 		//batch.end();
 		
@@ -666,6 +675,7 @@ public class Ship {
 	
 	public void updateDraw(SpriteBatch batch){
 		//update(chunkBuffer, batch);
+		if (map.getRawBlocks() == null) return;
 		queue.clear();
 		batch.setShader(null);;
 		int cached = 0;
@@ -705,6 +715,7 @@ public class Ship {
 	}
 
 	public void removeEntity(Entity entity) {
+		if (entity == null) return;
 		Pools.free(entities.removeValue(entity, true));
 	}
 	public void removeEntityNoPool(Entity entity) {
@@ -756,8 +767,8 @@ public class Ship {
 				frameb.begin();
 				Pixmap frame  = ScreenUtils.getFrameBufferPixmap(0, 0, frameb.getWidth(), frameb.getHeight());
 				
-				pixmap.drawPixmap(frame, (int)((float)x * chunkSize)
-					, pixmap.getHeight() - y * chunkSize);
+				pixmap.drawPixmap(frame, (int)((float)x * CHUNKSIZE)
+					, pixmap.getHeight() - y * CHUNKSIZE);
 				frameb.end();
 				//if (!frameb.getColorBufferTexture().getTextureData().isPrepared())frameb.getColorBufferTexture().getTextureData().prepare();;
 				//Pixmap frame = frameb.getColorBufferTexture().getTextureData().co;;
@@ -765,8 +776,8 @@ public class Ship {
 				//	Gdx.app.log(TAG, ""+frame.getPixel(g,  3));
 				//}
 				
-				//if (frameb != null) pixmap.drawPixmap(frame, (int)((float)x * chunkSize)
-				//		, pixmap.getHeight() - y * chunkSize);
+				//if (frameb != null) pixmap.drawPixmap(frame, (int)((float)x * CHUNKSIZE)
+				//		, pixmap.getHeight() - y * CHUNKSIZE);
 				
 				//drawChunk(x, y, batch, drawWires, drawFill);
 				//drawn.set(x + y * chunksX);
@@ -793,11 +804,12 @@ public class Ship {
 			wire = new IntPixelMap(map);
 			mapWidth = map.width;
 			mapHeight = map.height;
+			
 			shieldRadius = Math.max(mapWidth/2,  mapHeight/2);
 			shieldRadius *= 1.5f;
 			shieldRadius2 = shieldRadius * shieldRadius;
-			chunksX = mapWidth / chunkSize + (mapWidth % chunkSize == 0?0:1);
-			chunksY = mapHeight / chunkSize + (mapHeight % chunkSize == 0?0:1);
+			chunksX = mapWidth / CHUNKSIZE + (mapWidth % CHUNKSIZE == 0?0:1);
+			chunksY = mapHeight / CHUNKSIZE + (mapHeight % CHUNKSIZE == 0?0:1);
 			Gdx.app.log(TAG, "NEW HELPER CHUNkS");
 		}
 		hull.dispose();
@@ -817,6 +829,11 @@ public class Ship {
 		setAllDirty();
 		hasCategorizedBlocks = false;
 		populateRandomChunkOrder();
+	}
+
+	public void setFrom(IntPixelMap map2, EntityArray entities2, Texture texture) {
+		
+		
 	}
 
 	private void populateRandomChunkOrder() {
@@ -867,7 +884,7 @@ public class Ship {
 	}
 	
 	public void categorizeSystems() {
-		for (int i = 0; i < Ship.systemNames.length; i++){
+		for (int i = 0; i <systemNames.length; i++){
 			if (systemBlocks[i] == null) systemBlocks[i] = new Array<GridPoint2>();
 			for (int r = 0; r < systemBlocks[i].size; r++) Pools.free(systemBlocks[i].get(r));
 			systemBlocks[i].clear();
@@ -875,7 +892,7 @@ public class Ship {
 		for (int x = 1; x < mapWidth - 1; x++){
 			for (int y = 1; y < mapHeight - 1; y++){
 				int block = map.get(x, y);
-				int id = (block & Ship.BLOCK_ID_MASK);
+				int id = (block &BLOCK_ID_MASK);
 				if (id != VACCUUM && id != FLOOR && id != WALL){
 					
 					GridPoint2 p = Pools.obtain(GridPoint2.class);
@@ -885,7 +902,7 @@ public class Ship {
 				}
 			}
 		}
-		for (int i = 0; i < Ship.systemNames.length; i++){
+		for (int i = 0; i <systemNames.length; i++){
 			systemBlocks[i].shuffle();
 		}
 		hasCategorizedBlocks = true;
@@ -901,17 +918,17 @@ public class Ship {
 		//map.setAllBoosted();
 		for (int x = 1; x < mapWidth - 1; x++)
 			for (int y =1; y < mapHeight-1; y++){
-				int id = map.get(x,  y) & Ship.BLOCK_ID_MASK;
-				if (id != Ship.WALL && id != Ship.VACCUUM && id != Ship.FLOOR)
+				int id = map.get(x,  y) &BLOCK_ID_MASK;
+				if (id !=WALL && id !=VACCUUM && id !=FLOOR)
 					map.needsBoost[id].put(x + y * mapWidth, 0);
 				
 				int fillB = room.get(x, y) & BLOCK_ID_MASK;
-				if (fillB == -1 && id != Ship.WALL && id != Ship.VACCUUM){
+				if (fillB == -1 && id !=WALL && id !=VACCUUM){
 					//Gdx.app.log(TAG, "fill " + x);
 					room.floodFillWalkable(map, x, y, roomID++);
 				}
 				int sysRoomB = systemRooms.get(x,  y);
-				if (sysRoomB == -1 && id != Ship.WALL && id != Ship.VACCUUM){
+				if (sysRoomB == -1 && id !=WALL && id !=VACCUUM){
 					//Gdx.app.log(TAG, "sysFill " + id);
 					systemRooms.floodFillSystem(map, x, y, id, sysRoomID);
 					roomsBySystem[id].add(sysRoomID);
@@ -919,8 +936,55 @@ public class Ship {
 				}
 			}
 		
-		
-		
+		//GridPoint2 average = Pools.obtain(GridPoint2.class);
+		for (int i = 0; i < average.length; i++){
+			if (average[i] == null){
+				average[i] = new GridPoint2();
+			}
+			average[i].set(0, 0);
+			averageTotals[i] = 0;
+		}
+		for (int x = 1; x < mapWidth - 1; x++)
+			for (int y =1; y < mapHeight-1; y++){
+				int id = map.get(x,  y) & BLOCK_ID_MASK;
+				average[id].add(x, y);					
+				averageTotals[id]++;
+				
+				
+			}
+		for (int i = 0; i < average.length; i++){
+			if (averageTotals[i] == 0){//no blocks
+				//average[i].set(0, 0);
+			} else {
+				average[i].x /= averageTotals[i];
+				average[i].y /= averageTotals[i];
+				int id = map.get(average[i].x,  average[i].y) & BLOCK_ID_MASK;
+				if (id != i){//look for closest block with right id
+					float dist = 1000000000;
+					GridPoint2 distPt = Pools.obtain(GridPoint2.class);
+					distPt.set(-1, -1);
+					for (int x = 1; x < mapWidth - 1; x++)
+						for (int y =1; y < mapHeight-1; y++){
+							if ((map.get(x,  y) & BLOCK_ID_MASK) == id ){
+								float newD = average[i].dst2(x, y);
+								if (newD < dist){
+									dist = newD;
+									distPt.set(x, y);
+								}
+							}
+						}
+					if (distPt.x != -1){
+						average[i].set(distPt);
+					}
+					Pools.free(distPt);;
+					distPt = null;
+				}
+				
+			}
+			
+		}
+		//Pools.free(average);;
+		//average = null;*/
 		/*for (;;){
 
 			room[x + y * mapWidth] = roomID;
@@ -929,6 +993,8 @@ public class Ship {
 		
 		
 	}
+	GridPoint2[] average = new GridPoint2[systemNames.length];
+	int[] averageTotals = new int[systemNames.length];
 
 	public void selectClosestEntity(int x, int y, UI ui, Ship shipB, int x2, int y2) {
 		Entity w = null;
@@ -1101,6 +1167,37 @@ public class Ship {
 			count++;
 		}
 		return count;
+	}
+	GridPoint2 point = new GridPoint2();
+	public void ensureValidSpawnPoint() {
+		int curr = map.get(map.spawn.x, map.spawn.y) & BLOCK_ID_MASK;
+		if (curr == VACCUUM || curr == WALL){
+			int found = 0, count = 0, dist = 100000;
+	
+			while (found < 5 && count++ < 1000){
+				int x = MathUtils.random(mapWidth-1);
+				int y = MathUtils.random(mapHeight-1);
+				int di = Math.abs(x - mapWidth/2) + Math.abs(y - mapHeight/2);
+				int dblock = map.get(x,  y) & BLOCK_ID_MASK;
+				if (dblock != WALL && dblock != VACCUUM){
+					found++;
+					if (di < dist){
+						dist = di;
+						point.set(x, y);					
+					}
+				}
+					
+			}
+			if (found > 0){
+				map.spawn.set(point);
+			} else Gdx.app.log(TAG, "FAILED TO FIND A SPAWN");
+			
+		}
+			
+				
+			
+		
+		
 	}
 
 	

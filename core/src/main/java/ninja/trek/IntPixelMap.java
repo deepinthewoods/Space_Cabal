@@ -14,9 +14,9 @@ public class IntPixelMap{
 	private static int[] updateOrder;
 	private static int updateOrderLength;
 	private static BlockDef[] defs;
-	int[] map;
+	transient int[] map;
 	public int width, height, chunksX, chunksY;
-	int chunkSize;
+	;
 	private boolean specialConstructor;
 	private int updateProgress;
 	private int updateRepeats;
@@ -91,13 +91,12 @@ public class IntPixelMap{
 			damaged[i] = new IntIntMap();
 		}
 	}
-	public IntPixelMap(int w, int h, int chunkSize){
+	public IntPixelMap(int w, int h){
 		width = w;
 		height = h;
-		this.chunkSize = chunkSize;
-		chunksX = width / chunkSize + 1;
-		chunksY = height / chunkSize + 1;
-		map = new int[chunksX * chunkSize * chunksY * chunkSize];
+		chunksX = width / Ship.CHUNKSIZE + 1;
+		chunksY = height / Ship.CHUNKSIZE + 1;
+		map = new int[chunksX * Ship.CHUNKSIZE * chunksY * Ship.CHUNKSIZE];
 
 		for (int i = 0; i < 100; i++){
 			//set(MathUtils.random(width), MathUtils.random(10), MathUtils.random(4));
@@ -111,7 +110,7 @@ public class IntPixelMap{
 		}
 	}
 	public IntPixelMap(IntPixelMap map) {
-		this(map.width, map.height, map.chunkSize);
+		this(map.width, map.height);
 		specialConstructor = true;
 		// Gdx.app.log(TAG, "ALTERNATE MAP ");
 		for (int i = 0; i < 1000; i++){
@@ -125,7 +124,7 @@ public class IntPixelMap{
 	public int get(int x, int y) {
 		//Gdx.app.log(TAG, "get " + x + ", " + y);
 		if (x >= width || y >= height || x < 0 || y < 0) return Ship.VACCUUM;
-		int blockIndex = (x) + (y) * chunksX * chunkSize;
+		int blockIndex = (x) + (y) * chunksX * Ship.CHUNKSIZE;
 		
 		
 		
@@ -137,13 +136,13 @@ public class IntPixelMap{
 		//int currentBoost = (map[x  + y * chunkSize * chunksX] & Ship.BLOCK_BOOST_MASK) >> Ship.BLOCK_BOOST_BITS;
 		//if (currentBoost == 1) throw new GdxRuntimeException("Edkl)" + (b & Ship.BLOCK_BOOST_MASK));
 		//if (specialConstructor)Gdx.app.log(TAG, "set " + x + ", " + y);
-		map[x  + y * chunkSize * chunksX] = b;
+		map[x  + y * Ship.CHUNKSIZE * chunksX] = b;
 
 	}
 	public void damage(int x, int y, int dam, Ship ship) {
 		if (x >= width || y >= height || x < 0 || y < 0) return ;
 		//if (specialConstructor)Gdx.app.log(TAG, "set " + x + ", " + y);
-		int index = x  + y * chunkSize * chunksX;
+		int index = x  + y * Ship.CHUNKSIZE * chunksX;
 		int b = map[index];
 		int id = b & Ship.BLOCK_ID_MASK;
 		if (id == Ship.FLOOR) return;
@@ -171,7 +170,7 @@ public class IntPixelMap{
 	public void fix(int x, int y) {
 		if (x >= width || y >= height || x < 0 || y < 0) return ;
 		//if (specialConstructor)Gdx.app.log(TAG, "set " + x + ", " + y);
-		int index = x  + y * chunkSize * chunksX;
+		int index = x  + y * Ship.CHUNKSIZE * chunksX;
 		int b = map[index];
 		int id = b & Ship.BLOCK_ID_MASK;
 		if (id == Ship.FLOOR) return;
@@ -187,7 +186,7 @@ public class IntPixelMap{
 	public void fightFire(int x, int y) {
 		if (x >= width || y >= height || x < 0 || y < 0) return ;
 		//if (specialConstructor)Gdx.app.log(TAG, "set " + x + ", " + y);
-		int index = x  + y * chunkSize * chunksX;
+		int index = x  + y * Ship.CHUNKSIZE * chunksX;
 		int b = map[index];
 		int id = b & Ship.BLOCK_ID_MASK;
 
@@ -205,7 +204,7 @@ public class IntPixelMap{
 		if (x >= width || y >= height || x < 0 || y < 0) return ;
 		//if (specialConstructor)
 		//Gdx.app.log(TAG, "boost " + x + ", " + y);
-		int index = x  + y * chunkSize * chunksX;
+		int index = x  + y * Ship.CHUNKSIZE * chunksX;
 		int b = map[index];
 		int id = b & Ship.BLOCK_ID_MASK;
 		//if ((b & Ship.BLOCK_ID_MASK) == Ship.FLOOR) return;
@@ -422,7 +421,7 @@ public class IntPixelMap{
 		updateProgress %= updateOrderLength;
 		for (int cx = 0; cx <= chunksX; cx++)
 			for (int cy = 0; cy <= chunksY; cy++){
-				int dx = cx * chunkSize + x, dy = cy * chunkSize + y;
+				int dx = cx * Ship.CHUNKSIZE + x, dy = cy * Ship.CHUNKSIZE + y;
 				if (dx <= 0 || dy <= 0 || dx >= width-1 || dy >= height-1){
 					continue;
 				}
@@ -622,6 +621,15 @@ public class IntPixelMap{
 		for (int i = 0; i < map.length; i++){
 			map[i] = replacement;
 		}		
+	}
+	public int[] getRawBlocks() {
+		
+		return map;
+	}
+	public void setRawBlocks(int[] blocks) {
+		
+		map = blocks;
+		
 	}
 	
 }

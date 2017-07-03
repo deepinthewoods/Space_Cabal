@@ -7,9 +7,9 @@ import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Pixmap.Format;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.GridPoint2;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.IntArray;
 import com.badlogic.gdx.utils.Pools;
 
 import squidpony.squidgrid.AestheticDifference;
@@ -126,6 +126,7 @@ public class OuterHull {
 				
 			}
 		//blackBits = Color.rgba8888(Color.WHITE);
+		ship.ensureValidSpawnPoint();
 		int nodeX = ship.map.spawn.x, nodeY = ship.map.spawn.y, target = Color.BLACK.toIntBits(), replacement = 1;
 		int[] ret = new int[ship.mapWidth * ship.mapHeight];
 		floodFill(result, ret, nodeX, nodeY, target, replacement, ship.mapWidth, ship.mapHeight);
@@ -144,6 +145,7 @@ public class OuterHull {
 					npix.drawPixel(i, k, result[i + k * ship.mapWidth]);
 				}
 			}
+		candidates.clear();
 		for (int i = 1; i < ship.mapWidth-1; i ++)
 			for (int k = 1; k < ship.mapHeight-1; k++){
 				if (
@@ -151,20 +153,30 @@ public class OuterHull {
 						
 						){
 					if (
-							isClearPixel(npix.getPixel(i+1,  k))
-							|| isClearPixel(npix.getPixel(i-1,  k))
-							|| isClearPixel(npix.getPixel(i,  k+1))
-							|| isClearPixel(npix.getPixel(i,  k-1))
+							( !DetailedMimicPartial.isBlackPixel(npix.getPixel(i+1,  k))  )
+							|| 
+							( !DetailedMimicPartial.isBlackPixel(npix.getPixel(i-1,  k))  )
+							|| 
+							( !DetailedMimicPartial.isBlackPixel(npix.getPixel(i,  k+1))  )
+							|| 
+							( !DetailedMimicPartial.isBlackPixel(npix.getPixel(i,  k-1))  )
 							){
-						npix.drawPixel(i, k, blackBits);
+						
+						candidates.add(i + k * ship.mapWidth);
 					}
 					
 				}
 			}
+		for (int c = 0; c < candidates.size; c++){
+			int index = candidates.get(c);
+			int i = index % ship.mapWidth;
+			int k = index / ship.mapWidth;
+			npix.drawPixel(i, k, blackBits);
+		}
 		region = new Texture(npix);
 		mainPixmap = npix;
 	}
-
+	IntArray candidates = new IntArray();
 	private void addNode(int x, int y) {
 		GridPoint2 pt = Pools.obtain(GridPoint2.class);
 		pt.set(x, y);
@@ -225,7 +237,7 @@ public class OuterHull {
 		batch.begin();
 		if (region != null) batch.draw(region, 0, 0, ship.mapWidth, ship.mapHeight);
 		batch.end();
-		batch.disableBlending();
+		//batch.disableBlending();
 	}
 
 	public Pixmap getPixmap() {
@@ -246,5 +258,10 @@ public class OuterHull {
 		}
 		region = hull2;
 		
+	}
+
+	public Texture getTexture() {
+		// TODO Auto-generated method stub
+		return region;
 	}
 }

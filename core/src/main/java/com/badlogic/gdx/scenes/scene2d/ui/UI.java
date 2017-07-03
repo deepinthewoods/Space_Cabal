@@ -1,6 +1,10 @@
 package com.badlogic.gdx.scenes.scene2d.ui;
 
-import javax.swing.GroupLayout.Alignment;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input.Keys;
@@ -11,11 +15,9 @@ import com.badlogic.gdx.graphics.PixmapIO;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Actor;
-import com.badlogic.gdx.scenes.scene2d.EventListener;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
@@ -35,6 +37,7 @@ import com.badlogic.gdx.utils.Pools;
 import ninja.trek.Data;
 import ninja.trek.Entity;
 import ninja.trek.EntityAI;
+import ninja.trek.GameInfo;
 import ninja.trek.IntPixelMap;
 import ninja.trek.Items;
 import ninja.trek.Main;
@@ -97,6 +100,13 @@ public class UI {
 	private TextButton shipControlButton;
 	private ChangeListener shipControlListener;
 	private ChangeListener editButtonListener;
+	private Table newGameSelectTable;
+	private Window solarSystemWindow;
+	private TextButton geoOrbitButton;
+	private TextButton landOrbitButton;
+	private TextButton ellOrbitButton;
+	GameInfo info;
+	private Label planetInfoLabel;
 	public UI(Stage stage, World world) {
 		String uiName = "holo"
 				, fontName = "kenpixel_high"
@@ -238,6 +248,7 @@ public class UI {
 			@Override
 			public void draw(Batch batch, float parentAlpha) {
 				//batch.setColor(Color.WHITE);
+				if (ship == null) return;
 				ShipEntity se = ship.getShipEntity();
 				if (se == null){
 					return;
@@ -614,7 +625,7 @@ public class UI {
 			public void clicked(InputEvent event, float x, float y) {
 				Ship ship = world.getPlayerShip();
 				LoadLabel load = (LoadLabel) loadGroup.getChecked();
-				load.loadFileInto(ship);
+				load.loadFileInto(ship, world);
 				loadWindow.remove();
 				loadButtonInWindow.setChecked(false);
 				super.clicked(event, x, y);
@@ -659,19 +670,19 @@ public class UI {
 		Window newShipWindow = new Window("Select Settings for New Ship", skin);
 		newShipWindow.setPosition(Gdx.graphics.getWidth()/2, Gdx.graphics.getHeight()/2, Align.center);
 		Slider xSlider = new Slider(1, 8, 1, false, skin);
-		Label xSliderLabel = new Label("x " + Main.CHUNK_SIZE , skin);
+		Label xSliderLabel = new Label("x " + Ship.CHUNKSIZE , skin);
 		Slider ySlider = new Slider(1, 8, 1, false, skin);
-		Label ySliderLabel = new Label("y " + Main.CHUNK_SIZE, skin);
+		Label ySliderLabel = new Label("y " + Ship.CHUNKSIZE, skin);
 		xSlider.addListener(new ChangeListener(){
 			@Override
 			public void changed(ChangeEvent event, Actor actor) {
-				xSliderLabel.setText("x " + ((int)xSlider.getValue() * Main.CHUNK_SIZE));
+				xSliderLabel.setText("x " + ((int)xSlider.getValue() * Ship.CHUNKSIZE));
 			}
 		});
 		ySlider.addListener(new ChangeListener(){
 			@Override
 			public void changed(ChangeEvent event, Actor actor) {
-				ySliderLabel.setText("y " + ((int)ySlider.getValue() * Main.CHUNK_SIZE));
+				ySliderLabel.setText("y " + ((int)ySlider.getValue() * Ship.CHUNKSIZE));
 			}
 		});
 		newShipWindow.add(xSliderLabel);
@@ -685,11 +696,11 @@ public class UI {
 			public void clicked(InputEvent event, float x, float y) {
 				createShipButtonInWindow.setChecked(false);
 				newShipWindow.remove();
-				int w = (int)xSlider.getValue() * Main.CHUNK_SIZE;
-				int h = (int)ySlider.getValue() * Main.CHUNK_SIZE;
+				int w = (int)xSlider.getValue() * Ship.CHUNKSIZE;
+				int h = (int)ySlider.getValue() * Ship.CHUNKSIZE;
 				
 				EntityArray entities = Pools.obtain(EntityArray.class);
-				world.getPlayerShip().load(new IntPixelMap(w, h, Main.CHUNK_SIZE), entities, null);
+				world.getPlayerShip().load(new IntPixelMap(w, h), entities, null);
 				super.clicked(event, x, y);
 			}
 		});
@@ -730,7 +741,7 @@ public class UI {
 				super.clicked(event, x, y);
 			}
 		});
-		CheckBox hullBackToggleButton = new CheckBox("hull behind", skin);
+		CheckBox hullBackToggleButton = new CheckBox("hull front", skin);
 		hullBackToggleButton.addListener(new ClickListener(){
 			@Override
 			public void clicked(InputEvent event, float x, float y) {
@@ -741,13 +752,13 @@ public class UI {
 			}
 		});
 		
-		editTable.add(saveButton);
+		editTable.add(saveButton).left();
 		editTable.row();
-		editTable.add(loadButton);
+		editTable.add(loadButton).left();
 		editTable.row();
-		editTable.add(startButton);
+		editTable.add(startButton).left();
 		editTable.row();
-		editTable.add(newShipButton);
+		editTable.add(newShipButton).left();
 		editTable.row();
 		editTable.add(brushSizeSlider);
 		//editTable.row();
@@ -759,21 +770,21 @@ public class UI {
 		editTable.row();
 		editTable.add(editLineButton).left();
 		editTable.row();
-		editTable.add(weaponButton);
+		editTable.add(weaponButton).left();
 		editTable.row();
-		editTable.add(weaponDeleteButton);
+		editTable.add(weaponDeleteButton).left();
 		editTable.row();
-		editTable.add(entitySpawnButton);
+		editTable.add(entitySpawnButton).left();
 		editTable.row();
 		editTable.add(destroyButton).left();
 		editTable.row();
-		editTable.add(fireBtn);
+		editTable.add(fireBtn).left();
 		editTable.row();
-		editTable.add(hullShowButton);
+		editTable.add(hullShowButton).left();
 		editTable.row();
-		editTable.add(hullBackToggleButton);
+		editTable.add(hullBackToggleButton).left();
 		editTable.row();
-		editTable.add(openHullButton);
+		editTable.add(openHullButton).left();
 		editTable.row();
 		
 		ScrollPaneN editPane = new ScrollPaneN(emptyEditTable);
@@ -815,10 +826,8 @@ public class UI {
 		leftTable.row();
 		
 		
-		leftTable.row();
 		
 		leftGroup.add(editButton);
-		leftTable.row();
 		
 
 		weaponButtons = new WeaponButton[MAX_WEAPON_BUTTONS];
@@ -931,12 +940,46 @@ public class UI {
 		topTable.row();
 		topTable.add(infoTextLabel).colspan(3).left();
 		
+		newGameSelectTable = new Table();
+		TextButton nextShipButton = new TextButton("\n\nNext Ship >>\n\n", skin);
+		nextShipButton.addListener(new ClickListener(){
+			@Override
+			public void clicked(InputEvent event, float x, float y) {
+				world.showNextNewGameShip();
+				set(ship);
+				setEntity(null);
+				nextShipButton.setChecked(false);
+				super.clicked(event, x, y);
+			}
+		});
+		TextButton prevShipButton = new TextButton("\n\n<< Prev Ship\n\n", skin);
+		prevShipButton.addListener(new ClickListener(){
+			@Override
+			public void clicked(InputEvent event, float x, float y) {
+				world.showPrevNewGameShip();
+				set(ship);
+				setEntity(null);
+				prevShipButton.setChecked(false);
+				super.clicked(event, x, y);
+			}
+		});
 		
 		middleTable = new Window("Space Cabal", skin);
 		middleTable.setTouchable(Touchable.childrenOnly);
 		middleTable.getTitleTable().setTouchable(Touchable.disabled);
 		
 		TextButton newGameButton = new TextButton("New Game", skin);
+		TextButton startNewGameButton = new TextButton("Start Campaign", skin);
+		startNewGameButton.addListener(new ClickListener(){
+
+			@Override
+			public void clicked(InputEvent event, float x, float y) {
+				startNewGameButton.setChecked(false);
+				info = world.startNewGame();
+				newGameSelectTable.remove();
+				super.clicked(event, x, y);
+			}
+		});
 		newGameButton.addListener(new ClickListener(){
 			@Override
 			public void clicked(InputEvent event, float x, float y) {
@@ -944,6 +987,13 @@ public class UI {
 				set(world.getPlayerShip());
 				middleTable.remove();        
 				newGameButton.setChecked(false);
+				newGameSelectTable.add(prevShipButton).bottom();
+				newGameSelectTable.add(new Actor()).expand();
+				newGameSelectTable.add(startNewGameButton).bottom();
+				newGameSelectTable.add(new Actor()).expand();
+				newGameSelectTable.add(nextShipButton).bottom();
+				stage.addActor(newGameSelectTable);
+				newGameSelectTable.setFillParent(true);
 				super.clicked(event, x, y);
 			}
 		});
@@ -1002,13 +1052,70 @@ public class UI {
 		
 		makeInventoryWindow(skin);
 		
+		makeSolarSystemWindow(skin, world);
+		
+	}
+	private void makeSolarSystemWindow(Skin skin2, World world) {
+		solarSystemWindow = new Window("Planet Name", skin);
+		Table solarButtonsTable = new Table();
+		geoOrbitButton = new TextButton("Low Orbit", skin);
+		geoOrbitButton.addListener(new ClickListener(){
+			@Override
+			public void clicked(InputEvent event, float x, float y) {
+				geoOrbitButton.setChecked(false);
+				world.goToOrbit(GameInfo.ORBIT_ORBIT);
+				super.clicked(event, x, y);
+			}
+		});
+		landOrbitButton = new TextButton("Land", skin);
+		landOrbitButton.addListener(new ClickListener(){
+			@Override
+			public void clicked(InputEvent event, float x, float y) {
+				landOrbitButton.setChecked(false);
+				world.goToOrbit(GameInfo.ORBIT_LANDED);
+				super.clicked(event, x, y);
+			}
+		});
+		
+		ellOrbitButton = new TextButton("Elliptical Orbit", skin);
+		ellOrbitButton.addListener(new ClickListener(){
+			@Override
+			public void clicked(InputEvent event, float x, float y) {
+				ellOrbitButton.setChecked(false);
+				world.goToOrbit(GameInfo.ORBIT_ELLIPTICAL);
+				super.clicked(event, x, y);
+			}
+		});
+		solarButtonsTable.add(landOrbitButton);
+		solarButtonsTable.row();
+		solarButtonsTable.add(geoOrbitButton);
+		solarButtonsTable.row();
+		solarButtonsTable.add(ellOrbitButton);
+		
+		planetInfoLabel = new Label("dsjfk ljafsdk;l ;lkfsdj ;lks df;l kdj s;lka djsjd ;kljljks jfdjf;ldj fldjsf fj sdj f", skin);
+		planetInfoLabel.setWidth(Gdx.graphics.getWidth()/3);
+		planetInfoLabel.setWrap(true);
+		solarSystemWindow.add(solarButtonsTable );
+		solarSystemWindow.add(planetInfoLabel).width(Gdx.graphics.getWidth()/3);;
+		solarSystemWindow.pack();
 		
 		
+		solarSystemWindow.setPosition(Gdx.graphics.getWidth(), 0, Align.bottomRight);
 	}
 	private Ship ship;
 	private Entity entity;
 	public UISystemButton lastPressedShipSystemButton;
 
+	public void addSolarSystemWindow(Stage stage) {
+		landOrbitButton.setDisabled(true);
+		geoOrbitButton.setDisabled(true);
+		ellOrbitButton.setDisabled(true);
+		stage.addActor(solarSystemWindow);
+		
+	}
+	public void setPlanetInfo(int selectedPlanet) {
+		planetInfoLabel.setText(info.systems[info.currentSystem].planets[selectedPlanet].toString());
+	}
 	private void makeInventoryWindow(Skin skin) {
 		invWindow = new Window("Inventory", skin);
 		invItemDisplay = new ItemDisplay(skin, invWindow);
@@ -1200,12 +1307,25 @@ public class UI {
 		//Gdx.app.log(TAG, "actually save " + name + Main.MAP_FILE_EXTENSION);
 		FileHandle file = Gdx.files.external(Main.SHIP_SAVE_LOCATION + name + "." + Main.MAP_FILE_EXTENSION);
 		FileHandle entityFile = Gdx.files.external(Main.SHIP_SAVE_LOCATION + name + "." + Main.ENTITY_FILE_EXTENSION);
+		FileHandle blocksFile = Gdx.files.external(Main.SHIP_SAVE_LOCATION + name + "." + Main.MAP_BLOCKS_FILE_EXTENSION);
 		Json json = Pools.obtain(Json.class);
+		Gdx.app.log(TAG, "writing ship data");
 		String string = json.toJson(ship.map);
-		String entities = json.toJson(ship.getEntities());
-		Gdx.app.log(TAG, "writing ship ");
 		file.writeString(string, false);
+		Gdx.app.log(TAG, "writing ship blocks");
+		try {
+			ObjectOutputStream stream = new ObjectOutputStream (new GZIPOutputStream(blocksFile.write(false)));
+			stream.writeObject(ship.map.getRawBlocks());
+			stream.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
+		
 		Gdx.app.log(TAG, "writing entities ");
+		String entities = json.toJson(ship.getEntities());
 		entityFile.writeString(entities, false);
 		Gdx.app.log(TAG, "writing hull ");
 		FileHandle hullFile = Gdx.files.external(Main.SHIP_SAVE_LOCATION + name + "." + Main.MAP_HULL_EXTENSION);
@@ -1216,6 +1336,8 @@ public class UI {
 		//savePreview(name, ship);
 		Pools.free(json);
 	}
+	
+	
 	
 	private void savePreview(String name, Ship ship) {
 		FileHandle file = Gdx.files.external(Main.SHIP_SAVE_LOCATION + name + "." + Main.MAP_PREVIEW_EXTENSION);
@@ -1278,18 +1400,11 @@ public class UI {
 			
 		}
 
-		public void loadFileInto(Ship ship) {
-			Json json = Data.jsonPool.obtain();
-			IntPixelMap map = json.fromJson(IntPixelMap.class, f.readString());
-			FileHandle entityFile = Gdx.files.external(f.pathWithoutExtension() + "." + Main.ENTITY_FILE_EXTENSION);
-			FileHandle hullFile = Gdx.files.external(f.pathWithoutExtension() + "." + Main.MAP_HULL_EXTENSION);
-			EntityArray entities = json.fromJson(EntityArray.class, entityFile.readString());
-			Texture hull = null;
-			if (hullFile.exists())
-				hull = new Texture(hullFile);
-			ship.load(map, entities, hull);
-			Data.jsonPool.free(json);
+		public void loadFileInto(Ship ship, World world) {
+			world.loadShip(f, ship);
 		}
+
+		
 
 		public void set(FileHandle f) {
 			this.f = f;
@@ -1298,6 +1413,7 @@ public class UI {
 		}
 		
 	}
+	
 	public static class WeaponButton extends TextButton{
 
 		public ProgressBar slider;

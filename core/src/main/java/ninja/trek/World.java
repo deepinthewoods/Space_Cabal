@@ -1,13 +1,21 @@
 package ninja.trek;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.util.zip.GZIPInputStream;
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.UI;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Json;
@@ -21,17 +29,58 @@ public class World {
 	private Array<Ship> maps = new Array<Ship>(true, 4);
 	private FontManager fonts;
 	private float accum = 0f;
+	private ShaderProgram shader;
+	private Sprite pixelSprite;
+	private float warpAlpha, warpBeta;
+	public boolean planetSelectOn;
+	private PlanetRenderer planet;
 	public final static float timeStep = 1f/60f;
 	
-	public World(FontManager fontManager) {
-		
+	public World(FontManager fontManager, ShaderProgram shader, Sprite pixelSprite, PlanetRenderer planet) {
+		this.planet = planet;
+		this.shader = shader;
+		this.pixelSprite = pixelSprite;
 		fonts = fontManager; 
 		
 
 	}
-	public void update(SpriteBatch batch, Camera camera, World world, UI ui){
+	public void update(SpriteBatch batch, Camera camera, World world, UI ui, BackgroundRenderer background, PlanetRenderer planet, Stage stage	){
 		
 		accum += Gdx.graphics.getDeltaTime();
+		if (warpingToSolarSystemMap){
+			warpAlpha += Gdx.graphics.getDeltaTime();
+			planet.setAlpha(warpAlpha);
+			if (warpAlpha > 1f){
+				warpingToSolarSystemMap = false;
+				planetSelectOn = true;
+				warpAlpha = 0f;
+				ui.addSolarSystemWindow(stage);
+			}
+		}
+		if (warpingToPlanet){
+
+			warpAlpha += Gdx.graphics.getDeltaTime();
+			planet.setAlpha(1f - warpAlpha);
+			if (warpAlpha > 1f){
+				warpingToPlanet = false;
+				warpAlpha = 0f;
+			}
+		
+		}
+		if (warpingBetweenPlanets){
+
+			warpBeta += Gdx.graphics.getDeltaTime();
+			background.setAlpha(warpBeta<1f?warpBeta:2f - warpBeta);
+			if (warpBeta > 1f){
+				warpAlpha = 0f;;
+				warpingToPlanet = true;
+			}
+			if (warpBeta > 2f){
+				warpingBetweenPlanets = false;
+				warpBeta = 0f;
+			}
+		
+		}
 		while (accum > timeStep){
 			accum -= timeStep;
 			for (Ship map : maps)
@@ -53,11 +102,11 @@ public class World {
 		
 		 
 		
-		
+		if (!warpingBetweenPlanets && !warpingToPlanet && !warpingToSolarSystemMap && !planetSelectOn)
 		for (int i = 0; i < maps.size; i++){
 			Ship map = maps.get(i);
 			map.enableScissor(this);
-			batch.disableBlending();
+			batch.disableBlending() ;
 			
 			map.draw(batch, camera, this);
 			batch.begin();
@@ -115,18 +164,8 @@ public class World {
 		return maps.get(0);
 	}
 	public void startTestBattle() {
-		Json json = Data.jsonPool.obtain();
-		FileHandle f = Gdx.files.external(Main.SHIP_SAVE_LOCATION + "test" + "." + Main.MAP_FILE_EXTENSION);
-		IntPixelMap map = json.fromJson(IntPixelMap.class, f.readString());
-		FileHandle entityFile = Gdx.files.external(f.pathWithoutExtension() + "." + Main.ENTITY_FILE_EXTENSION);
-		FileHandle hullFile = Gdx.files.external(f.pathWithoutExtension() + "." + Main.MAP_HULL_EXTENSION);
-		EntityArray entities = json.fromJson(EntityArray.class, entityFile.readString());
-		//EntityArray entities = Pools.obtain(EntityArray.class);
-		Texture hull = null;
-		if (hullFile.exists())
-			hull = new Texture(hullFile);
-		maps.get(1).load(map, entities, hull);
-		Data.jsonPool.free(json);
+		loadShip("test", maps.get(1));
+		
 		
 		//Gdx.app.log(TAG, "IT " + maps.size);
 		for (int i = 0; i < maps.size; i++){
@@ -152,43 +191,110 @@ public class World {
 		
 	}
 	
+	String[] playerShipNames = {"test", "abasic"};
+	Array<Ship> playerShips;
+	Array<String> queuedPlayerShips = new Array<String>();
+	private boolean isNewGameMenu = false;
+	private Ship oldShip;
+	private int currentNewGameShipIndex;
+	private GameInfo info;
+	private boolean warpingToSolarSystemMap, warpingToPlanet, warpingBetweenPlanets;
 	
 	public void startNewGameMenu() {
+		/*if (playerShips == null){
+			playerShips = new Array<Ship>();
+			for (String name : playerShipNames){
+				Ship ship = new Ship(new IntPixelMap(16, 16), 1, pixelSprite, fonts, shader);
+				loadShip(name, ship);	
+				playerShips.add(ship);
+			}
+		} else {
+			for (String name : queuedPlayerShips){
+				Ship ship = new Ship(new IntPixelMap(16, 16), 1, pixelSprite, fonts, shader);
+				loadShip(name, ship);	
+				playerShips.add(ship);
+			}
+			
+		}
+		
+		Ship plShip = playerShips.get(0);
+		isNewGameMenu  = true;
+		oldShip = maps.get(0);
+		maps.set(0, plShip);;*/
+		currentNewGameShipIndex = 0;
+		loadShip(playerShipNames[currentNewGameShipIndex], getPlayerShip());
+		getPlayerShip().removeEntity(getPlayerShip().getShipEntity());
+		//warpingToSolarSystemMap = true;
+		
+	}
+	
+	public void showNextNewGameShip(){
+		currentNewGameShipIndex++;
+		if (currentNewGameShipIndex > playerShipNames.length-1)
+			currentNewGameShipIndex = 0;
+		loadShip(playerShipNames[currentNewGameShipIndex], getPlayerShip());
+		getPlayerShip().removeEntity(getPlayerShip().getShipEntity());
+
+	}
+	
+	public void showPrevNewGameShip(){
+		currentNewGameShipIndex--;
+		if (currentNewGameShipIndex < 0)
+			currentNewGameShipIndex = playerShipNames.length-1;
+		loadShip(playerShipNames[currentNewGameShipIndex], getPlayerShip());
+		getPlayerShip().removeEntity(getPlayerShip().getShipEntity());
+	}
+	
+	public GameInfo startNewGame(){
+		//startTestBattle();
+		MathUtils.random.setSeed(System.currentTimeMillis());
+		GameInfo info = new GameInfo(MathUtils.random(Integer.MAX_VALUE-1));
+		this.info = info;
+		warpAlpha = 0f;
+		warpingToSolarSystemMap = true;
+		planet.setInfo(info);
+		return info;
+	}
+
+	
+	public void loadShip(String name, Ship ship){
+		
+		FileHandle f = Gdx.files.external(Main.SHIP_SAVE_LOCATION + name + "." + Main.MAP_FILE_EXTENSION);
+		loadShip(f, ship);
+	}
+	public void loadShip(FileHandle f, Ship ship){
+		
 		Json json = Data.jsonPool.obtain();
-		FileHandle f = Gdx.files.external(Main.SHIP_SAVE_LOCATION + "test" + "." + Main.MAP_FILE_EXTENSION);
 		IntPixelMap map = json.fromJson(IntPixelMap.class, f.readString());
 		FileHandle entityFile = Gdx.files.external(f.pathWithoutExtension() + "." + Main.ENTITY_FILE_EXTENSION);
 		FileHandle hullFile = Gdx.files.external(f.pathWithoutExtension() + "." + Main.MAP_HULL_EXTENSION);
+		FileHandle mapBlocksFile = Gdx.files.external(f.pathWithoutExtension() + "." + Main.MAP_BLOCKS_FILE_EXTENSION);
 		EntityArray entities = json.fromJson(EntityArray.class, entityFile.readString());
-		//EntityArray entities = Pools.obtain(EntityArray.class);
 		Texture hull = null;
 		if (hullFile.exists())
 			hull = new Texture(hullFile);
-		maps.get(1).load(map, entities, hull);
+		
+		try {
+			ObjectInputStream blockStream = new ObjectInputStream(new GZIPInputStream(mapBlocksFile.read()));
+			int[] blocks = (int[]) blockStream.readObject();
+			map.setRawBlocks(blocks);
+			blockStream.close();
+		} catch (ClassNotFoundException | IOException e) {
+			Gdx.app.log(TAG, "failed to load raw blocks");
+			e.printStackTrace();
+		}
+		
+		ship.load(map, entities, hull);
+		
 		Data.jsonPool.free(json);
-		
-		//Gdx.app.log(TAG, "IT " + maps.size);
-		for (int i = 0; i < maps.size; i++){
-			Ship m = maps.get(i);
-			m.categorizeSystems();
-			
-			
-			if (!m.hasShipEntity()){
-				ShipEntity shipE = Pools.obtain(ShipEntity.class);
-				shipE.setDefaultAI();
-				maps.get(i).addEntity(shipE );
-			}
-			Gdx.app.log(TAG, "size " + i + "  " + maps.get(i).getEntities().size);
+		ship.categorizeSystems();
+		if (!ship.hasShipEntity()){
+			ShipEntity shipE = Pools.obtain(ShipEntity.class);
+			shipE.setDefaultAI();
+			ship.addEntity(shipE );
 		}
-		for (int i = 0; i < 1; i++){
-			Entity e = Pools.obtain(Entity.class);
-			e.glyph = letters[i % letters.length];
-			e.pos(maps.get(0).map.spawn);
-			e.setDefaultAI();
-			maps.get(0).addEntity(e);
-			
-		}
-		
+		//Gdx.app.log(TAG, "size " + i + "  " + maps.get(i).getEntities().size);
+	
 	}
 	public Ship getEnemyShip() {
 		return maps.get(1);
@@ -213,6 +319,11 @@ public class World {
 	public void dispose() {
 		for (int i = 0; i < maps.size; i++)
 			maps.get(i).dispose();
+		
+	}
+	public void goToOrbit(int orbitLanded) {
+		
+		
 		
 	}
 }

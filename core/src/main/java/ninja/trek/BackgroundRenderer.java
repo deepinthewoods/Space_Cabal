@@ -45,7 +45,12 @@ public class BackgroundRenderer {
 	}
 	Vector3 v, v3 = new Vector3();
 	Vector2 move = new Vector2(), mv = new Vector2();
+	public void setAlpha(float alpha){
+		this.alpha = alpha;
+	}
+	private float widthMod = 1f, maxWidth = 1000f, alpha = 0f;
 	public void draw(World world) {
+		widthMod = MathUtils.lerp(1f, maxWidth, alpha);
 		//if (true)return;
 		Alignment alignment = Alignment.CENTRE;
 		if (alignment  == Alignment.CENTRE){
@@ -57,7 +62,7 @@ public class BackgroundRenderer {
 			int width = (int) v3.x;
 			Gdx.gl.glScissor(0, 0, width, Gdx.graphics.getHeight());
 		}
-		
+		//batch.disableBlending();
 		batch.setProjectionMatrix(cam.combined);
 		batch.begin();
 		move.set(1, 0).scl(1f/4000f);
@@ -70,20 +75,20 @@ public class BackgroundRenderer {
 			v.add(mv.x, mv.y, 0);
 			v.x = (((v.x % MAX) + MAX) % MAX);
 			v.y = (((v.y % MAX) + MAX) % MAX);
-			//cam.project(v);
-			
-			//if (v.z < 0 || v.x < 0 || v.y < 0 || v.x > width || v.y > height) continue;
-			//Gdx.app.log("bg", "draw at " + v);
-			//cam.frustum.boundsInFrustum(v.x, v.y, v.z, 1, 1, 1);
-			batch.draw(sprite[i%8], v.x, v.y);
-			//batch.getProjectionMatrix().rotate(0f,  0f,  1f, .1f);
+			Sprite sprit = sprite[i%8];
+			//batch.draw(sprite[i%8], v.x, v.y);
+			sprit.setCenter(v.x, v.y);
+			sprit.setSize(sprit.getRegionWidth() * widthMod, sprit.getRegionHeight());
+			sprit.draw(batch);
 		}
 		batch.end();
 		//cam.rotate(1f, 0f, 0f, 1f);
 		cam.update();
 		if (alignment == Alignment.CENTRE){
 			Gdx.gl.glDisable(GL20.GL_SCISSOR_TEST);
+			
 		}
+		
 	}
 	public void dispose() {
 		// TODO Auto-generated method stub

@@ -11,11 +11,11 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.Pixmap;
-import com.badlogic.gdx.graphics.Pixmap.Filter;
 import com.badlogic.gdx.graphics.Pixmap.Format;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.Texture.TextureFilter;
 import com.badlogic.gdx.graphics.VertexAttribute;
+import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g3d.Environment;
 import com.badlogic.gdx.graphics.g3d.Material;
@@ -24,9 +24,14 @@ import com.badlogic.gdx.graphics.g3d.Renderable;
 import com.badlogic.gdx.graphics.g3d.RenderableProvider;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.glutils.FrameBuffer;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.scenes.scene2d.ui.UI;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.badlogic.gdx.utils.Pool;
 import com.badlogic.gdx.utils.ShortArray;
 
@@ -64,6 +69,8 @@ public class PlanetRenderer implements RenderableProvider{
 	private static final float ROTATION_SPEED = 8;
 
 	private static final int BUFFER_SIZE = 200;
+
+	private static final int MAX_PLANET_VERT_ARRAYS = 12;
  
     private Map<Long, Integer> middlePointIndexCache = new HashMap<>();
     
@@ -77,7 +84,7 @@ public class PlanetRenderer implements RenderableProvider{
 
 	private Mesh mesh;
 
-	private float[] verts;
+	private float[][] verts;
 
 	private Texture texture;
 
@@ -107,7 +114,12 @@ public class PlanetRenderer implements RenderableProvider{
 
 	private float orbitSpeed = 1f;
 
-	private FrameBuffer buffer;
+	private FrameBuffer[] buffer = new FrameBuffer[SolarSystem.MAX_PLANETS_PER_SYSTEM];
+	
+	private Sprite[] sprite = new Sprite[SolarSystem.MAX_PLANETS_PER_SYSTEM];
+
+	private Vector3[] SpherePointArray;
+	
  
     public PlanetRenderer(int recursionLevel, float size) {
     	texture = new Texture(Gdx.files.internal("biomes.png"));
@@ -147,9 +159,9 @@ public class PlanetRenderer implements RenderableProvider{
 		cam.update();
 		//Gdx.app.log("sphere", "type " + sphere.vertices.toArray().getClass());
 		
-		Vector3[] vertexArray = sphere.vertices.toArray();
+		SpherePointArray = sphere.vertices.toArray();
 		faceArray = new short[sphere.indices.size];
-		mesh = new Mesh(true, vertexArray.length * VERTEX_TOTAL_FLOATS, faceArray.length, 
+		mesh = new Mesh(true, SpherePointArray.length * VERTEX_TOTAL_FLOATS, faceArray.length, 
 				VertexAttribute.Position()
 				, VertexAttribute.ColorPacked()
 				//, VertexAttribute.TexCoords(0)
@@ -162,10 +174,11 @@ public class PlanetRenderer implements RenderableProvider{
 		//material.set(new ColorAttribute(ColorAttribute.createAmbient(Color.WHITE)));
 		//material.set(new ColorAttribute(ColorAttribute.AmbientLight));
 		
-        verts = new float[vertexArray.length * VERTEX_TOTAL_FLOATS];
-        vectorsToVerts(verts, vertexArray, sphere.indices);
+        verts = new float[MAX_PLANET_VERT_ARRAYS][];
+        verts[0] = new float[SpherePointArray.length * VERTEX_TOTAL_FLOATS];
+        vectorsToVerts(verts[0], SpherePointArray);
         
-        mesh.setVertices(verts);
+        mesh.setVertices(verts[0]);
         
         faceArray =  sphere.indices.toArray();
         
@@ -181,13 +194,15 @@ public class PlanetRenderer implements RenderableProvider{
         setBuffer(VertexBuffer.Type.TexCoord, 2, tb);
  
         updateBound();*/
+        for (int i = 0; i < buffer.length; i++){
+        	buffer[i] = new FrameBuffer(Format.RGBA4444, BUFFER_SIZE, BUFFER_SIZE, false);
+        	buffer[i].getColorBufferTexture().setFilter(TextureFilter.Nearest, TextureFilter.Nearest);
+        	sprite[i] = new Sprite(buffer[i].getColorBufferTexture());
+        }
         
-        buffer = new FrameBuffer(Format.RGBA4444, BUFFER_SIZE, BUFFER_SIZE, false);
-        
-        buffer.getColorBufferTexture().setFilter(TextureFilter.Nearest, TextureFilter.Nearest);
     }
     
-    private void vectorsToVerts(float[] verts, Vector3[] vertexArray, ShortArray indices) {
+    private void vectorsToVerts(float[] verts, Vector3[] vertexArray) {
     	int p = 0, i = 0, k = 0;
     	float lowestR = 2f, highestR = 0f;
     	
@@ -263,11 +278,40 @@ public class PlanetRenderer implements RenderableProvider{
 	}
 
 
+	public void setAlpha(float alpha){
+		this.alpha = alpha;
+	}
+	private float alpha = 0f;
 
+	public boolean starsFromSide = true, planetsFromSide = true;
 
-
-	public void draw(SpriteBatch screenBatch){
+	public void draw(SpriteBatch screenBatch, ShapeRenderer shape){
 		//cam.position.rotate(10, 0, 0, 1);
+		//if (info == null) return;
+		
+		int currentPlanet = 1;
+		int renderPlanet = 0;
+		if (info != null){
+			currentPlanet = info.currentPlanet;
+			if (alpha > .99f){
+				renderPlanet = MathUtils.random(info.systems[info.currentSystem].planets.length-1);
+			} else renderPlanet = currentPlanet;
+		}
+		
+		
+		
+		if (buffer[renderPlanet] == null){
+			buffer[renderPlanet] = new FrameBuffer(Format.RGBA4444, BUFFER_SIZE, BUFFER_SIZE, false);
+			sprite[renderPlanet] = new Sprite(buffer[currentPlanet].getColorBufferTexture());
+		}
+		
+		if (alpha > .99f){
+			if (verts[renderPlanet] == null){
+				verts[renderPlanet] = new float[SpherePointArray.length * VERTEX_TOTAL_FLOATS];
+			}
+			vectorsToVerts(verts[renderPlanet], SpherePointArray);
+			mesh.setVertices(verts[renderPlanet]);
+		}
 		cam.lookAt(0, 0, 0);
 		lightADirection.set(.5f, 1, 1);
 		lightBDirection.set(1, -1, -1);
@@ -282,34 +326,93 @@ public class PlanetRenderer implements RenderableProvider{
     			);
     	//Gdx.gl.glEnable(GL20.GL_CULL_FACE);
     	cam.update();
-    	buffer.begin();
+    	buffer[renderPlanet].begin();
     	modelBatch.begin(cam);
     	texture.bind();
 		//mesh.render(null, GL20.GL_TRIANGLES);
 		
 		modelBatch.render(this, environment);
 		modelBatch.end();
-		buffer.end();
+		buffer[renderPlanet].end();
 		
 		float w = Gdx.graphics.getWidth(), h = Gdx.graphics.getHeight();
-		//w = 1;h = 1;
 		screenBatch.getProjectionMatrix().setToOrtho2D(0, 0, w/h, 1);
-		
+		screenBatch.enableBlending();
 		screenBatch.begin();
-		float s = .8f, ox = -.1f, oy = -.1f;
-		screenBatch.draw(buffer.getColorBufferTexture(), ox, s + oy, s, -s);
+		float s = .8f, ox = -.1f, y = .3f;
+		float toS = .1f;
+		s = MathUtils.lerp(s, toS, alpha);
+		//if (alpha > .99f)
+		for (int i = 0; i < SolarSystem.MAX_PLANETS_PER_SYSTEM; i++){
+			//w = 1;h = 1;
+			float toY = (i + 1) / ((float)SolarSystem.MAX_PLANETS_PER_SYSTEM+1);
+			y = MathUtils.lerp(.3f, toY, alpha);
+			Sprite spr = sprite[i];
+			
+			spr.setSize(s, -s);
+			spr.setCenter(.3f, y);
+			
+			spr.draw(screenBatch);;
+			
+		}
+		if (info != null){
+			
+			if (info.systems[0] == null) throw new GdxRuntimeException("null info sys");
+			Sprite sun = Sprites.sun[info.systems[info.currentSystem].sunVariantID];
+			if (starsFromSide){
+				sun.setSize(.3f,  .3f);;
+				sun.setCenter(MathUtils.lerp(w/h , w/h * 0.8f, alpha), .5f);
+			}else{
+				sun.setSize(s* 3, -s * 3);
+				sun.setSize(.8f * 3,  .8f * 3);;
+				sun.setCenter(w/h * 0.8f, .5f);
+			}
+			sun.draw(screenBatch);;
+		}
+		
 		
 		screenBatch.end();
+		
+		if (alpha < .99f) return;
+		shape.setProjectionMatrix(screenBatch.getProjectionMatrix());
+		shape.begin(ShapeType.Line);
+		float ew = .7f, eh = .2f;;
+		if (info.currentOrbitalDepth == GameInfo.ORBIT_ORBIT){
+			ew = eh;
+		}
+		float ex = .3f - ew/2, ey = (currentPlanet + 1) / ((float)SolarSystem.MAX_PLANETS_PER_SYSTEM+1) - eh/2;
+		float rot = 0f;
+		dv.set(w/h * 0.8f, .5f);
+		float planetY = (currentPlanet + 1) / ((float)SolarSystem.MAX_PLANETS_PER_SYSTEM+1);;
+		dv.sub(.3f, planetY);
+		rot = dv.angle();
+		
+		
+		
+		dv.set(ew/2f - s/2 - .07f, 0);
+		dv.rotate(rot);
+		if (info.currentOrbitalDepth == GameInfo.ORBIT_ORBIT){
+
+			shape.ellipse(ex , ey , ew, eh, rot, 24);
+		} else 
+			shape.ellipse(ex + dv.x, ey + dv.y, ew, eh, rot, 24);
+		
+		
+		shape.end();
+		
 		//Gdx.gl.glDisable(GL20.GL_CULL_FACE);
 		
     }
-    
-    
+    Vector2 dv = new Vector2();
     
     
     
   
 	float rotation = 0;
+
+	private GameInfo info;
+
+	private int selectedPlanet;
 
 	@Override
 	public void getRenderables(Array<Renderable> renderables, Pool<Renderable> pool) {
@@ -332,8 +435,29 @@ public class PlanetRenderer implements RenderableProvider{
 		mesh.dispose();
 		texture.dispose();
 		pixmap.dispose();
-		this.buffer.dispose();
+		for (int i = 0; i < buffer.length; i++){
+			this.buffer[i].dispose();
+			this.buffer[i] = null;
+			
+		}
 		this.modelBatch.dispose();
+	}
+
+	public void click(float x, float y, UI ui) {
+		if (x > .6f) selectedPlanet = -1;
+		float planetY = ((float)SolarSystem.MAX_PLANETS_PER_SYSTEM+1);
+		selectedPlanet = (int) (
+				(y + 0)
+				* (SolarSystem.MAX_PLANETS_PER_SYSTEM+1) * 2
+				);
+		selectedPlanet--;
+		selectedPlanet /= 2;
+		selectedPlanet = Math.min(Math.max(selectedPlanet,  0), SolarSystem.MAX_PLANETS_PER_SYSTEM-1);
+		ui.setPlanetInfo(selectedPlanet);
+	}
+	
+	public void setInfo(GameInfo info){
+		this.info = info;
 	}
  
 }

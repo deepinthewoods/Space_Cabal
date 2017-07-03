@@ -62,7 +62,8 @@ public class FontManager {
 	}
 
 	public void drawSpawn(GridPoint2 e, SpriteBatch batch) {
-		fonts[1].draw(batch, spawnGlyph , e.x, e.y + fonts[1].getCapHeight()/2);
+		fonts[0].draw(batch, spawnGlyph , e.x, e.y + fonts[1].getCapHeight()/2);
+		//Gdx.app.log("font man", "spawn " );
 
 	}
 
