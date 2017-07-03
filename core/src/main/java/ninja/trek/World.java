@@ -34,6 +34,7 @@ public class World {
 	private float warpAlpha, warpBeta;
 	public boolean planetSelectOn;
 	private PlanetRenderer planet;
+	private boolean betaPhaseTwo;
 	public final static float timeStep = 1f/60f;
 	
 	public World(FontManager fontManager, ShaderProgram shader, Sprite pixelSprite, PlanetRenderer planet) {
@@ -61,9 +62,11 @@ public class World {
 
 			warpAlpha += Gdx.graphics.getDeltaTime();
 			planet.setAlpha(1f - warpAlpha);
+			
 			if (warpAlpha > 1f){
 				warpingToPlanet = false;
 				warpAlpha = 0f;
+				planetSelectOn = false;
 			}
 		
 		}
@@ -71,13 +74,19 @@ public class World {
 
 			warpBeta += Gdx.graphics.getDeltaTime();
 			background.setAlpha(warpBeta<1f?warpBeta:2f - warpBeta);
-			if (warpBeta > 1f){
-				warpAlpha = 0f;;
-				warpingToPlanet = true;
-			}
+			if (warpBeta > 1.75f){
+				if (!betaPhaseTwo){
+					betaPhaseTwo = true;
+					planet.unSelect();
+				}
+			} else 
+				betaPhaseTwo = false;
 			if (warpBeta > 2f){
 				warpingBetweenPlanets = false;
 				warpBeta = 0f;
+				warpAlpha = 0f;;
+				warpingToPlanet = true;
+				
 			}
 		
 		}
@@ -321,9 +330,12 @@ public class World {
 			maps.get(i).dispose();
 		
 	}
-	public void goToOrbit(int orbitLanded) {
-		
-		
+	public void goToOrbit(int orbitType) {
+		int planetI = planet.selectedPlanet;
+		info.currentPlanet = planetI;
+		info.currentOrbitalDepth = orbitType;
+		warpBeta = 0f;
+		warpingBetweenPlanets = true;
 		
 	}
 }

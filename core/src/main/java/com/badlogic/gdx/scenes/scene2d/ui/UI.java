@@ -162,7 +162,7 @@ public class UI {
 				}
 			});
 			btn.setTouchable(Touchable.enabled);
-			Gdx.app.log(TAG, "butt " + i);
+			//Gdx.app.log(TAG, "butt " + i);
 		}
 		//actionTable.setBackground(skin.getDrawable("btn_default_pressed"));
 		
@@ -1107,9 +1107,9 @@ public class UI {
 	public UISystemButton lastPressedShipSystemButton;
 
 	public void addSolarSystemWindow(Stage stage) {
-		landOrbitButton.setDisabled(true);
-		geoOrbitButton.setDisabled(true);
-		ellOrbitButton.setDisabled(true);
+		//landOrbitButton.setDisabled(true);
+		//geoOrbitButton.setDisabled(true);
+		//ellOrbitButton.setDisabled(true);
 		stage.addActor(solarSystemWindow);
 		
 	}

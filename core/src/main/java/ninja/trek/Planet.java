@@ -3,7 +3,9 @@ package ninja.trek;
 public class Planet {
 
 	private int seed;
-	private int index;
+	int index;
+	public int parent = -1;
+	public int parentOrder = -1;
 	
 	public Planet(int random, int index) {
 		seed = random;

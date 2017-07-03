@@ -402,7 +402,7 @@ public class Main extends ApplicationAdapter {
 		//Gdx.app.log(TAG, "shader \n" + shader.isCompiled());
 		float[] colorArray = CustomColors.getFloatColorArray();
 		shader.begin();
-		Gdx.app.log(TAG, "shader " + shader.getUniformLocation("u_colors[0]") + shader.isCompiled() + shader.getLog());
+		//Gdx.app.log(TAG, "shader " + shader.getUniformLocation("u_colors[0]") + shader.isCompiled() + shader.getLog());
 		shader.setUniform4fv("u_colors[0]", colorArray, 0, colorArray.length);
 		
 		shader.end();
