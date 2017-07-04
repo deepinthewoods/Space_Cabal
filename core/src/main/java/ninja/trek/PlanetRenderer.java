@@ -12,7 +12,6 @@ import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Pixmap.Format;
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.Texture.TextureFilter;
 import com.badlogic.gdx.graphics.VertexAttribute;
 import com.badlogic.gdx.graphics.g2d.Sprite;
@@ -31,11 +30,12 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.ui.UI;
 import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.FloatArray;
 import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.badlogic.gdx.utils.IntArray;
 import com.badlogic.gdx.utils.Pool;
 import com.badlogic.gdx.utils.ShortArray;
+
+import squidpony.squidgrid.gui.gdx.SColor;
 
 
  
@@ -77,7 +77,17 @@ public class PlanetRenderer implements RenderableProvider{
 	private static final int MAX_PLANET_VERT_ARRAYS = SolarSystem.MAX_PLANETS_PER_SYSTEM + SolarSystem.MAX_OTHER_BODIES_PER_SYSTEM;
 
 	private static final float SELECTED_PLANET_ZOOM_SPEED = 3f;
+
+	private static final int TOTAL_PLANET_COLOR_SETS = 12;
+
+	private static final Color[] GAS_GIANT_COLOR = {SColor.TAN, SColor.DB_IRON, Color.CYAN, SColor.GOLDEN_YELLOW};
  
+	private static final Color[] INNER_PLANET_COLOR = {SColor.LAVENDER_GRAY, SColor.LIGHT_GRAY, SColor.ORANGE, SColor.ATOMIC_TANGERINE};
+	
+	private static final float[] BEACH_COLORS = {SColor.YELLOW.toFloatBits(), SColor.TAN.toFloatBits(), SColor.LIGHT_GRAY.toFloatBits(), SColor.PEACH_YELLOW.toFloatBits()};
+	
+	private static final float[] OCEAN_COLORS = {SColor.BONDI_BLUE.toFloatBits(), SColor.CERULEAN.toFloatBits(), SColor.LIGHT_BLUE_SILK.toFloatBits(), SColor.CERULEAN_BLUE.toFloatBits()};
+	
     private Map<Long, Integer> middlePointIndexCache = new HashMap<>();
     
     private List<Vector3> vertices = new ArrayList<>();
@@ -92,7 +102,7 @@ public class PlanetRenderer implements RenderableProvider{
 
 	private float[][] verts;
 
-	private Texture texture;
+	//private Texture texture;
 
 	private Material material;
 
@@ -102,7 +112,7 @@ public class PlanetRenderer implements RenderableProvider{
 
 	private Pixmap pixmap;
 	
-	private Color[][] colors;
+	private float[][][] colors;
 	
 	private Vector3 lightADirection = new Vector3(), lightBDirection = new Vector3();
 
@@ -110,9 +120,9 @@ public class PlanetRenderer implements RenderableProvider{
 
 	private DirectionalLight lightB;
 	
-	private Color lightAColor = new Color(Color.WHITE), lightBColor = new Color(.1f, .1f, .2f, 1f);
+	private Color lightAColor = new Color(Color.WHITE), lightBColor = new Color(Color.DARK_GRAY);
 	
-	float seed = MathUtils.random();
+	//float seed = MathUtils.random();
     
 	Vector3 v = new Vector3();
 	
@@ -128,50 +138,102 @@ public class PlanetRenderer implements RenderableProvider{
 
 	private float[] sizeModifier = new float[MAX_PLANET_VERT_ARRAYS];
 
-	private Vector3[] SpherePointArray;
+	//private FloatArray[] oceanVerts;
 
-	private FloatArray[] oceanVerts;
+	//private ShortArray[] oceanIndices;
 
-	private ShortArray[] oceanIndices;
-
-	private Mesh oceanMesh;
+	//private Mesh oceanMesh;
 	
 	private IntArray lerpingIn = new IntArray(), lerpingOut = new IntArray();
+
+	private Icosphere baseSphere;
  
+	Color c = new Color();
+	
     public PlanetRenderer(int recursionLevel, float size) {
     	for (int i = 0; i < sizeModifier.length; i++)
     		sizeModifier[i] = 1f;
     	
-    	texture = new Texture(Gdx.files.internal("biomes.png"));
-    	pixmap = new Pixmap(Gdx.files.internal("biomes.png"));
+    	//texture = new Texture(Gdx.files.internal("biomes.png"));
     	
-    	colors = new Color[pixmap.getWidth()][pixmap.getHeight()];
+    	pixmap = new Pixmap(Gdx.files.internal("biomes.png"));
+    	colors = new float[TOTAL_PLANET_COLOR_SETS][pixmap.getWidth()][pixmap.getHeight()];
     	for (int i = 0; i < pixmap.getWidth(); i++){
     		for (int k = 0; k < pixmap.getHeight(); k++){
     			int p = pixmap.getPixel(i, k);
-    			Color c = new Color(p);
-    			
-    			colors[i][k] = c;
+    			c.set(p);
+    			colors[0][i][k] = c.toFloatBits();
     		}
     	}
-    	colors[0][0].set(pixmap.getPixel(pixmap.getWidth()-1,  pixmap.getHeight()-1));
+    	pixmap.dispose();
+    	pixmap = new Pixmap(Gdx.files.internal("biomes2.png"));
+    	for (int i = 0; i < pixmap.getWidth(); i++){
+    		for (int k = 0; k < pixmap.getHeight(); k++){
+    			int p = pixmap.getPixel(i, k);
+    			c.set(p);
+    			colors[1][i][k] = c.toFloatBits();
+    		}
+    	}
+    	pixmap.dispose();
+    	pixmap = new Pixmap(Gdx.files.internal("biomes3.png"));
+    	for (int i = 0; i < pixmap.getWidth(); i++){
+    		for (int k = 0; k < pixmap.getHeight(); k++){
+    			int p = pixmap.getPixel(i, k);
+    			c.set(p);
+    			colors[2][i][k] = c.toFloatBits();
+    		}
+    	}
+    	pixmap.dispose();
+    	pixmap = new Pixmap(Gdx.files.internal("biomes4.png"));
+    	for (int i = 0; i < pixmap.getWidth(); i++){
+    		for (int k = 0; k < pixmap.getHeight(); k++){
+    			int p = pixmap.getPixel(i, k);
+    			c.set(p);
+    			colors[3][i][k] = c.toFloatBits();
+    		}
+    	}
+    	pixmap.dispose();
+    	for (int gasGiant = 4; gasGiant < 8; gasGiant++)
+    	for (int i = 0; i < pixmap.getWidth(); i++){
+    		for (int k = 0; k < pixmap.getHeight(); k++){
+    			//int p = pixmap.getPixel(i, k);
+    			c.set(GAS_GIANT_COLOR[gasGiant-4]);
+    			alpha = MathUtils.random() * .2f;
+    			c.lerp(0f,  0f, 0f, 1f, alpha);
+    			colors[gasGiant][i][k] = c.toFloatBits();
+    		}
+    	}
+    	for (int innerPlanet = 8; innerPlanet < 12; innerPlanet++)
+    	for (int i = 0; i < pixmap.getWidth(); i++){
+    		for (int k = 0; k < pixmap.getHeight(); k++){
+    			//int p = pixmap.getPixel(i, k);
+    			c.set(INNER_PLANET_COLOR[innerPlanet-8]);
+    			alpha = MathUtils.random() * .2f;
+    			c.lerp(0f,  0f, 0f, 1f, alpha);
+    			colors[innerPlanet][i][k] = c.toFloatBits();
+    		}
+    	}
+    	//colors[0][0].set(pixmap.getPixel(pixmap.getWidth()-1,  pixmap.getHeight()-1));
     	//colors[0][0].set(pixmap.getPixel(0, 0));
     	//Gdx.app.log("planet", "pixel " + colors[0][0].r + " " + colors[0][0].g + " " + colors[0][0].b + " " + pixmap.getWidth());
-    	texture.setFilter(TextureFilter.Nearest, TextureFilter.Nearest);
-    	sphere = new Icosphere(5, 8f);
+    	//texture.setFilter(TextureFilter.Nearest, TextureFilter.Nearest);
+    	baseSphere = new Icosphere(5, 16, 8f);
+    	sphere = new Icosphere(baseSphere);
  
         environment = new Environment();
 		lightA = new DirectionalLight();
 		lightA.set(Color.WHITE, lightADirection);
-		
 		environment.add(lightA);
+		
 		lightB = new DirectionalLight();
-		lightB.set(Color.DARK_GRAY, lightBDirection);
+		lightB.set(Color.WHITE, lightBDirection);
 		environment.add(lightB);
         	
 		modelBatch = new ModelBatch();
 
 		cam = new PerspectiveCamera(50, BUFFER_SIZE, BUFFER_SIZE);
+		cam.near = 10;
+		cam.far = 40;
 		cam.position.set(0f, 20f, 0f);
 		cam.lookAt(0, 0, 0);
 		cam.near = 0.1f;
@@ -179,20 +241,20 @@ public class PlanetRenderer implements RenderableProvider{
 		cam.update();
 		//Gdx.app.log("sphere", "type " + sphere.vertices.toArray().getClass());
 		
-		SpherePointArray = sphere.vertices.toArray();
+		//spherePointArray = sphere.vertices.toArray(Vector3.class);
 		faceArray = new short[sphere.indices.size];
-		mesh = new Mesh(true, SpherePointArray.length * VERTEX_TOTAL_FLOATS, faceArray.length, 
+		mesh = new Mesh(true, sphere.vertices.size * VERTEX_TOTAL_FLOATS, faceArray.length, 
 				VertexAttribute.Position()
 				, VertexAttribute.ColorPacked()
 				//, VertexAttribute.TexCoords(0)
 				, VertexAttribute.Normal()
 				);
-		oceanMesh = new Mesh(true, SpherePointArray.length * VERTEX_TOTAL_FLOATS, faceArray.length * 2, 
+		/*oceanMesh = new Mesh(true, spherePointArray.length * VERTEX_TOTAL_FLOATS, faceArray.length * 2, 
 				VertexAttribute.Position()
 				, VertexAttribute.ColorPacked()
 				//, VertexAttribute.TexCoords(0)
 				, VertexAttribute.Normal()
-				);
+				);*/
 		material = new Material(
 				);
 		//material.set(TextureAttribute.createDiffuse(texture));
@@ -201,22 +263,22 @@ public class PlanetRenderer implements RenderableProvider{
 		//material.set(new ColorAttribute(ColorAttribute.AmbientLight));
 		
         verts = new float[MAX_PLANET_VERT_ARRAYS][];
-        oceanVerts = new FloatArray[MAX_PLANET_VERT_ARRAYS];
+        /*oceanVerts = new FloatArray[MAX_PLANET_VERT_ARRAYS];
         oceanIndices = new ShortArray[MAX_PLANET_VERT_ARRAYS];
         oceanVerts[0] = new FloatArray();
         oceanIndices[0] = new ShortArray();
-        verts[0] = new float[SpherePointArray.length * VERTEX_TOTAL_FLOATS];
-        vectorsToVerts(verts[0], SpherePointArray, oceanVerts[0], oceanIndices[0], sphere.indices);
-        
-        mesh.setVertices(verts[0]);
+        vectorsToVerts(verts[0], spherePointArray, oceanVerts[0], oceanIndices[0], sphere.indices);
+         */
+       
         
         faceArray =  sphere.indices.toArray();
         
         mesh.setIndices(faceArray);
         
+        /*
         oceanMesh.setVertices(oceanVerts[0].toArray());
 		oceanMesh.setIndices(oceanIndices[0].toArray());
-        /*FloatBuffer pb = BufferUtils.createFloatBuffer(vertexArray);
+         * FloatBuffer pb = BufferUtils.createFloatBuffer(vertexArray);
         setBuffer(VertexBuffer.Type.Position, 3, pb);
  
         IntBuffer ib = BufferUtils.createIntBuffer(faceArray);
@@ -227,55 +289,77 @@ public class PlanetRenderer implements RenderableProvider{
  
         updateBound();*/
         for (int i = 0; i < buffer.length; i++){
-        	buffer[i] = new FrameBuffer(Format.RGBA4444, BUFFER_SIZE, BUFFER_SIZE, false);
+        	buffer[i] = new FrameBuffer(Format.RGBA4444, BUFFER_SIZE, BUFFER_SIZE, true);
         	buffer[i].getColorBufferTexture().setFilter(TextureFilter.Nearest, TextureFilter.Nearest);
         	sprite[i] = new Sprite(buffer[i].getColorBufferTexture());
         }
         
     }
     
-    private void vectorsToVerts(float[] verts, Vector3[] vectorArray, FloatArray oceanVerts, ShortArray oceanIndices, ShortArray indices) {
+    private void vectorsToVerts(float[] verts, Array<Vector3> vertices2, ShortArray oceanIndices) {
+    	Planet planet = info.systems[info.currentSystem].planets[renderPlanet];
     	int p = 0, i = 0, k = 0;
-    	float lowestR = 2f, highestR = 0f;
-    	
+    	//float lowestR = 2f, highestR = 0f;
+    	float oceanColor = OCEAN_COLORS[planet.oceanColor], beachColor = BEACH_COLORS[planet.beachColor];
     	while ( p < verts.length){
     		//Gdx.app.log(TAG, "did " + vertexArray[i]);
-    		Vector3 pos = vectorArray[i];
-    		float height = noise.scaled(v.x,  v.y,  v.z, seed, 2f) ;
-    		height *= .25f;
-    		
-    		pos.nor().scl(8);
+    		Vector3 pos = vertices2.get(i);
+    		pos.nor().scl(7.5f);
     		//pos.scl(1 + height);
-    		v.set(pos);
-    		v.nor();
+    		v.set(pos).nor();
+    		float height = noise.scaled(v.x, v.y, v.z, planet.seed / 100002f, 10 * (planet.landScale + .02f));
+    		float oceanThreshold = planet.oceanHeight * 2 - 1;
+    		if (height > oceanThreshold){
+    			if (planet.exponentialHeightScaling)
+    				pos.scl(height * height * planet.height + 1);
+    			else
+    				pos.scl(height * .5f * planet.height + 1);
+    		}
     		
     		verts[p++] = pos.y;
     		verts[p++] = pos.x;
     		verts[p++] = pos.z;
+    		pos.nor().scl(7.5f);
+    		v.set(pos);
+    		v.nor();
+    		float temp = noise.scaled(v.x,  v.y,  v.z, planet.seed, 1f) /2f+.5f;
+    		//temp *= .45f;
+    		float az = 1f-Math.abs(v.z);
+    		temp *= (az);
+    		//temp *= Math.max(1f - height, 0);
+    		//temp *= Math.max(1f - height*2, 0);
+    		//temp = 0f;
+    		//temp = 0f;
+    		float rainfall = noise.scaled(v.x,  v.y,  v.z, planet.seed, 1f) /2f+.5f;
+    		//rainfall *= 2f;
+    		//rainfall -= .6f;
     		
-    		float temp = noise.scaled(v.x,  v.y,  v.z, seed, 1f) /2f+.5f;
-    		temp *= .45f;
-    		temp =  (1f-Math.abs(v.z));
-    		//temp = 1f;
-    		float rainfall = noise.scaled(v.x,  v.y,  v.z, seed, 1f) /2f+.5f;
-    		rainfall *= 2f;
-    		rainfall -= .6f;
-    		
-    		lowestR = Math.min(lowestR,  rainfall);
-    		highestR = Math.max(highestR,  rainfall);
+    		//lowestR = Math.min(lowestR,  rainfall);
+    		//highestR = Math.max(highestR,  rainfall);
     		//if (rainfall < .2f)
     			//Gdx.app.log(TAG, "low rainfall" + rainfall + " " + lowestR + "  high " + highestR);
     		rainfall = Math.max(Math.min(rainfall, 1f), 0f);
     		
     		//temp = MathUtils.random(1f);
+    		//rainfall = 1f - rainfall;
+    		//rainfall = 0f;
     		rainfall *= temp;
+    		//Gdx.app.log(TAG, "temp " + temp);
     		
-    		verts[p++] = lookupColor(1f-temp, 1f-rainfall, height);
+    		if (height < oceanThreshold){
+    			if (height < oceanThreshold - planet.beachAmount)
+    				verts[p++] = oceanColor;
+    			else
+        			verts[p++] = beachColor;    			
+    		}
+    		else	
+    			verts[p++] = lookupColor(1f-temp, 1f-rainfall, height, planet);
     		//verts[p++] = 1f - temp;
     		//verts[p++] = 1f - rainfall;
 
     		//v.set(0, 0, 0);
     				
+    		
     		verts[p++] = v.x;    	
     		verts[p++] = v.y;    	
     		verts[p++] = v.z;   
@@ -284,85 +368,13 @@ public class PlanetRenderer implements RenderableProvider{
     		//SDKFAAAAAAAAAAAAAAAAAAAAAAAA
     		i++;
     	}
-    	int indexIndex = 0;
-    	for (i = 0; i < indices.size/3-3; i++){
-    		v.set(0, 0, 0);
-    		//Vector3 vertA = vectorArray[indices.get(i*3)];
-    		//Vector3 vertB = vectorArray[indices.get(i*3+1)];
-    		//Vector3 vertC = vectorArray[indices.get(i*3+2)];
-    		int vi;
-    		
-    		
-    		vi = indices.get(i*3) * VERTEX_TOTAL_FLOATS;
-    		v.set(verts[vi], verts[vi+1], verts[vi+2]);
-    		float oceanA = noise.scaled(v.x, v.y, v.z, seed, .2f);
-    		
-    		vi = indices.get(i*3+1) * VERTEX_TOTAL_FLOATS;
-    		v.set(verts[vi], verts[vi+1], verts[vi+2]);
-    		float oceanB = noise.scaled(v.x, v.y, v.z, seed, .2f);
-    		
-    		vi = indices.get(i*3+2) * VERTEX_TOTAL_FLOATS;
-    		v.set(verts[vi], verts[vi+1], verts[vi+2]);
-    		float oceanC = noise.scaled(v.x, v.y, v.z, seed, .2f);
-    		
-    		v.scl(1f/3f);
-    		
-    		//float ocean = noise.scaled(v.x, v.y, v.z, seed, .2f);
-    		
-    		
-    		
-    		if (oceanA > 0 || oceanB > 0 || oceanC > 0){
-    			float colorA = Color.BLUE.toFloatBits();
-    			float colorB = Color.BLUE.toFloatBits();
-    			float colorC = Color.BLUE.toFloatBits();
-    			if (oceanA < .031f){
-    				colorA = Color.YELLOW.toFloatBits();
-    			
-    			}
-    			if (oceanB < .031f){
-    				colorB = Color.YELLOW.toFloatBits();
-    			}
-    			if (oceanC < .031f){
-    				colorC = Color.YELLOW.toFloatBits();
-    			}
-    				
-    			vi = indices.get(i*3) * VERTEX_TOTAL_FLOATS;
-        		oceanVerts.add(verts[vi++]);
-        		oceanVerts.add(verts[vi++]);
-        		oceanVerts.add(verts[vi++]);
-        		oceanVerts.add(colorA);vi++;
-        		oceanVerts.add(verts[vi++]);
-        		oceanVerts.add(verts[vi++]);
-        		oceanVerts.add(verts[vi++]);
-        		vi = indices.get(i*3+1) * VERTEX_TOTAL_FLOATS;
-        		oceanVerts.add(verts[vi++]);
-        		oceanVerts.add(verts[vi++]);
-        		oceanVerts.add(verts[vi++]);
-        		oceanVerts.add(colorB);vi++;
-        		oceanVerts.add(verts[vi++]);
-        		oceanVerts.add(verts[vi++]);
-        		oceanVerts.add(verts[vi++]);
-        		vi = indices.get(i*3+2) * VERTEX_TOTAL_FLOATS;
-        		oceanVerts.add(verts[vi++]);
-        		oceanVerts.add(verts[vi++]);
-        		oceanVerts.add(verts[vi++]);
-        		oceanVerts.add(colorC);vi++;
-        		oceanVerts.add(verts[vi++]);
-        		oceanVerts.add(verts[vi++]);
-        		oceanVerts.add(verts[vi++]);
-        		
-        		oceanIndices.add(indexIndex++);
-        		oceanIndices.add(indexIndex++);
-        		oceanIndices.add(indexIndex++);
-    		}
-    		
-    	}
+    	
     }
 
-	private float lookupColor(float temp, float rainfall, float height) {
+	private float lookupColor(float temp, float rainfall, float height, Planet planet) {
 		
-		int tempI = (int) ((temp) * (colors.length-1));
-		int rainfallI = (int) ((rainfall) * (colors[0].length-1));
+		int tempI = (int) (Math.min(Math.max(temp, 0f), 1f) * (colors[0].length-1));
+		int rainfallI = (int) (Math.min(Math.max(temp, 0f), 1f) * (colors[0][0].length-1));
 		//tempI = colors.length-3;
 		//rainfallI = colors.length-3;
 		//tempI = 63;
@@ -370,7 +382,8 @@ public class PlanetRenderer implements RenderableProvider{
 		//tempI = 0;
 		//rainfallI = 0;
 		//return colors[0][0].toFloatBits();
-		return colors[tempI][rainfallI].toFloatBits();
+		//Gdx.app.log(TAG, "color " + temp + " " +  "  " + tempI);
+		return colors[planet.colorIndex][tempI][rainfallI];
 		
 	}
 
@@ -409,8 +422,13 @@ public class PlanetRenderer implements RenderableProvider{
 		if (info != null){
 			currentPlanet = info.currentPlanet;
 			if (alpha > .25f){
-				renderPlanet = nextRenderPlanet++;
-				if (nextRenderPlanet >= info.systems[info.currentSystem].planets.length) renderPlanet = selectedPlanet;
+				if (nextRenderPlanet >= info.systems[info.currentSystem].planets.length){
+					if (renderPlanet != selectedPlanet){
+						renderPlanet = selectedPlanet;
+						mesh.setVertices(verts[renderPlanet]);						
+					}
+				} else 
+					renderPlanet = nextRenderPlanet++;
 			} else renderPlanet = currentPlanet;
 		}
 		
@@ -420,16 +438,20 @@ public class PlanetRenderer implements RenderableProvider{
 		}
 		
 		if (verts[renderPlanet] == null){
-			verts[renderPlanet] = new float[SpherePointArray.length * VERTEX_TOTAL_FLOATS];
-			oceanVerts[renderPlanet] = new FloatArray();
-			oceanIndices[renderPlanet] = new ShortArray();
+			verts[renderPlanet] = new float[sphere.vertices.size * VERTEX_TOTAL_FLOATS];
+			//oceanVerts[renderPlanet] = new FloatArray();
+			//oceanIndices[renderPlanet] = new ShortArray();
 		}
-		
+		boolean buffered = false;
 		if (alpha > .25f && nextRenderPlanet < info.systems[info.currentSystem].planets.length){
-			vectorsToVerts(verts[renderPlanet], SpherePointArray, oceanVerts[renderPlanet], oceanIndices[renderPlanet], sphere.indices);
+			sphere.set(baseSphere);
+			sphere.perterb(info.systems[info.currentSystem].planets[renderPlanet].seed);
+			vectorsToVerts(verts[renderPlanet], sphere.vertices, sphere.indices);
 			mesh.setVertices(verts[renderPlanet]);
-			oceanMesh.setVertices(oceanVerts[renderPlanet].toArray());
-			oceanMesh.setIndices(oceanIndices[renderPlanet].toArray());
+			buffered =true;
+			//Gdx.app.log(TAG, "renderplanet " + renderPlanet);
+			//oceanMesh.setVertices(oceanVerts[renderPlanet].toArray());
+			//oceanMesh.setIndices(oceanIndices[renderPlanet].toArray());
 			toY[renderPlanet] = (renderPlanet + 1) / ((float)SolarSystem.MAX_PLANETS_PER_SYSTEM+1);
 			toX[renderPlanet] = 0.3f;
 			SolarSystem currentSystem = info.systems[info.currentSystem];
@@ -439,12 +461,11 @@ public class PlanetRenderer implements RenderableProvider{
 				int parentI = parentPlanet.index;
 				toY[renderPlanet] = (parentI + 1) / ((float)SolarSystem.MAX_PLANETS_PER_SYSTEM+1);
 				toX[renderPlanet] += .2f + .1f * (planet.parentOrder);
-				
 			}
 		}
 		cam.lookAt(0, 0, 0);
 		lightADirection.set(.5f, 1, 1);
-		lightBDirection.set(1, -1, -1);
+		lightBDirection.set(-1f, -1, -1);
 		if (alpha > .95f){
 			rotation[renderPlanet] += Gdx.graphics.getDeltaTime() * SELECTED_ROTATION_SPEED;			
 		} else
@@ -454,16 +475,19 @@ public class PlanetRenderer implements RenderableProvider{
 		lightA.set(lightAColor, lightADirection);
 		lightB.set(lightBColor, lightBDirection);
 		//Gdx.gl.glClearColor(.1f, 0, 0, 1f);
-    	Gdx.gl.glClear( GL20.GL_DEPTH_BUFFER_BIT
-    	//		| GL20.GL_COLOR_BUFFER_BIT
-    			);
-    	Gdx.gl.glEnable(GL20.GL_CULL_FACE);
+		Gdx.gl.glDisable( GL20.GL_CULL_FACE| GL20.GL_BLEND);
+
     	cam.update();
     	buffer[renderPlanet].begin();
     	modelBatch.begin(cam);
-    	texture.bind();
+    	//texture.bind();
 		//mesh.render(null, GL20.GL_TRIANGLES);
-		
+    	Gdx.gl.glEnable(GL20.GL_DEPTH_TEST );
+    	Gdx.gl.glClear( GL20.GL_DEPTH_BUFFER_BIT);
+    	Gdx.gl.glClearColor(0f,  0f,  0f,  0f);
+    	Gdx.gl.glClear( 
+    	    			GL20.GL_COLOR_BUFFER_BIT
+    	    			);
 		modelBatch.render(this, environment);
 		modelBatch.end();
 		buffer[renderPlanet].end();
@@ -482,12 +506,14 @@ public class PlanetRenderer implements RenderableProvider{
 			for (int i = 0; i < MAX_PLANET_VERT_ARRAYS && i < currentSystem.planets.length; i++){
 				if (toY[i] <= 0.0001f) continue;
 				if (alpha < .98f && i != renderPlanet) continue;
-				//Planet planet = currentSystem.planets[i];
+				
+				Planet planet = currentSystem.planets[i];
 				float x = toX[i];
 				y = MathUtils.lerp(.3f, toY[i], alpha);
+				//if (alpha < .98f) continue;
 				Sprite spr = sprite[i];
-				
-				spr.setSize(-s * sizeModifier[i], -s * sizeModifier[i]);
+				if (buffered) continue;
+				spr.setSize(s * sizeModifier[i] * planet.size, -s * sizeModifier[i] * planet.size);
 				spr.setCenter(x, y);
 				spr.draw(screenBatch);;
 			}
@@ -507,7 +533,10 @@ public class PlanetRenderer implements RenderableProvider{
 		
 		screenBatch.end();
 		
-		if (alpha < .99f) return;
+		if (alpha < .99f){
+			Gdx.gl.glDisable(GL20.GL_DEPTH_TEST | GL20.GL_BLEND | GL20.GL_CULL_FACE);
+			return;
+		}
 		shape.setProjectionMatrix(screenBatch.getProjectionMatrix());
 		shape.begin(ShapeType.Line);
 		float ew = .7f, eh = .2f;;
@@ -537,7 +566,7 @@ public class PlanetRenderer implements RenderableProvider{
 		
 		shape.end();
 		
-		Gdx.gl.glDisable(GL20.GL_CULL_FACE);
+		Gdx.gl.glDisable(GL20.GL_DEPTH_TEST | GL20.GL_BLEND | GL20.GL_CULL_FACE);
     }
     Vector2 dv = new Vector2();
   
@@ -560,7 +589,7 @@ public class PlanetRenderer implements RenderableProvider{
 		
 		renderables.add(r);
 		
-		r = pool.obtain();
+		/*r = pool.obtain();
 		r.environment = environment;
 		r.material = material;
 		r.meshPart.mesh = oceanMesh;
@@ -569,14 +598,14 @@ public class PlanetRenderer implements RenderableProvider{
 		r.worldTransform.idt().rotate(0,  0,  1, rotation[renderPlanet]);
 		r.meshPart.primitiveType = GL20.GL_TRIANGLES;
 		
-		renderables.add(r);
+		renderables.add(r);*/
 		
 	}
 
 	public void dispose() {
 		mesh.dispose();
-		texture.dispose();
-		pixmap.dispose();
+		//texture.dispose();
+		//pixmap.dispose();
 		for (int i = 0; i < buffer.length; i++){
 			this.buffer[i].dispose();
 			this.buffer[i] = null;

@@ -265,6 +265,10 @@ public class World {
 		return info;
 	}
 
+	public void showSolarSystemView(){
+		warpAlpha = 0f;
+		warpingToSolarSystemMap = true;
+	}
 	
 	public void loadShip(String name, Ship ship){
 		

@@ -752,6 +752,16 @@ public class UI {
 			}
 		});
 		
+		
+		TextButton solarSystemButton = new TextButton("SS map", skin);
+		solarSystemButton.addListener(new ClickListener(){
+			@Override
+			public void clicked(InputEvent event, float x, float y) {
+				solarSystemButton.setChecked(false);
+				world.showSolarSystemView();
+				super.clicked(event, x, y);
+			}
+		});
 		editTable.add(saveButton).left();
 		editTable.row();
 		editTable.add(loadButton).left();
@@ -760,6 +770,9 @@ public class UI {
 		editTable.row();
 		editTable.add(newShipButton).left();
 		editTable.row();
+		editTable.add(solarSystemButton);
+		editTable.row();
+		
 		editTable.add(brushSizeSlider);
 		//editTable.row();
 		editTable.add(brushSizeLabel);
