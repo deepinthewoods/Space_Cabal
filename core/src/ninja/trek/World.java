@@ -7,10 +7,14 @@ import java.util.zip.GZIPInputStream;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Camera;
+import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.VertexAttribute;
+import com.badlogic.gdx.graphics.VertexAttributes.Usage;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g3d.ModelBatch;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.MathUtils;
@@ -19,6 +23,7 @@ import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.UI;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Json;
+import com.badlogic.gdx.utils.PauseableThread;
 import com.badlogic.gdx.utils.Pools;
 
 import ninja.trek.Ship.Alignment;
@@ -35,15 +40,81 @@ public class World {
 	public boolean planetSelectOn;
 	private PlanetRenderer planet;
 	private boolean betaPhaseTwo;
+	private ModelBatch modelBatch;
+	private float[][] vertsForThreads;
+	private short[] indicesForChunkMesh;
+	private Mesh mesh;
+	private ShaderProgram cacheShader;
+	private PauseableThread[] threads;
 	public final static float timeStep = 1f/60f;
 	
-	public World(FontManager fontManager, ShaderProgram shader, Sprite pixelSprite, PlanetRenderer planet) {
+	public World(FontManager fontManager, ShaderProgram shader, Sprite pixelSprite, PlanetRenderer planet, ModelBatch modelBatch) {
+		this.modelBatch = modelBatch;
 		this.planet = planet;
 		this.shader = shader;
 		this.pixelSprite = pixelSprite;
 		fonts = fontManager; 
 		
+		vertsForThreads = new float[Main.THREADS][Ship.CHUNKSIZE * Ship.CHUNKSIZE * 4 * 3];
+		indicesForChunkMesh = new short[Ship.CHUNKSIZE * Ship.CHUNKSIZE * 6];
+		//for (int i = 0; i < vertsForThreads.length; i++)
+		mesh = new Mesh(true, vertsForThreads[0].length , indicesForChunkMesh.length, 
+				new VertexAttribute(Usage.Position, 2, ShaderProgram.POSITION_ATTRIBUTE)
+				, VertexAttribute.ColorPacked()
+				//, VertexAttribute.TexCoords(0)
+				//, VertexAttribute.Normal()
+				);
+		short index = 0;
+		for (int i = 0; i < indicesForChunkMesh.length;) {
+			indicesForChunkMesh[i++] = index;
+			indicesForChunkMesh[i++] = (short) (index+1);
+			indicesForChunkMesh[i++] = (short) (index+2);
+			indicesForChunkMesh[i++] = (short) (index+1);
+			indicesForChunkMesh[i++] = (short) (index+2);
+			indicesForChunkMesh[i++] = (short) (index+3);			
+			index += 4;
+		}
+		mesh.setIndices(indicesForChunkMesh);
+		cacheShader = createDefaultShader();
 
+		threads = new PauseableThread[2];
+		threads[0] = new PauseableThread(new MapCacheRunnable(0, this));
+		threads[1] = new PauseableThread(new MapCacheRunnable(1, this));
+		threads[0].start();
+		//threads[1].start();
+	}
+	public ShaderProgram createDefaultShader () {
+		String vertexShader = "attribute vec4 " + ShaderProgram.POSITION_ATTRIBUTE + ";\n" //
+			+ "attribute vec4 " + ShaderProgram.COLOR_ATTRIBUTE + ";\n" //
+			//+ "attribute vec2 " + ShaderProgram.TEXCOORD_ATTRIBUTE + "0;\n" //
+			+ "uniform mat4 u_projTrans;\n" //
+			+ "varying vec4 v_color;\n" //
+			//+ "varying vec2 v_texCoords;\n" //
+			+ "\n" //
+			+ "void main()\n" //
+			+ "{\n" //
+			+ "   v_color = " + ShaderProgram.COLOR_ATTRIBUTE + ";\n" //
+			+ "   v_color.a = v_color.a * (255.0/254.0);\n" //
+			//+ "   v_texCoords = " + ShaderProgram.TEXCOORD_ATTRIBUTE + "0;\n" //
+			+ "   gl_Position =  u_projTrans * " + ShaderProgram.POSITION_ATTRIBUTE + ";\n" //
+			+ "}\n";
+		String fragmentShader = "#ifdef GL_ES\n" //
+			+ "#define LOWP lowp\n" //
+			+ "precision mediump float;\n" //
+			+ "#else\n" //
+			+ "#define LOWP \n" //
+			+ "#endif\n" //
+			+ "varying LOWP vec4 v_color;\n" //
+			//+ "varying vec2 v_texCoords;\n" //
+			//+ "uniform sampler2D u_texture;\n" //
+			+ "void main()\n"//
+			+ "{\n" //
+			+ "  gl_FragColor = v_color;\n" //
+			+ "}";
+
+		ShaderProgram shader = new ShaderProgram(vertexShader, fragmentShader);
+		if (shader.isCompiled() == false) throw new IllegalArgumentException("Error compiling shader: " + shader.getLog());
+		return shader;
 	}
 	public void update(SpriteBatch batch, Camera camera, World world, UI ui, BackgroundRenderer background, PlanetRenderer planet, Stage stage	){
 		
@@ -101,7 +172,7 @@ public class World {
 		}
 		
 		for (Ship map : maps)
-			map.updateDraw(batch);
+			map.updateDraw(mesh, cacheShader);
 		
 	}
 	
@@ -341,5 +412,9 @@ public class World {
 		warpBeta = 0f;
 		warpingBetweenPlanets = true;
 		
+	}
+	public Ship getShipForThread(int index) {
+		if (maps.size <= index) return null;
+		return maps.get(index);
 	}
 }

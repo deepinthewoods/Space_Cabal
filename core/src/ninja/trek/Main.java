@@ -12,6 +12,7 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
+import com.badlogic.gdx.graphics.g3d.ModelBatch;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.MathUtils;
@@ -39,7 +40,8 @@ public class Main extends ApplicationAdapter {
 	public static final String HULL_SOURCE_FILES_LOCATION = "sources/";
 	public static final String FONT_SAVE_LOCATION = "SpaceCabal/fonts/";
 	public static final String MAP_HULL_EXTENSION = "png";
-	public static final String MAP_BLOCKS_FILE_EXTENSION = "blk";;
+	public static final String MAP_BLOCKS_FILE_EXTENSION = "blk";
+	public static final int THREADS = 1;;
 	
 	SpriteBatch batch;
 	TextureAtlas atlas;
@@ -59,6 +61,7 @@ public class Main extends ApplicationAdapter {
 	private ScreenViewport viewport;
 	private BackgroundRenderer background;
 	private PlanetRenderer planet;
+	private ModelBatch modelBatch;
 	@Override
 	public void create () {
 		String[] args = {""};
@@ -80,7 +83,8 @@ public class Main extends ApplicationAdapter {
 		atlas = new TextureAtlas(Gdx.files.internal("background.atlas"));
 		Sprites.init(atlas);
 		background = new BackgroundRenderer(atlas);
-		planet = new PlanetRenderer(6, 1f);
+		modelBatch = new ModelBatch();;
+		planet = new PlanetRenderer(6, 1f, modelBatch);
 		camera = new OrthographicCamera(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		camera.position.set(Gdx.graphics.getWidth()/2, Gdx.graphics.getHeight()/2, 0);
 		//camera.rotate(90);
@@ -405,7 +409,7 @@ public class Main extends ApplicationAdapter {
 		fontManager = new FontManager();
 		
 		Sprite pixelSprite = new Sprite(new Texture("pixel.png"));
-		world = new World(fontManager, shader, pixelSprite, planet);
+		world = new World(fontManager, shader, pixelSprite, planet, modelBatch);
 		
 		if (!Gdx.files.internal("lighting.vert").exists()) throw new GdxRuntimeException("kdls");
 		shader = new ShaderProgram(Gdx.files.internal("lighting.vert"), Gdx.files.internal("lighting.frag"));

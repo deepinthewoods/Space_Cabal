@@ -150,7 +150,7 @@ public class PlanetRenderer implements RenderableProvider{
  
 	Color c = new Color();
 	
-    public PlanetRenderer(int recursionLevel, float size) {
+    public PlanetRenderer(int recursionLevel, float size, ModelBatch batch) {
     	for (int i = 0; i < sizeModifier.length; i++)
     		sizeModifier[i] = 1f;
     	
@@ -229,7 +229,7 @@ public class PlanetRenderer implements RenderableProvider{
 		lightB.set(Color.WHITE, lightBDirection);
 		environment.add(lightB);
         	
-		modelBatch = new ModelBatch();
+		modelBatch = batch;
 
 		cam = new PerspectiveCamera(50, BUFFER_SIZE, BUFFER_SIZE);
 		cam.near = 10;

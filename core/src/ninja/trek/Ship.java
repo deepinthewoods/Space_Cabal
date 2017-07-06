@@ -2,9 +2,9 @@ package ninja.trek;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
-import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Pixmap.Format;
@@ -20,6 +20,7 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.math.GridPoint2;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.ui.UI;
@@ -27,11 +28,11 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Bits;
 import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.badlogic.gdx.utils.IntArray;
+import com.badlogic.gdx.utils.PauseableThread;
 import com.badlogic.gdx.utils.Pool;
 import com.badlogic.gdx.utils.Pools;
 import com.badlogic.gdx.utils.ScreenUtils;
 
-import ninja.trek.Ship.EntityArray;
 import ninja.trek.ui.ItemDisplay;
 import ninja.trek.ui.ItemDisplay.ItemButton;
 import ninja.trek.ui.UIActionButton;
@@ -54,7 +55,6 @@ public class Ship {
 	public int[] systemButtonOrder = new int[systemNames.length];
 	public int[] maxDepletionBySystem = {63, 63, 63, 63, 63, 63, 63, 63, 63, 63, 63};
 	public float[] maxDamgeBySystem =   {15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15};;
-	Array<GridPoint2> queue = new Array<GridPoint2>();
 	public boolean placeWeapon = false;
 	public boolean deleteWeapon;
 	public boolean placeSpawn;
@@ -119,6 +119,9 @@ public class Ship {
 	public boolean[] disabledButton = new boolean[systemNames.length];
 	public boolean hullFront;
 	public Array<GridPoint2> roomCentres = new Array<GridPoint2>();
+	private float[][] cacheVerts;
+	private int[] cacheDrawCount;
+	
 	
 	
 	public Ship(IntPixelMap map, Sprite pixelSprite, FontManager fonts, ShaderProgram shader){
@@ -173,6 +176,10 @@ public class Ship {
 		}
 		populateRandomChunkOrder();
 
+		cacheVerts = new float[chunksX * chunksY][CHUNKSIZE * CHUNKSIZE * 3 * 4];
+		cacheDrawCount = new int[chunksX * chunksY];
+		
+		
 	}
 	public FrameBuffer makeFrameBuffer(int i){
 		int ind = hasBuffer.nextSetBit(0), count = 0;
@@ -231,37 +238,87 @@ public class Ship {
 		}
 		//Gdx.app.log(TAG, "clear  buffer post" + i + "   / "  + count);
 	}
+	
+	
 
-	private void cacheChunk(int x, int y, SpriteBatch batch, FrameBuffer[] buffer, IntPixelMap map) {
+	public void cacheChunk(IntPixelMap map) {
+		cacheProgress++;
+		if (cacheProgress >= chunksInRandomOrder.size) cacheProgress = 0;
+		GridPoint2 pt = chunksInRandomOrder.get(cacheProgress);
+		int x = pt.x, y = pt.y;
+		//Gdx.app.log(TAG, "cache chunk" + x + "," + y);
+		int chunkIndex = x + y * chunksX;
+		float[] verts = cacheVerts[chunkIndex]; 
+		int i = 0;
+		for (int xx = 0; xx < CHUNKSIZE; xx++)
+			for (int yy = 0; yy < CHUNKSIZE; yy++){
+				//int blockIndex = (x*CHUNKSIZE + xx) + (y * CHUNKSIZE + yy) * chunksX * CHUNKSIZE;
+				//Gdx.app.log(TAG, "cache block" + blockIndex + "," + x + "," + xx + "," + y + "," + yy + "," );
+				int ax = x*CHUNKSIZE + xx , ay =  y * CHUNKSIZE + yy;
+				int block = map.get(ax, ay);
+				float c = map.getColor(block, ax, ay, this).toFloatBits();
+				verts[i++] = xx;
+				verts[i++] = CHUNKSIZE - yy-1;
+				verts[i++] = c;
+				verts[i++] = xx+1;
+				verts[i++] = CHUNKSIZE - yy-1;
+				verts[i++] = c;
+				verts[i++] = xx;
+				verts[i++] = CHUNKSIZE - yy-1+1;
+				verts[i++] = c;
+				verts[i++] = xx+1;
+				verts[i++] = CHUNKSIZE - yy-1+1;
+				verts[i++] = c;
+				
+				
+				//batch.setColor(map.getColor(block, ax, ay, this));
+				//batch.draw(pixel, xx, CHUNKSIZE - yy-1, 1, 1);
+			}
+		cacheDrawCount[chunkIndex] = CHUNKSIZE * CHUNKSIZE;
+	}
+	Matrix4 proj = new Matrix4();
+	private int renderProgress;
+	public void drawCachedChunk(int x, int y, FrameBuffer[] buffer, IntPixelMap map, Mesh mesh, ShaderProgram cacheShader) {
+		
 		//Gdx.app.log(TAG, "cache chunk" + x + "," + y);
 		int chunkIndex = x + y * chunksX;
 		//int[] chunk = chunkData[chunkIndex];
 		if (buffer[chunkIndex] == null)
 			makeFrameBuffer(chunkIndex);
+		proj.setToOrtho2D(0, 0, CHUNKSIZE, CHUNKSIZE);
+		
+		cacheShader.begin();
+		cacheShader.setUniformMatrix("u_projTrans", proj);
 		buffer[chunkIndex].begin();
 		Gdx.gl.glClearColor(backR, backG, backB , 1f);
 
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-		batch.getProjectionMatrix().setToOrtho2D(0, 0, CHUNKSIZE, CHUNKSIZE);
-		batch.setColor(Color.WHITE);
+		mesh.setVertices(cacheVerts[chunkIndex]);
+		mesh.render(cacheShader, GL20.GL_TRIANGLES, 0, cacheDrawCount[chunkIndex] * 6);
 		
-		batch.begin();
-		for (int xx = 0; xx < CHUNKSIZE; xx++)
-			for (int yy = 0; yy < CHUNKSIZE; yy++){
-				//int blockIndex = (x*CHUNKSIZE + xx) + (y * CHUNKSIZE + yy) * chunksX * CHUNKSIZE;
-				//Gdx.app.log(TAG, "cache block" + blockIndex + "," + x + "," + xx + "," + y + "," + yy + "," );
-				//switch (chunkData[blockIndex]){
-				int ax = x*CHUNKSIZE + xx , ay =  y * CHUNKSIZE + yy;
-				int block = map.get(ax, ay);
-				batch.setColor(map.getColor(block, ax, ay, this));
-				batch.draw(pixel, xx, CHUNKSIZE - yy-1, 1, 1);
-				//if (block != 0) Gdx.app.log(TAG, "col " + map.getColor(block));
-			}
-		batch.end();
 		buffer[chunkIndex].end();
+		cacheShader.end();
 	}
 
 	
+	public void updateDraw( Mesh mesh, ShaderProgram cacheShader){
+		//update(chunkBuffer, batch);
+		if (map.getRawBlocks() == null) return;
+		
+		
+		for (int i = 0; i < cacheIterations; i++){
+			
+			renderProgress++;
+			
+			if (renderProgress >= chunksInRandomOrder.size) renderProgress = 0;
+			
+			GridPoint2 pt = chunksInRandomOrder.get(renderProgress);
+			//cacheChunk(pt.x, pt.y, map);
+			//if (editMode)cacheChunk(pt.x, pt.y, batch, fillBuffer, fill);
+			drawCachedChunk(pt.x, pt.y, chunkBuffer, map, mesh, cacheShader);
+			
+		}
+	}
 	/** 
 	 * @param x world x coord
 	 * @param y world y coord
@@ -668,40 +725,6 @@ public class Ship {
 			break;
 		}
 		
-	}
-	
-	public void updateDraw(SpriteBatch batch){
-		//update(chunkBuffer, batch);
-		if (map.getRawBlocks() == null) return;
-		queue.clear();
-		batch.setShader(null);;
-		int cached = 0;
-		int tot = chunksX * chunksY;
-		int x0, x1, y0, y1;
-		x0 = 0; y0 = 0;x1 = chunksX-1;y1 = chunksY-1;
-		for (int x = x0; x <= x1; x++)
-			for (int y = y0; y <= y1; y++){
-			if (
-					(!hasBuffer.get(x + y * chunksX))
-					||
-					true
-					//( dirtyChunk[x + y * chunksX])
-					){
-				queue.add(Pools.obtain(GridPoint2.class).set(x, y));
-			}
-		}
-		
-		for (int i = 0; i < cacheIterations; i++){
-			cacheProgress++;
-			if (cacheProgress >= chunksInRandomOrder.size) cacheProgress = 0;
-			if (queue.size == 0) break;
-			GridPoint2 pt = chunksInRandomOrder.get(cacheProgress);
-			cacheChunk(pt.x, pt.y, batch, chunkBuffer, map);
-			if (editMode)cacheChunk(pt.x, pt.y, batch, fillBuffer, fill);
-			//cacheChunk(pt.x, pt.y, batch, wireBuffer, wire);
-			//dirtyChunk[pt.x + pt.y * chunksX] = false;
-			cached++;
-		}
 	}
 	
 	public void updateEntities(World world, UI ui) {

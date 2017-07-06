@@ -1032,7 +1032,7 @@ public class UI {
 				customShipButton.setChecked(false);
 				middleTable.remove();
 				shipControlButton.setChecked(true);
-				
+				set(world.getPlayerShip());
 				//editButtonListener.changed(null, null);
 				//shipControlListener.clicked(null, 0, 0);
 				//shipControlButton.setChecked(false);
