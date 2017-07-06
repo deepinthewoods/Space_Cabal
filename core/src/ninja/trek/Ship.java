@@ -60,6 +60,7 @@ public class Ship {
 	public boolean placeSpawn;
 	private int cacheProgress;
 	private Array<GridPoint2> chunksInRandomOrder = new Array<GridPoint2>();
+	private Array<GridPoint2> chunksInRandomOrderForCaching = new Array<GridPoint2>();
 	public int tick;
 	public static String[] systemNames = {"Vac", "Engine", "Weapon", "Shield", "Wall", "Floor", "Oxygen", "Drone", "Teleporter", "Science"};
 	public static final int VACCUUM = 0; 
@@ -243,8 +244,8 @@ public class Ship {
 
 	public void cacheChunk(IntPixelMap map) {
 		cacheProgress++;
-		if (cacheProgress >= chunksInRandomOrder.size) cacheProgress = 0;
-		GridPoint2 pt = chunksInRandomOrder.get(cacheProgress);
+		if (cacheProgress >= chunksInRandomOrderForCaching.size) cacheProgress = 0;
+		GridPoint2 pt = chunksInRandomOrderForCaching.get(cacheProgress);
 		int x = pt.x, y = pt.y;
 		//Gdx.app.log(TAG, "cache chunk" + x + "," + y);
 		int chunkIndex = x + y * chunksX;
@@ -869,6 +870,8 @@ public class Ship {
 				pt.set(x, y);
 				chunksInRandomOrder.add(pt);;
 			}
+		chunksInRandomOrderForCaching.clear();
+		chunksInRandomOrderForCaching.addAll(chunksInRandomOrder);
 		
 	}
 	

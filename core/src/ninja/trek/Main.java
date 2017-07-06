@@ -92,6 +92,7 @@ public class Main extends ApplicationAdapter {
 		InputMultiplexer mux = new InputMultiplexer();
 		mux.addProcessor(stage);
 		mux.addProcessor(new InputProcessor(){
+
 			@Override
 			public boolean keyDown(int keycode) {
 				if (keycode == Keys.A)
@@ -431,7 +432,6 @@ public class Main extends ApplicationAdapter {
 		
 		Ship amap2 = new Ship(new IntPixelMap(128, 256),  pixelSprite, fontManager, shader);
 		world.addMap(amap2);
-		
 		
 //		Entity player = new Entity().pos(0, 0).setAI(playerAction );
 		//Entity player = new Entity().pos(0, 0).setDefaultAI();

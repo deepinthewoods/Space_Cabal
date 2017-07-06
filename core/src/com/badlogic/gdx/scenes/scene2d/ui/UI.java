@@ -1117,10 +1117,11 @@ public class UI {
 		solarButtonsTable.add(ellOrbitButton);
 		
 		planetInfoLabel = new Label("dsjfk ljafsdk;l ;lkfsdj ;lks df;l kdj s;lka djsjd ;kljljks jfdjf;ldj fldjsf fj sdj f", skin);
-		planetInfoLabel.setWidth(Gdx.graphics.getWidth()/3);
+		planetInfoLabel.setWidth(Gdx.graphics.getWidth());
 		planetInfoLabel.setWrap(true);
+		//solarSystemWindow.add(planetInfoLabel).width(Gdx.graphics.getWidth());;
+		//solarSystemWindow.row();
 		solarSystemWindow.add(solarButtonsTable );
-		solarSystemWindow.add(planetInfoLabel).width(Gdx.graphics.getWidth()/3);;
 		solarSystemWindow.pack();
 		
 		
@@ -1135,7 +1136,9 @@ public class UI {
 		//geoOrbitButton.setDisabled(true);
 		//ellOrbitButton.setDisabled(true);
 		stage.addActor(solarSystemWindow);
-		
+		planetInfoLabel.setWidth(Gdx.graphics.getWidth()/2);
+		stage.addActor(planetInfoLabel);
+		planetInfoLabel.setPosition(0, 0, Align.bottomLeft);
 	}
 	public void setPlanetInfo(int selectedPlanet) {
 		planetInfoLabel.setText(info.systems[info.currentSystem].planets[selectedPlanet].toString());

@@ -30,8 +30,10 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.ui.UI;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.AtomicQueue;
 import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.badlogic.gdx.utils.IntArray;
+import com.badlogic.gdx.utils.PauseableThread;
 import com.badlogic.gdx.utils.Pool;
 import com.badlogic.gdx.utils.ShortArray;
 
@@ -149,6 +151,8 @@ public class PlanetRenderer implements RenderableProvider{
 	private Icosphere baseSphere;
  
 	Color c = new Color();
+
+	private PauseableThread[] threads;
 	
     public PlanetRenderer(int recursionLevel, float size, ModelBatch batch) {
     	for (int i = 0; i < sizeModifier.length; i++)
@@ -217,9 +221,14 @@ public class PlanetRenderer implements RenderableProvider{
     	//colors[0][0].set(pixmap.getPixel(0, 0));
     	//Gdx.app.log("planet", "pixel " + colors[0][0].r + " " + colors[0][0].g + " " + colors[0][0].b + " " + pixmap.getWidth());
     	//texture.setFilter(TextureFilter.Nearest, TextureFilter.Nearest);
+    	
+    	
+    	
+    	
     	baseSphere = new Icosphere(5, 16, 8f);
     	sphere = new Icosphere(baseSphere);
- 
+    	sphere.initTwins();
+    	
         environment = new Environment();
 		lightA = new DirectionalLight();
 		lightA.set(Color.WHITE, lightADirection);
@@ -269,7 +278,11 @@ public class PlanetRenderer implements RenderableProvider{
         oceanIndices[0] = new ShortArray();
         vectorsToVerts(verts[0], spherePointArray, oceanVerts[0], oceanIndices[0], sphere.indices);
          */
-       
+        for (int i = 0; i < buffer.length; i++) {
+			buffer[i] = new FrameBuffer(Format.RGBA4444, BUFFER_SIZE, BUFFER_SIZE, false);
+			sprite[i] = new Sprite(buffer[i].getColorBufferTexture());
+			verts[i] = new float[sphere.vertices.size * VERTEX_TOTAL_FLOATS];
+    	}
         
         faceArray =  sphere.indices.toArray();
         
@@ -293,11 +306,12 @@ public class PlanetRenderer implements RenderableProvider{
         	buffer[i].getColorBufferTexture().setFilter(TextureFilter.Nearest, TextureFilter.Nearest);
         	sprite[i] = new Sprite(buffer[i].getColorBufferTexture());
         }
-        
+        threads = new PauseableThread[1];
+        threads[0] = new PauseableThread(new CachePlanetRunnable(this));
+        threads[0].start();
     }
     
-    private void vectorsToVerts(float[] verts, Array<Vector3> vertices2, ShortArray oceanIndices) {
-    	Planet planet = info.systems[info.currentSystem].planets[renderPlanet];
+    private void vectorsToVerts(float[] verts, Array<Vector3> vertices2, ShortArray oceanIndices, Planet planet) {
     	int p = 0, i = 0, k = 0;
     	//float lowestR = 2f, highestR = 0f;
     	float oceanColor = OCEAN_COLORS[planet.oceanColor], beachColor = BEACH_COLORS[planet.beachColor];
@@ -421,34 +435,31 @@ public class PlanetRenderer implements RenderableProvider{
 		renderPlanet = 0;
 		if (info != null){
 			currentPlanet = info.currentPlanet;
-			if (alpha > .25f){
-				if (nextRenderPlanet >= info.systems[info.currentSystem].planets.length){
-					if (renderPlanet != selectedPlanet){
-						renderPlanet = selectedPlanet;
-						mesh.setVertices(verts[renderPlanet]);						
-					}
-				} else 
-					renderPlanet = nextRenderPlanet++;
-			} else renderPlanet = currentPlanet;
+			Integer rend = renderQueue.poll();
+			if (rend != null) {
+				renderPlanet = rend;
+			} else
+			/*if (resetRenderCached) {
+				resetRenderCached = false;
+				nextRenderPlanet = 0;
+			}*/
+			if (nextRenderPlanet < info.systems[info.currentSystem].planets.length)
+				renderPlanet = nextRenderPlanet++;
+			else if (alpha > .95f) {
+				renderPlanet = selectedPlanet;
+			}
+			else
+				renderPlanet = currentPlanet;
+			
 		}
 		
-		if (buffer[renderPlanet] == null){
-			buffer[renderPlanet] = new FrameBuffer(Format.RGBA4444, BUFFER_SIZE, BUFFER_SIZE, false);
-			sprite[renderPlanet] = new Sprite(buffer[currentPlanet].getColorBufferTexture());
-		}
 		
-		if (verts[renderPlanet] == null){
-			verts[renderPlanet] = new float[sphere.vertices.size * VERTEX_TOTAL_FLOATS];
-			//oceanVerts[renderPlanet] = new FloatArray();
-			//oceanIndices[renderPlanet] = new ShortArray();
-		}
 		boolean buffered = false;
-		if (alpha > .25f && nextRenderPlanet < info.systems[info.currentSystem].planets.length){
-			sphere.set(baseSphere);
-			sphere.perterb(info.systems[info.currentSystem].planets[renderPlanet].seed);
-			vectorsToVerts(verts[renderPlanet], sphere.vertices, sphere.indices);
+		if (info != null 
+				){
+			
 			mesh.setVertices(verts[renderPlanet]);
-			buffered =true;
+			//if (alpha > .925f)buffered =false;
 			//Gdx.app.log(TAG, "renderplanet " + renderPlanet);
 			//oceanMesh.setVertices(oceanVerts[renderPlanet].toArray());
 			//oceanMesh.setIndices(oceanIndices[renderPlanet].toArray());
@@ -462,9 +473,10 @@ public class PlanetRenderer implements RenderableProvider{
 				toY[renderPlanet] = (parentI + 1) / ((float)SolarSystem.MAX_PLANETS_PER_SYSTEM+1);
 				toX[renderPlanet] += .2f + .1f * (planet.parentOrder);
 			}
+			//nextRenderPlanet++;
 		}
 		cam.lookAt(0, 0, 0);
-		lightADirection.set(.5f, 1, 1);
+		lightADirection.set(-1f, 1, 1);
 		lightBDirection.set(-1f, -1, -1);
 		if (alpha > .95f){
 			rotation[renderPlanet] += Gdx.graphics.getDeltaTime() * SELECTED_ROTATION_SPEED;			
@@ -533,10 +545,11 @@ public class PlanetRenderer implements RenderableProvider{
 		
 		screenBatch.end();
 		
-		if (alpha < .99f){
+		if (alpha < .99f || info == null){
 			Gdx.gl.glDisable(GL20.GL_DEPTH_TEST | GL20.GL_BLEND | GL20.GL_CULL_FACE);
 			return;
 		}
+		
 		shape.setProjectionMatrix(screenBatch.getProjectionMatrix());
 		shape.begin(ShapeType.Line);
 		float ew = .7f, eh = .2f;;
@@ -568,6 +581,21 @@ public class PlanetRenderer implements RenderableProvider{
 		
 		Gdx.gl.glDisable(GL20.GL_DEPTH_TEST | GL20.GL_BLEND | GL20.GL_CULL_FACE);
     }
+	int nextCachePlanet = 0;
+
+	public void cachePlanet() {
+		if (info == null) return;
+		if (nextCachePlanet >= info.systems[info.currentSystem].planets.length) return;
+		int cachePlanet = nextCachePlanet++;
+		Gdx.app.log(TAG, "cache planet" + cachePlanet);
+		sphere.set(baseSphere);
+		sphere.perterb(info.systems[info.currentSystem].planets[cachePlanet].seed);
+		vectorsToVerts(verts[cachePlanet], sphere.vertices, sphere.indices, info.systems[info.currentSystem].planets[cachePlanet]);
+		//resetRenderCached = true;
+		renderQueue.put((cachePlanet));
+		
+	}
+	AtomicQueue<Integer> renderQueue = new AtomicQueue<Integer>(30);
     Vector2 dv = new Vector2();
   
 	float[] rotation = new float[MAX_PLANET_VERT_ARRAYS];
@@ -645,4 +673,15 @@ public class PlanetRenderer implements RenderableProvider{
 		lerpingOut.add(selectedPlanet);
 	}
  
+	private static class CachePlanetRunnable implements Runnable{
+		private PlanetRenderer planet;
+		public CachePlanetRunnable(PlanetRenderer planet) {
+			this.planet = planet;
+		}
+		@Override
+		public void run() {
+			planet.cachePlanet();
+			
+		}
+	}
 }

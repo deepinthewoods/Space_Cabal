@@ -46,7 +46,7 @@ public class BackgroundRenderer {
 	Vector3 v, v3 = new Vector3();
 	Vector2 move = new Vector2(), mv = new Vector2();
 	public void setAlpha(float alpha){
-		this.alpha = alpha;
+		this.alpha = Math.max(Math.min(alpha, 1f), 0f);
 	}
 	private float widthMod = 1f, maxWidth = 1000f, alpha = 0f;
 	public void draw(World world) {

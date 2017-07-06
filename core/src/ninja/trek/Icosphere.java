@@ -1,4 +1,5 @@
 package ninja.trek;
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.MathUtils;
 /**
  * Copyright 2013 Dennis Ippel
@@ -14,10 +15,13 @@ import com.badlogic.gdx.math.MathUtils;
  */
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.IntMap;
 import com.badlogic.gdx.utils.Pools;
 import com.badlogic.gdx.utils.ShortArray;
 
 public class Icosphere{ 
+private static final String TAG = "icosphere";
+
 private float radius = 1;
 
 private final float t = (float) ((1.0f + Math.sqrt(5.0f)) / 2.0f);
@@ -44,6 +48,8 @@ private boolean mCreateTextureCoords = false;
 private boolean mCreateVertexColorBuffer = false;
 
 private boolean mMirrorTextureCoords;
+
+private IntMap<Vector3> twins = new IntMap<Vector3>();
 	
 public Icosphere(int horizDivisions, int vertDivisions, float radius) {
 	this(horizDivisions, vertDivisions, radius, true);
@@ -136,12 +142,24 @@ protected void init(boolean createVBOs) {
 					indices[index++] = b;
 					indices[index++] = c;
 				} else {
-					indices[index++] = a;
-					indices[index++] = b;
-					indices[index++] = c;
-					indices[index++] = a;
-					indices[index++] = c;
-					indices[index++] = d;
+					if (MathUtils.randomBoolean()) {
+						indices[index++] = a;
+						indices[index++] = b;
+						indices[index++] = c;
+						indices[index++] = a;
+						indices[index++] = c;
+						indices[index++] = d;
+						
+					} else {
+						indices[index++] = a;
+						indices[index++] = b;
+						indices[index++] = d;
+						indices[index++] = d;
+						indices[index++] = b;
+						indices[index++] = c;
+						
+					}
+					
 					quads.add(a);
 					quads.add(b);
 					quads.add(c);
@@ -216,25 +234,62 @@ protected void init(boolean createVBOs) {
 	//setData(vertices, normals, textureCoords, colors, indices, createVBOs);
 	this.vertices.addAll(vertices);
 	this.indices.addAll(indices);;
+	
+	
+	
 }
+
+public void initTwins() {
+	//if (true) return;
+	for (int verti = 0; verti < vertices.size; verti++){
+		Vector3 pt = vertices.get(verti);
+		for (int k = 0; k < vertices.size; k++) {
+			if ( verti != k && pt.equals(vertices.get(k)) ) {
+				//Gdx.app.log("sphere", "dupe " + verti + " " + k);
+				twins.put(verti, vertices.get(k));
+			}
+		}
+	}
+}
+
 	public void perterb(int seed) {
 		MathUtils.random.setSeed(seed);
-		if (true) return;
-		for (int i = 0; i < 100000; i++){
+		//if (true) return;
+		for (int i = 0; i < 1000000; i++){
 			//if (true) continue;
 			int quadIndex = MathUtils.random(quads.size / 4 - 4);
 			;
-			
-			Vector3 a = vertices.get(quads.get(quadIndex*4));
-			Vector3 b = vertices.get(quads.get(quadIndex*4+1));
-			Vector3 c = vertices.get(quads.get(quadIndex*4+2));
-			Vector3 d = vertices.get(quads.get(quadIndex*4+3));
+			int ia = quads.get(quadIndex*4);
+			int ib = quads.get(quadIndex*4+1);
+			int ic = quads.get(quadIndex*4+2);
+			int id = quads.get(quadIndex*4+3);
+			if (twins.containsKey(ia) 
+					|| twins.containsKey(ib) ||
+					twins.containsKey(ic) || twins.containsKey(id)
+					) {
+				continue;
+			}
+			Vector3 a = vertices.get(ia);
+			Vector3 b = vertices.get(ib);
+			Vector3 c = vertices.get(ic);
+			Vector3 d = vertices.get(id);
 			v.set(a).add(b).add(c).add(d).scl(.25f);
 			float alpha = MathUtils.random(.5f);
 			a.lerp(v, alpha).nor();
+			/*alpha = MathUtils.random(.975f);
 			b.lerp(v, alpha).nor();
+			alpha = MathUtils.random(.975f);
 			c.lerp(v, alpha).nor();
-			d.lerp(v, alpha).nor();
+			alpha = MathUtils.random(.975f);
+			d.lerp(v, alpha).nor();*/
+			
+			/*if (twins.containsKey(ia)) {
+				twins.get(ia).set(a);
+				//Gdx.app.log(TAG, "twin correct");
+			}
+			if (twins.containsKey(ib))twins.get(ib).set(b);
+			if (twins.containsKey(ic))twins.get(ic).set(c);
+			if (twins.containsKey(id))twins.get(id).set(d);*/
 		}
 	}
 

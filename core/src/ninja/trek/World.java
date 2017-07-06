@@ -79,7 +79,7 @@ public class World {
 
 		threads = new PauseableThread[2];
 		threads[0] = new PauseableThread(new MapCacheRunnable(0, this));
-		threads[1] = new PauseableThread(new MapCacheRunnable(1, this));
+		//threads[1] = new PauseableThread(new MapCacheRunnable(1, this));
 		threads[0].start();
 		//threads[1].start();
 	}
@@ -330,7 +330,7 @@ public class World {
 		MathUtils.random.setSeed(System.currentTimeMillis());
 		GameInfo info = new GameInfo(MathUtils.random(Integer.MAX_VALUE-1));
 		this.info = info;
-		warpAlpha = 0f;
+		warpAlpha = 1f;
 		warpingToSolarSystemMap = true;
 		planet.setInfo(info);
 		return info;

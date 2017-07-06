@@ -38,7 +38,7 @@ public class Planet {
 		switch (planetType){
 		default:
 		case INNER:
-			landScale = 1f;
+			landScale = .0f;
 			height = .1f;
 			size = .8f;
 			oceanHeight = 0f;
@@ -65,6 +65,7 @@ public class Planet {
 				//oceanHeight = .56f;
 				colorIndex = MathUtils.random(1);
 				oceanColor = MathUtils.random(2)+1;
+				beachAmount = .05f;
 				//colorIndex = 3;
 				//oceanHeight = 0f;
 				//height = .43f;
