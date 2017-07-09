@@ -63,6 +63,7 @@ public class DesktopLauncher {
     private static LwjglApplicationConfiguration getDefaultConfiguration() {
     	
     	//TexturePacker.process("C:/Users/n/_spacecabal/sprites", "C:/Users/n/_spacecabal/assets", "background.atlas");
+//    	TexturePacker.process("C:/Users/n/_spacecabal/android/assets/skins/holo/raw/dark-mdpi", "C:/Users/n/_spacecabal/android/assets/skins/holo/skin/dark-mdpi/", "Holo-dark-mdpi.atlas");
     	
     	
     	

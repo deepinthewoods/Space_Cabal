@@ -6,14 +6,13 @@ import java.util.Comparator;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.scenes.scene2d.Actor;
-import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
-import com.badlogic.gdx.scenes.scene2d.ui.Button;
 import com.badlogic.gdx.scenes.scene2d.ui.ButtonGroup;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.ui.UI;
 import com.badlogic.gdx.scenes.scene2d.ui.Window;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
@@ -47,7 +46,7 @@ public class ItemDisplay extends Table {
 	private ButtonGroup<ItemButton> itemButtonGroup;
 	private TextButton closeButton;
 	private Actor spacerActor;
-	public ItemDisplay(Skin skin, final Window window){
+	public ItemDisplay(Skin skin, final Window window, UI ui){
 		leftTable = new Table();
 		add(leftTable).left();
 		descTable = new Table();
@@ -106,6 +105,7 @@ public class ItemDisplay extends Table {
 					but.setChecked(false);
 					ItemButton currentSelectedItem = itemButtonGroup.getChecked();
 					left.equipWeapon(index, currentSelectedItem );
+					ui.resetShip();
 					super.clicked(event, x, y);
 				}
 			});

@@ -228,8 +228,8 @@ com.badlogic.gdx.scenes.scene2d.ui.List$ListStyle: {
 }
 com.badlogic.gdx.scenes.scene2d.ui.ProgressBar$ProgressBarStyle: {
 	default-horizontal: {
-		background: text_focused
-		knobAfter: btn_default_normal
+		background: small_grey_button
+		knobBefore: small_white
 	}
 	power-horizontal: {
 		background: text_focused
