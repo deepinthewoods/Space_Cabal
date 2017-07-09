@@ -83,10 +83,12 @@ public class Ship {
 	private static final int MAP_EXTRA_PIXELS = 64;
 	static final float GAP = 10;
 	private static final int SHIELD_SPACING = 12;
+	private static final int MAX_WIDTH = 512;
+	private static final int MAX_HEIGHT = 512;
+	private static final float ZOOM_SPEED = 5f;
 	private transient FrameBuffer[] chunkBuffer, fillBuffer, wireBuffer;
 	private transient Texture[] chunkTextures, fillTextures, wireTextures;;
 	private transient boolean[] dirtyChunk;
-	//private int[] map;
 	private transient TextureRegion pixel;
 	private float backR = .01f//.31f
 			, backG = .01f//.31f
@@ -122,8 +124,14 @@ public class Ship {
 	public Array<GridPoint2> roomCentres = new Array<GridPoint2>();
 	private float[][] cacheVerts;
 	private int[] cacheDrawCount;
-	
-	
+	private float maxZoomForCentering;
+	private float zoomedOutEnemyZoom;
+	private float zoomInTarget;
+	private float zoomAlpha;
+	GridPoint2 point = new GridPoint2();
+	protected boolean zoomingOut;
+	private Entity selectedEntity;
+	public boolean zoomingIn;
 	
 	public Ship(IntPixelMap map, Sprite pixelSprite, FontManager fonts, ShaderProgram shader){
 		if (pixelSprite.getHeight() != pixelSprite.getWidth()) throw new GdxRuntimeException(" prites not square");
@@ -169,7 +177,7 @@ public class Ship {
 			}
 			
 		};
-		aStar = new AStar2(mapWidth, mapHeight, this);
+		aStar = new AStar2(MAX_WIDTH, MAX_HEIGHT, this);
 		depleter = new AStarDeplete(mapWidth, mapHeight, this);
 
 		for (int i = 0; i < systemButtonOrder.length; i++){
@@ -177,10 +185,15 @@ public class Ship {
 		}
 		populateRandomChunkOrder();
 
-		cacheVerts = new float[chunksX * chunksY][CHUNKSIZE * CHUNKSIZE * 3 * 4];
-		cacheDrawCount = new int[chunksX * chunksY];
+		cacheVerts = new float[(MAX_WIDTH / CHUNKSIZE) * (MAX_HEIGHT / CHUNKSIZE)][CHUNKSIZE * CHUNKSIZE * 3 * 4];
+		cacheDrawCount = new int[(MAX_WIDTH / CHUNKSIZE) * (MAX_HEIGHT / CHUNKSIZE)];
 		
-		
+		maxZoomForCentering =  (float)mapHeight / (float)Gdx.graphics.getHeight();
+		//Gdx.app.log(TAG, "max zoom" + maxZoomForCentering + "  h " + mapHeight);
+		zoomedOutEnemyZoom = 5 * (float)mapHeight / (float)Gdx.graphics.getHeight();
+		zoomInTarget = maxZoomForCentering * 1.5f;
+		zoomAlpha = 0f;
+		maxZoomForCentering *= 2f;
 	}
 	public FrameBuffer makeFrameBuffer(int i){
 		int ind = hasBuffer.nextSetBit(0), count = 0;
@@ -350,7 +363,7 @@ public class Ship {
 		//batch.getProjectionMatrix().set(camera.combined);
 		stateTime += Gdx.graphics.getDeltaTime();
 		
-		updateCamera(wcamera, world);
+		
 		batch.setProjectionMatrix(camera.combined);
 		if (!hullFront && showHull){
 			//batch.enableBlending();
@@ -460,14 +473,12 @@ public class Ship {
 		//batch.end();
 		
 	}
-	private Entity selectedEntity;
+	
 
 	public void drawLines(ShapeRenderer shape, UI ui, boolean isSettingTarget, OrthographicCamera wcamera, World world){
 		shape.setProjectionMatrix(camera.combined);
 		shape.setColor(.31f, .31f, .31f, 1f);
 		shape.begin(ShapeType.Line);
-		
-		
 		
 		if (editMode){
 			shape.line(0, 0, 0, mapHeight);
@@ -652,80 +663,78 @@ public class Ship {
 			Ship otherShip = world.getEnemyShip();
 			if (otherShip != null){
 				otherShip.camera.project(v);
-				
-				otherWidth = Gdx.graphics.getWidth() - (int) v.x;
-				
+				otherWidth = (int) (camera.viewportWidth - v.x);
+				//Gdx.app.log(TAG, "otherwidth  " + otherWidth);
 			}
 			//Gdx.gl.glScissor(0, 0, width, Gdx.graphics.getHeight());
 		}
-		
+		float beta =  camera.zoom / maxZoomForCentering;
+		//Gdx.app.log(TAG, "beta " + beta + " max " + maxZoomForCentering);
 		camera.setToOrtho(false, wcamera.viewportWidth, wcamera.viewportHeight);
-		//camera.rotate(-90);
-		camera.position.set(wcamera.position);
-		//camera.zoom = wcamera.zoom;
-		camera.update();
-		v.set(0, 0, 0);
-		camera.unproject(v);
-		v.y = camera.viewportHeight - v.y -1;
-		//Gdx.app.log(TAG, "offset " + v);
 		
-		float tw = camera.viewportWidth * camera.zoom ;
-		float th = camera.viewportHeight * camera.zoom;
-		//w *= camera.zoom;
+		if (camera.zoom > maxZoomForCentering) {
+			camera.zoom = maxZoomForCentering;
+			offset.scl(.75f);		
+		}
 		
-		float dx = (tw - mapWidth)/2;
-		float dy = (th - mapHeight)/2;
-		
-		camera.translate(-v.x, -v.y, 0);
+		//offset.set(0, 0);
+		//camera.position.set(wcamera.position);
+		//camera.update();
+		float hMapW = mapWidth/2, hMapH = mapHeight / 2, hScreenW = camera.viewportWidth/2, hScreenH = camera.viewportHeight/2;
 		switch (alignment){
 		case CENTRE:
-			camera.translate(-dx, -dy, 0);
+			//otherWidth = 0;
+			//camera.position.x *= (camera.zoom);
+			camera.position.set(0, 0, 0);
+			camera.translate(camera.zoom * otherWidth/2, 0);
 			camera.translate(offset);
-			
+			camera.translate(hMapW, hMapH);
+			//camera.translate(, 0);
+			//camera.position.x = Math.min(Math.max(0+camera.zoom * otherWidth/2, camera.position.x), (mapWidth) + camera.zoom * otherWidth/2);
+			camera.position.y = Math.min(Math.max(0, camera.position.y), mapHeight);
 			camera.update();
-			int halfX = Gdx.graphics.getWidth() - otherWidth;
-			halfX /= 2;
-			int halfY = Gdx.graphics.getHeight() ;
-			halfY /= 2;
 			
 			v.set(0, 0, 0);
 			
 			camera.project(v);
-			
-			v.y = camera.viewportHeight - v.y -1;
-			//Gdx.app.log(TAG, "translate " + v.x + "  " + halfX + " other " + otherWidth + " diff " + (-( halfX - v.x)));
-			if (v.x > halfX){
-				camera.translate(-( halfX - v.x) * camera.zoom, 0, 0);
-				offset.add(-( halfX - v.x) * camera.zoom, 0);
-			}
-			if (v.y < halfY){
-				camera.translate(0, ( halfY - v.y) * camera.zoom, 0);
-				offset.add(0, ( halfY - v.y) * camera.zoom);
-			}
-			camera.update();
-			v.set(mapWidth, mapHeight, 0);
-			camera.project(v);
-			v.y = camera.viewportHeight - v.y -1;
-			if (v.x < halfX){
-				camera.translate(-( halfX - v.x) * camera.zoom, 0, 0);
-				offset.add(-( halfX - v.x) * camera.zoom, 0);
-			}
-			if (v.y > halfY){
-				camera.translate(0, ( halfY - v.y) * camera.zoom, 0);
-				offset.add(0, ( halfY - v.y) * camera.zoom);
-			}
-			camera.update();
-			
+			//Gdx.app.log(TAG, "translate " + v);
 			break;
 		case TOP_RIGHT:
-			//Gdx.app.log(TAG, "translate offset " + (w) + "  x  " + (h));
-			//camera.translate(-(tw - mapWidth) + GAP, -(th - mapHeight) + GAP*8 * camera.zoom, 0);
-			camera.translate(-(tw - mapWidth) + GAP, -(th - mapHeight - (th - mapHeight)/2), 0);
-			camera.translate(offset);
+			if (zoomPause > 0) {
+				zoomPause -= Gdx.graphics.getDeltaTime();
+			} else {
+				
+				if (zoomingIn) {
+					zoomAlpha += Gdx.graphics.getDeltaTime() * ZOOM_SPEED;
+					if (zoomAlpha > 1) {
+						zoomAlpha = 1;
+						zoomingIn = false;
+					}
+				}else
+					if (zoomingOut) {
+						zoomAlpha -= Gdx.graphics.getDeltaTime() * ZOOM_SPEED;
+						if (zoomAlpha < 0) {
+							zoomAlpha = 0;
+							zoomingOut = false;
+						}
+					}
+			}
+			
+			camera.zoom = MathUtils.lerp(zoomedOutEnemyZoom, zoomInTarget, smoothStep(smoothStep(zoomAlpha)));
+			camera.position.set(0, 0, 0);
+			//camera.zoom = 1f;
+			//camera.translate(offset);
+			camera.translate(0, hMapH);
+			camera.translate(-(camera.viewportWidth/2f) * camera.zoom + mapWidth, 0);
+			//Gdx.app.log(TAG, "camera  " + camera.viewportWidth/2 + " zoom " + camera.zoom);
 			camera.update();
 			break;
 		}
-		
+		//Gdx.app.log(TAG, "ccam " + camera.position);
+	}
+	
+	public float smoothStep(float t) {
+		return t*t * (3f - 2f*t);
 	}
 	
 	public void updateEntities(World world, UI ui) {
@@ -752,7 +761,6 @@ public class Ship {
 		if (alignment == Alignment.CENTRE)
 			offset.add(dx * camera.zoom, dy * camera.zoom);
 	}
-
 	public void swap(int a, int b) {
 		int aind = 0;
 		for (int i = 0; i < systemButtonOrder.length; i++) if (systemButtonOrder[i] == a) aind = i;
@@ -766,7 +774,7 @@ public class Ship {
 	}
 
 	public void updateBlocks() {
-		for (int i = 0; i < 32; i++)
+		for (int i = 0; i < 64; i++)
 			map.updateBlocks(this);
 		map.updateAirNew(wire, this);
 		//wire.clear();
@@ -852,12 +860,14 @@ public class Ship {
 		setAllDirty();
 		hasCategorizedBlocks = false;
 		populateRandomChunkOrder();
+		//aStar = new AStar2(mapWidth, mapHeight, this);
+		depleter = new AStarDeplete(mapWidth, mapHeight, this);
+
+		cacheVerts = new float[chunksX * chunksY][CHUNKSIZE * CHUNKSIZE * 3 * 4];
+		cacheDrawCount = new int[chunksX * chunksY];
 	}
 
-	public void setFrom(IntPixelMap map2, EntityArray entities2, Texture texture) {
-		
-		
-	}
+	
 
 	private void populateRandomChunkOrder() {
 		int x0, x1, y0, y1;
@@ -919,11 +929,9 @@ public class Ship {
 				int block = map.get(x, y);
 				int id = (block &BLOCK_ID_MASK);
 				if (id != VACCUUM && id != FLOOR && id != WALL){
-					
 					GridPoint2 p = Pools.obtain(GridPoint2.class);
 					p.set(x, y);
 					systemBlocks[id].add(p);
-					
 				}
 			}
 		}
@@ -1004,9 +1012,7 @@ public class Ship {
 					Pools.free(distPt);;
 					distPt = null;
 				}
-				
 			}
-			
 		}
 		//Pools.free(average);;
 		//average = null;*/
@@ -1014,8 +1020,6 @@ public class Ship {
 
 			room[x + y * mapWidth] = roomID;
 		}*/
-		
-		
 		
 	}
 	GridPoint2[] average = new GridPoint2[systemNames.length];
@@ -1060,7 +1064,10 @@ public class Ship {
 			w.target.set(x, y);
 			w.hasTarget = true;
 		}
+		
+		//Gdx.app.log(TAG, "zoom out for target");
 	}
+	
 	
 	public void cancelWeaponTarget(int index){
 		Weapon w = getWeapon(index);
@@ -1137,6 +1144,7 @@ public class Ship {
 	public float stateTime;
 	public float shieldRadius2, shieldRadius;
 	public boolean showHull;
+	private float zoomPause;
 	public void unReserve(int x, int y) {
 		//Gdx.app.log(TAG, "unresrv " + x + "," + y);
 		//if (!reserved.get(x + y * mapWidth)) Gdx.app.log(TAG, "dfka");
@@ -1165,7 +1173,6 @@ public class Ship {
 			for (int y =0; y < mapHeight; y++){
 				unReserve(x, y);
 			}
-		
 	}
 
 	public ShipEntity getShipEntity() {
@@ -1193,7 +1200,7 @@ public class Ship {
 		}
 		return count;
 	}
-	GridPoint2 point = new GridPoint2();
+	
 	public void ensureValidSpawnPoint() {
 		int curr = map.get(map.spawn.x, map.spawn.y) & BLOCK_ID_MASK;
 		if (curr == VACCUUM || curr == WALL){
@@ -1211,7 +1218,6 @@ public class Ship {
 						point.set(x, y);					
 					}
 				}
-					
 			}
 			if (found > 0){
 				map.spawn.set(point);
@@ -1219,13 +1225,19 @@ public class Ship {
 			
 		}
 			
-				
-			
-		
-		
 	}
-
 	
-
-	
+	public void offsetForZoom(float x, float y) {
+		if (camera.zoom < maxZoomForCentering-.02f)
+			offset.sub(x, y);
+	}
+	public void zoomInForTarget() {
+		zoomingIn = true;
+		zoomingOut = false;
+	}	
+	void zoomOutForTarget() {
+		zoomingIn = false;
+		zoomingOut = true;
+		zoomPause = .15f;
+	}
 }

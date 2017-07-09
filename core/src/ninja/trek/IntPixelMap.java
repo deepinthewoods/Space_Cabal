@@ -56,7 +56,7 @@ public class IntPixelMap{
 				int depletion = (block & Ship.BLOCK_DATA_MASK) >> Ship.BLOCK_DATA_BITS;
 				int air = (block & Ship.BLOCK_AIR_MASK) >> Ship.BLOCK_AIR_BITS;
 				
-				int neededAir = 63 - air;
+				int neededAir = 127 - air;
 				int maxAddedDepletion = ship.maxDepletionBySystem[block & Ship.BLOCK_ID_MASK] - depletion;
 				int actualDepletion = Math.min(maxAddedDepletion, neededAir/4);
 				//Gdx.app.log(TAG, ");
@@ -491,8 +491,9 @@ public class IntPixelMap{
 				}
 				BlockDef def = defs[block & Ship.BLOCK_ID_MASK];
 				def.update(dx, dy, block, this, ship);
-				
+				//updateAir(x, y, block, ship);
 			}
+		
 		updateSystemBlocks(ship);
 	}
 	private void updateSystemBlocks(Ship ship) {
@@ -704,7 +705,7 @@ public class IntPixelMap{
 			//block = MathUtils.random(1, 3);
 			fill.randomFloodFill(this, x, y
 					, airUpdateReplaceIndex, MathUtils.random(20000, 100000));
-			updateAir(x, y, block, ship);
+			
 			}
 		if (ship.systemBlocks[Ship.OXYGEN] != null && ship.systemBlocks[Ship.OXYGEN].size > 0)
 		{
@@ -721,7 +722,7 @@ public class IntPixelMap{
 			//block = MathUtils.random(1, 3);
 			fill.randomFloodFill(this, x, y
 					, airUpdateReplaceIndex, MathUtils.random(20000, 100000));
-			updateAir(x, y, block, ship);
+			//updateAir(x, y, block, ship);
 			
 		}
 		airUpdateReplaceIndex++;

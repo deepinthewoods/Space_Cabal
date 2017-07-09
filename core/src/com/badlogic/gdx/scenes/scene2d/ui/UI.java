@@ -862,6 +862,8 @@ public class UI {
 					weaponButtons[index].setChecked(false);
 					world.targettingIndex = index;
 					world.getPlayerShip().cancelWeaponTarget(index);
+					Ship enemy = world.getEnemyShip();
+					enemy.zoomInForTarget();
 					super.clicked(event, x, y);
 				}
 			});
@@ -993,7 +995,7 @@ public class UI {
 		middleTable.getTitleTable().setTouchable(Touchable.disabled);
 		
 		final TextButton newGameButton = new TextButton("New Game", skin);
-		final TextButton startNewGameButton = new TextButton("Start Campaign", skin);
+		final TextButton startNewGameButton = new TextButton("\nStart Campaign\n", skin);
 		startNewGameButton.addListener(new ClickListener(){
 
 			@Override

@@ -16,7 +16,7 @@ Color
 , PHASER = new Color(Color.CYAN)
 //, TORPEDO = new Color()
 , DRONE = new Color(Color.CORAL)
-, FLOOR = new Color(.25f, .25f, .25f, 1f)
+, FLOOR = new Color(.525f, .525f, .525f, 1f)
 , VACCUUM = new Color(Color.BLACK)
 , OXYGEN = new Color(Color.LIME)
 , SHIELD = new Color(0, .35f, 1, 1f)

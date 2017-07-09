@@ -101,6 +101,15 @@ public class Main extends ApplicationAdapter {
 					ui.toggleInventory(world.getPlayerShip());
 				else if (keycode == Keys.S)
 					world.getPlayerShip().unReserveAll();
+				else if (keycode == Keys.Z) {
+					world.getEnemyShip().zoomingIn = true;
+				}
+				else if (keycode == Keys.X) {
+					world.getEnemyShip().zoomingOut = true;
+					
+				}
+					
+				
 				return false;
 			}
 
@@ -143,6 +152,7 @@ public class Main extends ApplicationAdapter {
 					//TODO unproject and check for vacuum
 					
 					ship.setWeaponTarget(world.targettingIndex, (int)v.x, (int)v.y);
+					eShip.zoomOutForTarget();
 					world.targettingIndex = -1;
 					return true;
 				}
@@ -383,6 +393,7 @@ public class Main extends ApplicationAdapter {
 			@Override
 			public boolean scrolled(int amount) {
 				Ship map = world.getMapForScreenPosition(Gdx.input.getX(), Gdx.input.getY());
+				map = world.getPlayerShip();
 				if (map != null){
 					v.set(Gdx.input.getX(), Gdx.input.getY(), 0);
 					map.camera.unproject(v);
@@ -395,7 +406,8 @@ public class Main extends ApplicationAdapter {
 						v2.set(Gdx.input.getX(), Gdx.graphics.getHeight() -1 - Gdx.input.getY(), 0);
 						v2.sub(v);
 						v2.scl(map.camera.zoom);
-						map.offset.sub(v2.x, v2.y);
+						
+						map.offsetForZoom(v2.x, v2.y);
 						
 					}
 				}
@@ -430,7 +442,7 @@ public class Main extends ApplicationAdapter {
 		amap.inventory.add(Items.laser1);
 		amap.inventory.add(Items.rocket1);
 		
-		Ship amap2 = new Ship(new IntPixelMap(128, 256),  pixelSprite, fontManager, shader);
+		Ship amap2 = new Ship(new IntPixelMap(256, 256),  pixelSprite, fontManager, shader);
 		world.addMap(amap2);
 		
 //		Entity player = new Entity().pos(0, 0).setAI(playerAction );

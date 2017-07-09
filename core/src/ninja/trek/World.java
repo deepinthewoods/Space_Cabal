@@ -79,9 +79,9 @@ public class World {
 
 		threads = new PauseableThread[2];
 		threads[0] = new PauseableThread(new MapCacheRunnable(0, this));
-		//threads[1] = new PauseableThread(new MapCacheRunnable(1, this));
+		threads[1] = new PauseableThread(new MapCacheRunnable(1, this));
 		threads[0].start();
-		//threads[1].start();
+		threads[1].start();
 	}
 	public ShaderProgram createDefaultShader () {
 		String vertexShader = "attribute vec4 " + ShaderProgram.POSITION_ATTRIBUTE + ";\n" //
@@ -185,6 +185,7 @@ public class World {
 		if (!warpingBetweenPlanets && !warpingToPlanet && !warpingToSolarSystemMap && !planetSelectOn)
 		for (int i = 0; i < maps.size; i++){
 			Ship map = maps.get(i);
+			map.updateCamera(camera, this);
 			map.enableScissor(this);
 			batch.disableBlending() ;
 			
@@ -391,6 +392,7 @@ public class World {
 	}
 	public void cancelTarget() {
 		getPlayerShip().cancelWeaponTarget(targettingIndex);
+		getEnemyShip().zoomOutForTarget();
 		targettingIndex = -1;
 	}
 	private static String[] letters = {"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"};
