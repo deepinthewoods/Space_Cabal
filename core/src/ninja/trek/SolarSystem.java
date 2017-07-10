@@ -2,6 +2,7 @@ package ninja.trek;
 
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.IntMap;
 
 import ninja.trek.Planet.Type;
 
@@ -12,14 +13,26 @@ public class SolarSystem {
 	public int sunVariantID = 0;
 	public Planet[] planets;
 	private Array<Planet> plan = new Array<Planet>();
-	public SolarSystem(int level, int seed) {
+	public SolarSystem(int level, int seed, Array<Quest> basicQuests, Array<Quest> specialQuests) {
+		Planet planet;
+		planet = new Planet(MathUtils.random(Integer.MAX_VALUE-1), 0, Type.INNER);
 		
-		plan.add(new Planet(MathUtils.random(Integer.MAX_VALUE-1), 0, Type.INNER));
-		plan.add(new Planet(MathUtils.random(Integer.MAX_VALUE-1), 1, Type.INNER));
-		plan.add(new Planet(MathUtils.random(Integer.MAX_VALUE-1), 2, Type.EARTH_LIKE));
-		plan.add(new Planet(MathUtils.random(Integer.MAX_VALUE-1), 3, Type.MARS_LIKE));
-		plan.add(new Planet(MathUtils.random(Integer.MAX_VALUE-1), 4, Type.GAS_GIANT));
-		plan.add(new Planet(MathUtils.random(Integer.MAX_VALUE-1), 5, Type.GAS_GIANT));
+		plan.add(planet);
+		planet = new Planet(MathUtils.random(Integer.MAX_VALUE-1), 1, Type.INNER);
+		plan.add(planet);
+		planet = new Planet(MathUtils.random(Integer.MAX_VALUE-1), 2, Type.EARTH_LIKE);
+		
+		planet.quests.add(basicQuests.get(0).hashCode());
+		
+		plan.add(planet);
+		planet = new Planet(MathUtils.random(Integer.MAX_VALUE-1), 3, Type.MARS_LIKE);
+		plan.add(planet);
+		planet = new Planet(MathUtils.random(Integer.MAX_VALUE-1), 4, Type.GAS_GIANT);
+		plan.add(planet);
+		planet = new Planet(MathUtils.random(Integer.MAX_VALUE-1), 5, Type.GAS_GIANT);
+		plan.add(planet);
+				
+		
 		
 		int numberOfOther = MAX_OTHER_BODIES_PER_SYSTEM;
 		int[] totalChildren = new int[MAX_PLANETS_PER_SYSTEM];

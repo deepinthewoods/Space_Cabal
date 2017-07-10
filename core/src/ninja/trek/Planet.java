@@ -1,6 +1,7 @@
 package ninja.trek;
 
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.utils.IntArray;
 
 public class Planet {
 
@@ -20,6 +21,8 @@ public class Planet {
 	public boolean exponentialHeightScaling = true;
 	public enum Type {INNER, EARTH_LIKE, MARS_LIKE, GAS_GIANT, METEOR, MOON};
 	public Type planetType;
+	public IntArray quests = new IntArray();
+	public IntArray completed = new IntArray();
 	public Planet(int random, int index, Type type) {
 		seed = random;
 		this.index = index;
@@ -104,4 +107,5 @@ public class Planet {
 		
 		
 	}
+	
 }

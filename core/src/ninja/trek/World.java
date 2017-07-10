@@ -22,6 +22,7 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.UI;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.IntArray;
 import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.PauseableThread;
 import com.badlogic.gdx.utils.Pools;
@@ -138,6 +139,7 @@ public class World {
 				warpingToPlanet = false;
 				warpAlpha = 0f;
 				planetSelectOn = false;
+				showQuestScreen(ui, stage);
 			}
 		
 		}
@@ -176,7 +178,11 @@ public class World {
 		
 	}
 	
-	public void draw(SpriteBatch batch, OrthographicCamera camera, ShapeRenderer shape, UI ui){
+	private void showQuestScreen(UI ui, Stage stage) {
+		ui.showQuestScreen(info, stage, getPlayerShip());
+		
+	}
+	public void draw(SpriteBatch batch, OrthographicCamera camera, ShapeRenderer shape, UI ui, boolean paused){
 		
 		
 		
@@ -189,10 +195,14 @@ public class World {
 			map.enableScissor(this);
 			batch.disableBlending() ;
 			
-			map.draw(batch, camera, this);
-			batch.begin();
+			map.draw(batch, camera, this, paused);
+			batch.setProjectionMatrix(map.camera.combined);
 			batch.enableBlending();
+			batch.setShader(null);
+			batch.begin();
 			map.drawEntities(batch, this);
+			batch.end();
+			batch.begin();
 			map.drawLines(shape, ui, targettingIndex != -1, camera, this);
 			if (map.alignment == Alignment.TOP_RIGHT)
 				map.drawTargettedLines(shape, ui, getPlayerShip());
@@ -353,6 +363,7 @@ public class World {
 		IntPixelMap map = json.fromJson(IntPixelMap.class, f.readString());
 		FileHandle entityFile = Gdx.files.external(f.pathWithoutExtension() + "." + Main.ENTITY_FILE_EXTENSION);
 		FileHandle hullFile = Gdx.files.external(f.pathWithoutExtension() + "." + Main.MAP_HULL_EXTENSION);
+		FileHandle invFile = Gdx.files.external(f.pathWithoutExtension() + "." + Main.MAP_INVENTORY_FILE_EXTENSION);
 		FileHandle mapBlocksFile = Gdx.files.external(f.pathWithoutExtension() + "." + Main.MAP_BLOCKS_FILE_EXTENSION);
 		EntityArray entities = json.fromJson(EntityArray.class, entityFile.readString());
 		Texture hull = null;
@@ -369,7 +380,9 @@ public class World {
 			e.printStackTrace();
 		}
 		
-		ship.load(map, entities, hull);
+		IntArray inv = json.fromJson(IntArray.class, invFile.readString());
+		
+		ship.load(map, entities, hull, inv);
 		
 		Data.jsonPool.free(json);
 		ship.categorizeSystems();
@@ -395,7 +408,7 @@ public class World {
 		getEnemyShip().zoomOutForTarget();
 		targettingIndex = -1;
 	}
-	private static String[] letters = {"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"};
+	public static String[] letters = {"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"};
 
 	public void switchToEnemyShip(Missile miss) {
 		Ship enemyShip = getEnemy(miss.ship);

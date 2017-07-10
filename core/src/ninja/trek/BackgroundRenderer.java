@@ -14,6 +14,8 @@ import ninja.trek.Ship.Alignment;
 
 public class BackgroundRenderer {
 	private static final int MAX = 1000;
+
+	private static final float STAR_SPEED = 0.05f;
 	
 	private Vector3[] stars = new Vector3[300];
 
@@ -39,8 +41,6 @@ public class BackgroundRenderer {
 				atlas.createSprite("smallstar"), atlas.createSprite("smallstar"),
 				atlas.createSprite("smallstar"), atlas.createSprite("smallstar"),
 				atlas.createSprite("medstar"), atlas.createSprite("bigstar")
-				
-		
 		};
 	}
 	Vector3 v, v3 = new Vector3();
@@ -49,7 +49,7 @@ public class BackgroundRenderer {
 		this.alpha = Math.max(Math.min(alpha, 1f), 0f);
 	}
 	private float widthMod = 1f, maxWidth = 1000f, alpha = 0f;
-	public void draw(World world) {
+	public void draw(World world, boolean paused) {
 		widthMod = MathUtils.lerp(1f, maxWidth, alpha);
 		//if (true)return;
 		Alignment alignment = Alignment.CENTRE;
@@ -65,7 +65,9 @@ public class BackgroundRenderer {
 		//batch.disableBlending();
 		batch.setProjectionMatrix(cam.combined);
 		batch.begin();
-		move.set(1, 0).scl(1f/4000f);
+		if (paused)
+			move.set(0, 0);
+		else move.set(1, 0).scl(Gdx.graphics.getDeltaTime() * STAR_SPEED);
 		int width = Gdx.graphics.getWidth();
 		int height = Gdx.graphics.getHeight();
 		for (int i = 0; i < stars.length; i++){

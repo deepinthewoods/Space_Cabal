@@ -1,5 +1,6 @@
 package ninja.trek;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -34,7 +35,8 @@ public Entity setDefaultAI() {
 @Override
 public void draw(SpriteBatch batch, OrthographicCamera camera, World world) {
 	WeaponItem weI = (WeaponItem) Items.getDef(weeaponItemID);
-	Sprite sprite = (Sprite) Sprites.projectile[weI.variantIndex].getKeyFrame(ship.stateTime);
+	//Gdx.app.log("missile", "missile draw " + ship.stateTime);
+	Sprite sprite = (Sprite) Sprites.projectile[weI.variantIndex].getKeyFrame(ship.stateTime, true);
 	batch.setProjectionMatrix(camera.combined);
 	sprite.setCenterX(x);
 	sprite.setCenterY(y);

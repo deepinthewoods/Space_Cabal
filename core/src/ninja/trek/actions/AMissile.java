@@ -21,7 +21,7 @@ public class AMissile extends Action {
 	public void update(float dt, World world, Ship map, UI ui) {
 		//move
 		Missile miss = (Missile) parent.e;
-		Gdx.app.log(TAG, "update missile " + miss.position);
+		//Gdx.app.log(TAG, "update missile " + miss.position);
 		dt = World.timeStep;
 		miss.time += dt;
 		MissileItem weI = (MissileItem) Items.getDef(miss.weeaponItemID);
@@ -53,7 +53,7 @@ public class AMissile extends Action {
 				miss.time = 0;
 				parent.e.isHostile = true;
 				world.switchToEnemyShip(miss);
-				Gdx.app.log(TAG, "SWITCH SHIPS");
+				//Gdx.app.log(TAG, "SWITCH SHIPS");
 				parent.e.isHostile = true;
 				parent.e.x = (int) miss.target.x;
 				parent.e.y = (int) miss.target.y;

@@ -411,7 +411,7 @@ public class PlanetRenderer implements RenderableProvider{
 	int nextRenderPlanet = 0;
 
 	private int renderPlanet;
-	public void draw(SpriteBatch screenBatch, ShapeRenderer shape){
+	public void draw(SpriteBatch screenBatch, ShapeRenderer shape, boolean paused){
 		//cam.position.rotate(10, 0, 0, 1);
 		//if (info == null) return;
 		for (int i = lerpingIn.size-1; i >= 0; i--){
@@ -478,14 +478,17 @@ public class PlanetRenderer implements RenderableProvider{
 		cam.lookAt(0, 0, 0);
 		lightADirection.set(-1f, 1, 1);
 		lightBDirection.set(-1f, -1, -1);
-		if (alpha > .95f){
-			rotation[renderPlanet] += Gdx.graphics.getDeltaTime() * SELECTED_ROTATION_SPEED;			
-		} else
-			rotation[renderPlanet] += Gdx.graphics.getDeltaTime() * ROTATION_SPEED;
-		lightADirection.rotate(rotation[renderPlanet]*2f * orbitSpeed, 0, 0, 1);
-		lightBDirection.rotate(rotation[renderPlanet]*2 * orbitSpeed, 0, 0, 1);
-		lightA.set(lightAColor, lightADirection);
-		lightB.set(lightBColor, lightBDirection);
+		if (!paused) {
+			if (alpha > .95f){
+				rotation[renderPlanet] += Gdx.graphics.getDeltaTime() * SELECTED_ROTATION_SPEED;			
+			} else
+				rotation[renderPlanet] += Gdx.graphics.getDeltaTime() * ROTATION_SPEED;
+			lightADirection.rotate(rotation[renderPlanet]*2f * orbitSpeed, 0, 0, 1);
+			lightBDirection.rotate(rotation[renderPlanet]*2 * orbitSpeed, 0, 0, 1);
+			lightA.set(lightAColor, lightADirection);
+			lightB.set(lightBColor, lightBDirection);
+			
+		}
 		//Gdx.gl.glClearColor(.1f, 0, 0, 1f);
 		Gdx.gl.glDisable( GL20.GL_CULL_FACE| GL20.GL_BLEND);
 
@@ -587,7 +590,7 @@ public class PlanetRenderer implements RenderableProvider{
 		if (info == null) return;
 		if (nextCachePlanet >= info.systems[info.currentSystem].planets.length) return;
 		int cachePlanet = nextCachePlanet++;
-		Gdx.app.log(TAG, "cache planet" + cachePlanet);
+		//Gdx.app.log(TAG, "cache planet" + cachePlanet);
 		sphere.set(baseSphere);
 		sphere.perterb(info.systems[info.currentSystem].planets[cachePlanet].seed);
 		vectorsToVerts(verts[cachePlanet], sphere.vertices, sphere.indices, info.systems[info.currentSystem].planets[cachePlanet]);

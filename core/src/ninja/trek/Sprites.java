@@ -1,5 +1,6 @@
 package ninja.trek;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
@@ -13,8 +14,10 @@ static Sprite[] sun;
 public static void init(TextureAtlas atlas){
 	laser = atlas.createSprite("laserbody");
 	projectile = new Animation[PROJECTILES];
-	for (int i = 0; i < PROJECTILES; i++)
-		projectile[i] = new Animation(.2f, atlas.createSprites("projectile"+i));
+	for (int i = 0; i < PROJECTILES; i++) {
+		projectile[i] = new Animation(.1f, atlas.createSprites("projectile"+i));
+		//Gdx.app.log("sprites", "anim " + projectile[i].getKeyFrames().length);
+	}
 	sun = new Sprite[9];
 	int ind = 0;
 	sun[ind++] = atlas.createSprite("nova");

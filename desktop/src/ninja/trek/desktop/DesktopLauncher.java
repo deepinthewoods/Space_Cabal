@@ -1,6 +1,5 @@
 package ninja.trek.desktop;
 
-import com.badlogic.gdx.Files.FileType;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
@@ -15,7 +14,9 @@ import com.badlogic.gdx.tools.bmfont.BitmapFontWriter;
 import com.badlogic.gdx.tools.bmfont.BitmapFontWriter.FontInfo;
 import com.badlogic.gdx.tools.bmfont.BitmapFontWriter.Padding;
 import com.badlogic.gdx.tools.texturepacker.TexturePacker;
+import com.badlogic.gdx.tools.texturepacker.TexturePacker.Settings;
 
+import ninja.trek.FontManager;
 import ninja.trek.Main;
 
 /** Launches the desktop (LWJGL) application. */
@@ -27,18 +28,48 @@ public class DesktopLauncher {
     private static LwjglApplication createApplication() {
         return new LwjglApplication(new Main(){
         	public void makeFonts() {
-        		String fontName = "kenpixel_high";
+        		if (true) return;
+        		//makeFont("kenpixel_high");
+        		for (int i = 0; i < FontManager.fontNames.length; i++) {
+        			makeFont(FontManager.fontNames[i], FontManager.fontSizes[i]);
+        		}
+        			
+        		Settings settings = new Settings();
+        		settings.maxWidth = 1024;
+        		settings.maxHeight = 1024;
+        		settings.paddingX = 0;
+        		settings.paddingY = 0;
+        		settings.duplicatePadding = false;
+        		settings.edgePadding = false;
+        		
+        		
+            	TexturePacker.process(settings, "C:/Users/n/Spacecabal/fonts", "C:/Users/n/_spacecabal/android/assets/ui", "ui.atlas");
+
+            	FileHandle dest = Gdx.files.absolute("C:/Users/n/_spacecabal/android/assets/ui");
             	FileHandle fontFolder = Gdx.files.external(Main.FONT_SAVE_LOCATION);
+            	for (FileHandle f : fontFolder.list()) {
+            		if (f.extension().contains("fnt")) {
+            			Gdx.app.log("main", "copy file " + f.name() + dest.path());
+            			f.copyTo(dest);
+            		}
+            	}
+
+        		
+        	}
+
+			private void makeFont(String fontName, int fontSize) {
+				Gdx.app.log("desktop main", "MAKE FONT");
+				FileHandle fontFolder = Gdx.files.external(Main.FONT_SAVE_LOCATION);
         		fontFolder.mkdirs();
         		FileHandle fontFile = Gdx.files.external(Main.FONT_SAVE_LOCATION + fontName + ".fnt");
         		if (!fontFile.exists()){
         			BitmapFontWriter writer = new BitmapFontWriter();
             		FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("fonts/" + fontName + ".ttf"));
             		FreeTypeFontParameter parameter = new FreeTypeFontParameter();
-            		parameter.size = 32;
+            		parameter.size = fontSize;
             		parameter.borderColor = Color.BLACK;
             		parameter.borderWidth = 2f;
-            		parameter.packer = new PixmapPacker(512, 512, Format.RGBA8888, 2, false);
+            		parameter.packer = new PixmapPacker(256, 256, Format.RGBA8888, 2, false);
             		
             		BitmapFont font = generator.generateFont(parameter); // font size 12 pixels
             		
@@ -46,15 +77,22 @@ public class DesktopLauncher {
             		info.padding = new Padding(1, 1, 1, 1);
             		info.outline = 2;
             		//writer.writeFont(font.getData(), font.g, fontFile, info);
-            		writer.writeFont(font.getData(), new String[]{"ui.png"},
-            				fontFile, info, 512, 512);
-            		BitmapFontWriter.writePixmaps(parameter.packer.getPages(), fontFolder, "ui");
+            		writer.writeFont(font.getData(), new String[]{fontName + ".png"},
+            				fontFile, info, 256, 256);
+            		/*Array<Page> p = parameter.packer.getPages();
+            		Pixmap[] pages = new Pixmap[p.size];
+            		for (int i = 0; i < p.size; i++) {
+            			pages[i] = p.get(i).getPixmap();
+            		}
+            		writer.writeFont(font.getData(), pages , fontFile, info);*/
             		
+            		BitmapFontWriter.writePixmaps(parameter.packer.getPages(), fontFolder, fontName);
+            	
 
             		generator.dispose(); // don't forget to dispose to avoid memory leaks!
         		}
-        		
-        	};
+				
+			};
         }
         		
         		, getDefaultConfiguration());

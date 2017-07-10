@@ -2,9 +2,7 @@ package com.badlogic.gdx.scenes.scene2d.ui;
 
 
 import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 import com.badlogic.gdx.Gdx;
@@ -13,7 +11,6 @@ import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.PixmapIO;
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.math.Vector2;
@@ -35,13 +32,16 @@ import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.Pool;
 import com.badlogic.gdx.utils.Pools;
 
-import ninja.trek.Data;
 import ninja.trek.Entity;
 import ninja.trek.EntityAI;
+import ninja.trek.FontManager;
 import ninja.trek.GameInfo;
 import ninja.trek.IntPixelMap;
 import ninja.trek.Items;
 import ninja.trek.Main;
+import ninja.trek.Planet;
+import ninja.trek.Quest;
+import ninja.trek.QuestOption;
 import ninja.trek.Ship;
 import ninja.trek.Ship.EntityArray;
 import ninja.trek.ShipEntity;
@@ -109,7 +109,12 @@ public class UI {
 	GameInfo info;
 	private Label planetInfoLabel;
 	public CheckBox randomFillButton;
-	public UI(final Stage stage, final World world) {
+	private Window entitiesWindow;
+	private Table entitiesTable;
+	private TextButton[] entityAddButtonRace;
+	private EntityInfoButton[] entityInfoButtons;
+	private QuestOptionDisplayPool questOptionPool;
+	public UI(final Stage stage, final World world,  FontManager fontManager) {
 		String uiName = "holo"
 				, fontName = "kenpixel_high"
 				;
@@ -139,7 +144,7 @@ public class UI {
 		leftTable = new Table();
 		rightTable = new Table();
 		shipSystemTable = new Table();
-		
+		questOptionPool = new QuestOptionDisplayPool(skin);
 		
 		DragListener topDragL = new DragListenerSwap(this, entityActionTable, entityActionButtons){
 			@Override
@@ -707,7 +712,7 @@ public class UI {
 				int h = (int)ySlider.getValue() * Ship.CHUNKSIZE;
 				
 				EntityArray entities = Pools.obtain(EntityArray.class);
-				world.getPlayerShip().load(new IntPixelMap(w, h), entities, null);
+				world.getPlayerShip().load(new IntPixelMap(w, h), entities, null, null);
 				super.clicked(event, x, y);
 			}
 		});
@@ -769,6 +774,23 @@ public class UI {
 				super.clicked(event, x, y);
 			}
 		});
+		
+		
+		makeEntitiesWindow(stage, fontManager);
+		TextButton entitiesButton = new TextButton("Entities", skin);
+		entitiesButton.addListener(new ClickListener() {
+			@Override
+			public void clicked(InputEvent event, float x, float y) {
+				entitiesButton.setChecked(false);
+				populateEntitiesWindow(fontManager);
+				stage.addActor(entitiesWindow);
+				super.clicked(event, x, y);
+			}
+
+			
+		});
+		
+		
 		editTable.add(saveButton).left();
 		editTable.row();
 		editTable.add(loadButton).left();
@@ -797,6 +819,9 @@ public class UI {
 		editTable.add(weaponDeleteButton).left();
 		editTable.row();
 		editTable.add(entitySpawnButton).left();
+		editTable.row();
+		editTable.add(entitiesButton);
+		
 		editTable.row();
 		editTable.add(destroyButton).left();
 		editTable.row();
@@ -1081,7 +1106,103 @@ public class UI {
 		
 		makeSolarSystemWindow(skin, world);
 		
+		createQuestWindow(skin);
 	}
+	private void makeEntitiesWindow(Stage stage, FontManager fontManager) {
+		entitiesWindow = new Window("Entities", skin);
+		Window entityAddWindow = new Window("Add Entity", skin);
+		entitiesTable = new Table();
+		TextButton entityAddButton = new TextButton("Add", skin);
+		entityAddButton.addListener(new ClickListener() {
+			@Override
+			public void clicked(InputEvent event, float x, float y) {
+				entityAddButton.setChecked(false);
+				if (ship == null) return;
+				entityAddWindow.pack();
+				entityAddWindow.setPosition(Gdx.graphics.getWidth()/2, Gdx.graphics.getHeight()/2, Align.center);
+				stage.addActor(entityAddWindow);
+				
+				super.clicked(event, x, y);
+			}
+		});
+		
+		entityAddButtonRace = new TextButton[Entity.raceNames.length];
+		for (int i = 0; i < Entity.raceNames.length; i++) {
+			int raceIndex = i;
+			entityAddButtonRace[i] = new TextButton(Entity.raceNames[i], skin);
+			entityAddWindow.add(entityAddButtonRace[i]);
+			entityAddButtonRace[i].addListener(new ClickListener() {
+				@Override
+				public void clicked(InputEvent event, float x, float y) {
+					entityAddWindow.remove();
+					entityAddButtonRace[raceIndex].setChecked(false);
+					ship.addEntity(raceIndex);
+					populateEntitiesWindow(fontManager);
+				}
+			});
+		}
+		TextButton entityAddWindoCloseButton = new TextButton("close", skin);
+		entityAddWindoCloseButton.addListener(new ClickListener() {
+			@Override
+			public void clicked(InputEvent event, float x, float y) {
+				entityAddWindoCloseButton.setChecked(false);
+				entityAddWindow.remove();
+				super.clicked(event, x, y);
+			}
+		});
+		entityAddWindow.add(entityAddWindoCloseButton);
+		
+		TextButton entityWindowCloseButton = new TextButton("close", skin);
+		entityWindowCloseButton.addListener(new ClickListener() {
+			@Override
+			public void clicked(InputEvent event, float x, float y) {
+				entityWindowCloseButton.setChecked(false);
+				entitiesWindow.remove();
+				super.clicked(event, x, y);
+			}
+		});
+		entitiesWindow.add(entityAddButton);
+		entitiesWindow.add(entityWindowCloseButton);
+		entitiesWindow.row();
+		entitiesWindow.add(entitiesTable);
+		entityInfoButtons = new EntityInfoButton[Ship.MAX_ENTITIES];
+		for (int i = 0; i < Ship.MAX_ENTITIES; i++) {
+			entityInfoButtons[i] = new EntityInfoButton(i, skin);
+			
+		}
+		
+	}
+	private void populateEntitiesWindow(FontManager fontManager) {
+		EntityArray list = ship.getEntities();
+		for (int i = 0; i < list.size; i++) {
+			Entity e = list.get(i);
+			if (e instanceof Weapon) continue;
+			entityInfoButtons[i].set(e, fontManager);;
+			entitiesTable.add(entityInfoButtons[i]);
+			entitiesTable.row();
+		}
+		entitiesWindow.pack();
+		entitiesWindow.setPosition(Gdx.graphics.getWidth()/2, Gdx.graphics.getHeight()/2, Align.center);
+
+	}
+	private static class EntityInfoButton extends TextButton{
+
+		private int index;
+
+		public EntityInfoButton(int i, Skin skin) {
+			super("entity", skin);
+			index = i;
+		}
+
+		public void set(Entity e, FontManager fontManager) {
+			setText(e.glyph + " : " + Entity.raceNames[e.font]);
+			getLabel().getStyle().font = fontManager.getFont(e.font);
+			//col.set(MathUtils.random(), MathUtils.random(), MathUtils.random(), 1f);
+			//getLabel().setColor(col);;
+		}
+		
+	}
+	static Color col = new Color();
 	private void makeSolarSystemWindow(Skin skin2, final World world) {
 		solarSystemWindow = new Window("Planet Name", skin);
 		Table solarButtonsTable = new Table();
@@ -1091,6 +1212,8 @@ public class UI {
 			public void clicked(InputEvent event, float x, float y) {
 				geoOrbitButton.setChecked(false);
 				world.goToOrbit(GameInfo.ORBIT_ORBIT);
+				solarSystemWindow.remove();
+				planetInfoLabel.remove();
 				super.clicked(event, x, y);
 			}
 		});
@@ -1100,6 +1223,8 @@ public class UI {
 			public void clicked(InputEvent event, float x, float y) {
 				landOrbitButton.setChecked(false);
 				world.goToOrbit(GameInfo.ORBIT_LANDED);
+				solarSystemWindow.remove();
+				planetInfoLabel.remove();
 				super.clicked(event, x, y);
 			}
 		});
@@ -1110,6 +1235,8 @@ public class UI {
 			public void clicked(InputEvent event, float x, float y) {
 				ellOrbitButton.setChecked(false);
 				world.goToOrbit(GameInfo.ORBIT_ELLIPTICAL);
+				solarSystemWindow.remove();
+				planetInfoLabel.remove();
 				super.clicked(event, x, y);
 			}
 		});
@@ -1133,6 +1260,8 @@ public class UI {
 	private Ship ship;
 	private Entity entity;
 	public UISystemButton lastPressedShipSystemButton;
+	private Window questWindow;
+	private Label questTextLabel;
 
 	public void addSolarSystemWindow(Stage stage) {
 		//landOrbitButton.setDisabled(true);
@@ -1148,7 +1277,7 @@ public class UI {
 	}
 	private void makeInventoryWindow(Skin skin) {
 		invWindow = new Window("Inventory", skin);
-		invItemDisplay = new ItemDisplay(skin, invWindow);
+		invItemDisplay = new ItemDisplay(skin, invWindow, this);
 		invWindow.add(invItemDisplay);
 	}
 
@@ -1214,8 +1343,7 @@ public class UI {
 					WeaponButton b = weaponButtons[i];
 					if (w.equippedItemID != -1){
 						b.setText(Items.getDef(w.equippedItemID).name);
-						
-					}
+					} else b.setText(" ");
 					weaponTable.add(b);
 					
 					
@@ -1338,6 +1466,7 @@ public class UI {
 		FileHandle file = Gdx.files.external(Main.SHIP_SAVE_LOCATION + name + "." + Main.MAP_FILE_EXTENSION);
 		FileHandle entityFile = Gdx.files.external(Main.SHIP_SAVE_LOCATION + name + "." + Main.ENTITY_FILE_EXTENSION);
 		FileHandle blocksFile = Gdx.files.external(Main.SHIP_SAVE_LOCATION + name + "." + Main.MAP_BLOCKS_FILE_EXTENSION);
+		FileHandle invFile = Gdx.files.external(Main.SHIP_SAVE_LOCATION + name + "." + Main.MAP_INVENTORY_FILE_EXTENSION);
 		Json json = Pools.obtain(Json.class);
 		Gdx.app.log(TAG, "writing ship data");
 		String string = json.toJson(ship.map);
@@ -1352,11 +1481,11 @@ public class UI {
 			e.printStackTrace();
 		}
 		
-		
-		
 		Gdx.app.log(TAG, "writing entities ");
 		String entities = json.toJson(ship.getEntities());
 		entityFile.writeString(entities, false);
+		String invS = json.toJson(ship.inventory);
+		invFile.writeString(invS, false);
 		Gdx.app.log(TAG, "writing hull ");
 		FileHandle hullFile = Gdx.files.external(Main.SHIP_SAVE_LOCATION + name + "." + Main.MAP_HULL_EXTENSION);
 		
@@ -1455,31 +1584,99 @@ public class UI {
 			slider = new ProgressBar(0, 1, 0.01f, false, skin);
 			slider.setFillParent(true);
 			getLabel().setColor(Color.BLACK);
-			
+			//getCell(getLabel()).pad(0);
+			//getCell(getLabel()).space(0);
 			addActorBefore(getLabel(), slider);
+			//getLabelCell().padTop(0);
 			//slider.setHeight(getHeight());
 			slider.getStyle().background.setMinHeight(getHeight());;
-			slider.getStyle().knobAfter.setMinHeight(getHeight());;
-			slider.getStyle().knobAfter.setMinWidth(0);;
+			
+			slider.getStyle().knobBefore.setMinHeight(getHeight());;
+			//slider.getStyle().knobAfter.setMinWidth(0);;
 			//slider.getStyle().knobAfter.setRightWidth(0f);;
 			slider.setColor(Color.GRAY);
 			
 			slider.setValue(0.5f);
-			
 		}
 		@Override
 		public void draw(Batch batch, float parentAlpha) {
 			//slider.setHeight(getHeight());
+			
 			super.draw(batch, parentAlpha);
 		}
 	}
 	public Entity getEntity() {
-		// TODO Auto-generated method stub
 		return entity;
 	}
 
 	public void dispose() {
 		skin.dispose();
+		
+	}
+	public void resetShip() {
+		set(ship);
+		
+	}
+	public void createQuestWindow(Skin skin) {
+		questWindow = new Window("changeme", skin);
+		questTextLabel = new Label("", skin);
+	}
+	
+	public void showQuestScreen(GameInfo info, Stage stage, Ship ship) {
+		Planet planet = info.systems[info.currentSystem].planets[info.currentPlanet];
+		questWindow.getTitleLabel().setText(planet.toString());
+		for (Actor a : questWindow.getChildren()) {
+			if (a instanceof QuestOptionDisplay) {
+				questOptionPool.free((QuestOptionDisplay) a);
+			}
+		}
+		questWindow.clearChildren();
+		questWindow.add(questTextLabel);
+		for (int i = 0; i < planet.quests.size; i++) {
+			int questHash = planet.quests.get(i);
+			Quest quest = info.getQuest(questHash);
+			if (!info.hasCompleted(questHash, info.currentSystem, info.currentPlanet) && info.isValid(questHash, ship)) {
+				questTextLabel.setText(quest.text);
+				Gdx.app.log(TAG, "ADD OPTIONS");
+				for (int k = 0; k < quest.options.size; k++) {
+					QuestOptionDisplay opt = questOptionPool.obtain();
+					opt.set(quest.options.get(k));
+					questWindow.add(opt);
+					questWindow.row();
+				}
+				break;
+			}
+		}
+		Gdx.app.log(TAG, "DONE WINDOW");
+		questWindow.pack();
+		questWindow.setPosition(Gdx.graphics.getWidth()/2, Gdx.graphics.getHeight()/2, Align.center);
+		stage.addActor(questWindow);
+	}
+	public static class QuestOptionDisplay extends TextButton{
+
+		private QuestOption quest;
+
+		public QuestOptionDisplay(String text, Skin skin) {
+			super(text, skin);
+			
+		}
+
+		public void set(QuestOption questOption) {
+			this.quest = questOption;
+			setText(questOption.text);
+		}
+		
+	}
+	public static class QuestOptionDisplayPool extends Pool<QuestOptionDisplay>{
+		private Skin skin;
+		public QuestOptionDisplayPool(Skin skin) {
+			this.skin = skin;
+		}
+		@Override
+		protected QuestOptionDisplay newObject() {
+			// TODO Auto-generated method stub
+			return new QuestOptionDisplay("fjsdklj", skin);
+		}
 		
 	}
 }

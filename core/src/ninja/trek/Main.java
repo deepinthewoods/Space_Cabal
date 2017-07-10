@@ -41,7 +41,9 @@ public class Main extends ApplicationAdapter {
 	public static final String FONT_SAVE_LOCATION = "SpaceCabal/fonts/";
 	public static final String MAP_HULL_EXTENSION = "png";
 	public static final String MAP_BLOCKS_FILE_EXTENSION = "blk";
-	public static final int THREADS = 1;;
+	public static final int THREADS = 1;
+	public static final String MAP_INVENTORY_FILE_EXTENSION = "inv";;
+	
 	
 	SpriteBatch batch;
 	TextureAtlas atlas;
@@ -62,6 +64,7 @@ public class Main extends ApplicationAdapter {
 	private BackgroundRenderer background;
 	private PlanetRenderer planet;
 	private ModelBatch modelBatch;
+	private boolean paused;
 	@Override
 	public void create () {
 		String[] args = {""};
@@ -107,6 +110,8 @@ public class Main extends ApplicationAdapter {
 				else if (keycode == Keys.X) {
 					world.getEnemyShip().zoomingOut = true;
 					
+				} else if (keycode == Keys.SPACE) {
+					paused = !paused;
 				}
 					
 				
@@ -418,8 +423,8 @@ public class Main extends ApplicationAdapter {
 		Gdx.input.setInputProcessor(mux);
 		
 		//uiAtlas = new TextureAtlas(Gdx.files.internal("ui/ui.atlas"));
-		
-		fontManager = new FontManager();
+		TextureAtlas fontAtlas = new TextureAtlas("ui/ui.atlas");
+		fontManager = new FontManager(fontAtlas);
 		
 		Sprite pixelSprite = new Sprite(new Texture("pixel.png"));
 		world = new World(fontManager, shader, pixelSprite, planet, modelBatch);
@@ -454,7 +459,7 @@ public class Main extends ApplicationAdapter {
 		//amap2.offsetSize.set(200, 200);
 		amap2.alignment = Alignment.TOP_RIGHT;
 		
-		ui = new UI(stage, world);
+		ui = new UI(stage, world, fontManager);
 		ui.setEntity(null);
 		ui.set(null);//world.getPlayerShip());
 	}
@@ -466,13 +471,14 @@ public class Main extends ApplicationAdapter {
 		stage.act(Gdx.graphics.getDeltaTime());
 		Gdx.gl.glClearColor(0, 0, 0, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-		world.update(batch, camera, world, ui, background, planet, stage);
+		if (!paused)
+			world.update(batch, camera, world, ui, background, planet, stage);
 		
 		//batch.begin();
 		//batch.draw(img, 0, 0);
-		background.draw(world);
-		planet.draw(batch, shape);
-		world.draw(batch, camera, shape, ui);
+		background.draw(world, paused);
+		planet.draw(batch, shape, paused);
+		world.draw(batch, camera, shape, ui, paused);
 		//batch.end();
 		//stage.getBatch().disableBlending();
 		stage.draw();

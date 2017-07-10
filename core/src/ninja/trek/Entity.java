@@ -14,6 +14,7 @@ import ninja.trek.actions.ABase;
 
 public class Entity implements Poolable {
 	private static final String TAG = "entity";
+	public static String[] raceNames = {"Human", "Reptiod", "Sloth", "Mechanoid"};
 	public int x, y;
 	public String glyph = "A";
 	public int font = 0;

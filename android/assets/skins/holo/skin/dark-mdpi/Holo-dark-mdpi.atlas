@@ -200,7 +200,7 @@ scroll_horizontal_knob
   index: -1
 scroll_opaque
   rotate: false
-  xy: 604, 997
+  xy: 518, 716
   size: 3, 3
   split: 1, 1, 1, 1
   orig: 3, 3
@@ -251,7 +251,7 @@ scrubber_secondary
   index: -1
 scrubber_track
   rotate: false
-  xy: 518, 779
+  xy: 524, 779
   size: 10, 12
   split: 0, 0, 0, 10
   pad: 0, 0, 0, 0
@@ -260,7 +260,7 @@ scrubber_track
   index: -1
 scrubber_vertical_primary
   rotate: false
-  xy: 570, 946
+  xy: 549, 928
   size: 12, 10
   split: 0, 10, 0, 0
   pad: 0, 0, 0, 0
@@ -269,7 +269,7 @@ scrubber_vertical_primary
   index: -1
 scrubber_vertical_secondary
   rotate: false
-  xy: 622, 1011
+  xy: 570, 946
   size: 12, 10
   split: 0, 10, 0, 0
   pad: 0, 0, 0, 0
@@ -278,7 +278,7 @@ scrubber_vertical_secondary
   index: -1
 scrubber_vertical_track
   rotate: false
-  xy: 69, 463
+  xy: 622, 1011
   size: 12, 10
   split: 0, 10, 0, 0
   pad: 0, 0, 0, 0
@@ -288,19 +288,33 @@ scrubber_vertical_track
 small_grey_button
   rotate: false
   xy: 503, 475
-  size: 2, 32
+  size: 3, 32
   split: 0, 0, 16, 14
   pad: 0, 0, 8, 8
-  orig: 2, 32
+  orig: 3, 32
+  offset: 0, 0
+  index: -1
+small_grey_button.9 - Copy
+  rotate: false
+  xy: 518, 757
+  size: 4, 34
+  orig: 4, 34
   offset: 0, 0
   index: -1
 small_white
   rotate: false
   xy: 544, 903
-  size: 2, 32
-  split: 0, 0, 16, 14
-  pad: 0, 0, 8, 8
-  orig: 2, 32
+  size: 3, 32
+  split: 1, 1, 16, 14
+  pad: 1, 1, 8, 8
+  orig: 3, 32
+  offset: 0, 0
+  index: -1
+small_white.9 - Copy
+  rotate: false
+  xy: 518, 721
+  size: 4, 34
+  orig: 4, 34
   offset: 0, 0
   index: -1
 spinner_default
@@ -439,7 +453,7 @@ textfield_focused
   index: -1
 textfield_selection
   rotate: false
-  xy: 549, 937
+  xy: 508, 506
   size: 1, 1
   orig: 1, 1
   offset: 0, 0
@@ -460,7 +474,7 @@ tree_plus
   index: -1
 white_pixel
   rotate: false
-  xy: 507, 506
+  xy: 544, 900
   size: 1, 1
   orig: 1, 1
   offset: 0, 0

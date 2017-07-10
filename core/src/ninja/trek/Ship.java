@@ -86,6 +86,7 @@ public class Ship {
 	private static final int MAX_WIDTH = 512;
 	private static final int MAX_HEIGHT = 512;
 	private static final float ZOOM_SPEED = 5f;
+	public static final int MAX_ENTITIES = 10;
 	private transient FrameBuffer[] chunkBuffer, fillBuffer, wireBuffer;
 	private transient Texture[] chunkTextures, fillTextures, wireTextures;;
 	private transient boolean[] dirtyChunk;
@@ -359,9 +360,9 @@ public class Ship {
 			}
 	}
 	
-	public void draw(SpriteBatch batch, OrthographicCamera wcamera, World world){
+	public void draw(SpriteBatch batch, OrthographicCamera wcamera, World world, boolean paused){
 		//batch.getProjectionMatrix().set(camera.combined);
-		stateTime += Gdx.graphics.getDeltaTime();
+		if (!paused)stateTime += Gdx.graphics.getDeltaTime();
 		
 		
 		batch.setProjectionMatrix(camera.combined);
@@ -453,9 +454,10 @@ public class Ship {
 	}
 	public void drawEntities(SpriteBatch batch, World world){
 		fonts.setZoom(camera);
+		//camera.update();
 		//Gdx.app.log(TAG, "draw entities " + entities.size + "  "  + camera.position);
-		batch.setProjectionMatrix(camera.combined);//.translate(offset.x, offset.y, 0);
-		batch.setShader(null);
+		//batch.setProjectionMatrix(camera.combined);//.translate(offset.x, offset.y, 0);
+		//batch.setShader(null);
 		
 		
 		
@@ -464,12 +466,12 @@ public class Ship {
 		}
 		
 		
-		batch.enableBlending();
+		//batch.enableBlending();
 		for (Entity e : entities){
 			e.draw(batch, camera, world);
 		}
 		if (editMode) fonts.drawSpawn(map.spawn, batch);
-		batch.disableBlending();
+		//batch.disableBlending();
 		//batch.end();
 		
 	}
@@ -558,8 +560,6 @@ public class Ship {
 			//shape.line(0,0,0, 1000);
 		}
 		
-		
-		
 		if (selectedEntity != null){
 			Entity e = selectedEntity;
 			float w = 20 * camera.zoom, h = w;
@@ -588,9 +588,6 @@ public class Ship {
 					shape.line(q.x + x, q.y + y, r.x + x, r.y + y);
 				}
 			}
-			
-			
-			
 			
 		}
 
@@ -622,8 +619,6 @@ public class Ship {
 			float y1 = y0;
 			shape.line(x0,  y0, x1, y1);
 		}
-		
-		
 		
 		shape.end();
 		shape.setProjectionMatrix(camera.combined);
@@ -822,7 +817,7 @@ public class Ship {
 		
 	}
 
-	public void load(IntPixelMap map2, EntityArray entities2, Texture hull2) {
+	public void load(IntPixelMap map2, EntityArray entities2, Texture hull2, IntArray inv) {
 		for (Entity e : entities){
 			Pools.free(e);
 		}
@@ -856,6 +851,9 @@ public class Ship {
 				e.setDefaultAI();
 			}
 		}
+		
+		inventory.clear();
+		inventory.addAll(inv);
 		
 		setAllDirty();
 		hasCategorizedBlocks = false;
@@ -1145,6 +1143,7 @@ public class Ship {
 	public float shieldRadius2, shieldRadius;
 	public boolean showHull;
 	private float zoomPause;
+	private int nextGlyphIndex;
 	public void unReserve(int x, int y) {
 		//Gdx.app.log(TAG, "unresrv " + x + "," + y);
 		//if (!reserved.get(x + y * mapWidth)) Gdx.app.log(TAG, "dfka");
@@ -1239,5 +1238,18 @@ public class Ship {
 		zoomingIn = false;
 		zoomingOut = true;
 		zoomPause = .15f;
+	}
+	public void addEntity(int raceIndex) {
+		Entity e = Pools.obtain(Entity.class);
+		e.setDefaultAI();
+		e.font = raceIndex;
+		e.glyph = getNextAvailableGlyph();
+		e.pos(map.spawn);
+		addEntity(e);
+	}
+	private String getNextAvailableGlyph() {
+	
+		String glyph = World.letters[nextGlyphIndex++ % World.letters.length];
+		return glyph;
 	}
 }
