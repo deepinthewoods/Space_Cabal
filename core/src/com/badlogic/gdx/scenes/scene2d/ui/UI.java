@@ -1632,6 +1632,7 @@ public class UI {
 		}
 		questWindow.clearChildren();
 		questWindow.add(questTextLabel);
+		questWindow.row();
 		for (int i = 0; i < planet.quests.size; i++) {
 			int questHash = planet.quests.get(i);
 			Quest quest = info.getQuest(questHash);
@@ -1640,7 +1641,7 @@ public class UI {
 				Gdx.app.log(TAG, "ADD OPTIONS");
 				for (int k = 0; k < quest.options.size; k++) {
 					QuestOptionDisplay opt = questOptionPool.obtain();
-					opt.set(quest.options.get(k));
+					opt.set(quest.options.get(k), info);
 					questWindow.add(opt);
 					questWindow.row();
 				}
@@ -1655,15 +1656,27 @@ public class UI {
 	public static class QuestOptionDisplay extends TextButton{
 
 		private QuestOption quest;
+		private GameInfo info;
 
 		public QuestOptionDisplay(String text, Skin skin) {
 			super(text, skin);
 			
 		}
 
-		public void set(QuestOption questOption) {
+		public void set(QuestOption questOption, GameInfo info) {
 			this.quest = questOption;
 			setText(questOption.text);
+			this.info = info;
+		}
+
+		public void selected() {
+			for (int i = 0; i < quest.postCommands.size; i++){
+				
+			}
+			for (int i = 0; i < quest.next.length; i++){
+				Quest q = info.getQuest(quest.next[i]);
+			
+			}
 		}
 		
 	}
@@ -1674,8 +1687,16 @@ public class UI {
 		}
 		@Override
 		protected QuestOptionDisplay newObject() {
-			// TODO Auto-generated method stub
-			return new QuestOptionDisplay("fjsdklj", skin);
+			QuestOptionDisplay d = new QuestOptionDisplay("fjsdklj", skin);
+			d.addListener(new ClickListener() {
+				@Override
+				public void clicked(InputEvent event, float x, float y) {
+					d.setChecked(false);
+					d.selected();
+					super.clicked(event, x, y);
+				}
+			});
+			return d;
 		}
 		
 	}

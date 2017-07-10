@@ -56,4 +56,9 @@ public class GameInfo {
 		
 		return quests.get(questHash, null);
 	}
+
+
+	public Quest getQuest(String string) {
+		return getQuest(string.hashCode());
+	}
 }
