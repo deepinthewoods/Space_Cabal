@@ -28,11 +28,11 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Bits;
 import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.badlogic.gdx.utils.IntArray;
-import com.badlogic.gdx.utils.PauseableThread;
 import com.badlogic.gdx.utils.Pool;
 import com.badlogic.gdx.utils.Pools;
 import com.badlogic.gdx.utils.ScreenUtils;
 
+import bloom.Bloom;
 import ninja.trek.ui.ItemDisplay;
 import ninja.trek.ui.ItemDisplay.ItemButton;
 import ninja.trek.ui.UIActionButton;
@@ -133,6 +133,7 @@ public class Ship {
 	protected boolean zoomingOut;
 	private Entity selectedEntity;
 	public boolean zoomingIn;
+	private BloomN bloom;
 	
 	public Ship(IntPixelMap map, Sprite pixelSprite, FontManager fonts, ShaderProgram shader){
 		if (pixelSprite.getHeight() != pixelSprite.getWidth()) throw new GdxRuntimeException(" prites not square");
@@ -195,6 +196,9 @@ public class Ship {
 		zoomInTarget = maxZoomForCentering * 1.5f;
 		zoomAlpha = 0f;
 		maxZoomForCentering *= 2f;
+		bloom = new BloomN();
+		
+		
 	}
 	public FrameBuffer makeFrameBuffer(int i){
 		int ind = hasBuffer.nextSetBit(0), count = 0;
@@ -379,7 +383,7 @@ public class Ship {
 		batch.begin();
 		//float[] colorArray = CustomColors.getFloatColorArray();
 		//shader.setUniform3fv("u_colors[0]", colorArray , 0, colorArray.length);
-		
+		//bloom.capture();
 		int x0, x1, y0, y1;
 		x0 = 0; y0 = 0;x1 = chunksX-1;y1 = chunksY-1;
 		for (int x = x0; x <= x1; x++)
@@ -389,7 +393,7 @@ public class Ship {
 			}
 		//batch.draw(img, 0, 0);
 		batch.end();
-		
+		//bloom.render();
 		toFree.clear();
 		toFree.or(hasBuffer);
 		toFree.andNot(drawn);
@@ -1144,6 +1148,7 @@ public class Ship {
 	public boolean showHull;
 	private float zoomPause;
 	private int nextGlyphIndex;
+	private boolean isHostile;
 	public void unReserve(int x, int y) {
 		//Gdx.app.log(TAG, "unresrv " + x + "," + y);
 		//if (!reserved.get(x + y * mapWidth)) Gdx.app.log(TAG, "dfka");
@@ -1252,4 +1257,29 @@ public class Ship {
 		String glyph = World.letters[nextGlyphIndex++ % World.letters.length];
 		return glyph;
 	}
+	public void doCommand(String cmd, GameInfo info, UI ui, World world) {
+		
+		if (cmd.equals("reward")) {
+			Gdx.app.log(TAG, "REWARD");
+			
+		} else if (cmd.equals("spawn snail")) {
+			Gdx.app.log(TAG, "SPAWN SNAIL SHIP");
+		} else if (cmd.equals("hostile")) {
+			Gdx.app.log(TAG, "HOSTILE");
+			Ship enemy = world.getEnemy(this);
+			if (enemy != null) {
+				enemy.setHostile(true);
+				setHostile(true);
+			}
+		}
+		
+		
+		
+		else Gdx.app.log(TAG, "FAILED command " + cmd);
+	}
+	
+	private void setHostile(boolean b) {
+		isHostile = b;
+	}
+	
 }

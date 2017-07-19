@@ -39,6 +39,7 @@ public static Color[] mapDrawColors = new Color[128]
 private static float time;
 private static Color[] lerpToColorBoost;;
 public static void init(){
+	
 	//Pixmap pixmap = new Pixmap(Gdx.files.internal("palette.png"));
 	
 	NO_AIR_FLOOR.r += .3f;
@@ -107,7 +108,15 @@ public static void init(){
 	}
 	
 	lerpToColorBoost = new Color[16];
-	for (int i = 0; i < lerpToColorBoost.length; i++) lerpToColorBoost[i] = new Color(color[i]).lerp(Color.WHITE, .35f);
+	for (int i = 0; i < lerpToColorBoost.length; i++) {
+		Color c = new Color(color[i]);
+		lerpToColorBoost[i] = c;
+		hc.fromRGB(c);
+		hc.s = .75f;
+		hc.toRGB(c);
+		//hc.s = 1f;
+		hc.toRGB(color[i]);
+	}
 	
 	for (int i = 0; i < 16; i++){
 		mapLerpColors[i] = new Color(1f, 1f, 1f, 1f);
@@ -144,7 +153,7 @@ public static void updateColors(float dt, ShaderProgram shader){
 		mapLerpColorsBoost[i].set(color[i]);
 		mapLerpColorsBoost[i].lerp(lerpToColorBoost[i], alpha );
 		
-		hc.fromRGB(color[i]);
+		/*hc.fromRGB(color[i]);
 		float s1 = Math.min(hc.s + VARIANCE, 1f);
 		float s0 = s1 - VARIANCE * 2;
 		//s0 = 1;
@@ -153,7 +162,7 @@ public static void updateColors(float dt, ShaderProgram shader){
 		hc.s = lerp(.75f, 1, alpha);
 		//hc.l = lerp(hc.l, hc.l - .2f, alpha);
 		
-		hc.toRGB(mapLerpColorsBoost[i]);
+		hc.toRGB(mapLerpColorsBoost[i]);*/
 		//mapLerpColorsBoost[i].set(color[i]);
 		
 		mapFlashColorsFireB[i].set(mapLerpColors[i]);

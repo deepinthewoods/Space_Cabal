@@ -3,15 +3,14 @@ package ninja.trek;
 import com.badlogic.gdx.utils.Array;
 
 public class Quest {
-	transient public String name;
-	public boolean isOneOff = false
-			;
-	
-	public Array<QuestOption> options = new Array<QuestOption>();
+	public String name;
+	public String[] commands;
 	public String text = "Explanation text";
+	public String[] tags = {};
+	public boolean isOneOff = false;
+	public Array<QuestOption> options = new Array<QuestOption>();
 	@Override
 	public int hashCode() {
-		// TODO Auto-generated method stub
 		return name.hashCode();
 	}
 }

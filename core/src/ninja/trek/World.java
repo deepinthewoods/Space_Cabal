@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.zip.GZIPInputStream;
 
+import com.badlogic.gdx.Application.ApplicationType;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Camera;
@@ -47,6 +48,7 @@ public class World {
 	private Mesh mesh;
 	private ShaderProgram cacheShader;
 	private PauseableThread[] threads;
+	private Runnable[] runnable;
 	public final static float timeStep = 1f/60f;
 	
 	public World(FontManager fontManager, ShaderProgram shader, Sprite pixelSprite, PlanetRenderer planet, ModelBatch modelBatch) {
@@ -79,10 +81,16 @@ public class World {
 		cacheShader = createDefaultShader();
 
 		threads = new PauseableThread[2];
-		threads[0] = new PauseableThread(new MapCacheRunnable(0, this));
-		threads[1] = new PauseableThread(new MapCacheRunnable(1, this));
-		threads[0].start();
-		threads[1].start();
+		runnable = new Runnable[2];
+		runnable[0] = new MapCacheRunnable(0, this);
+		runnable[1] = new MapCacheRunnable(1, this);
+		threads[0] = new PauseableThread(runnable[0]);
+		threads[1] = new PauseableThread(runnable[1]);
+		if (Gdx.app.getType() == ApplicationType.Android) {
+			threads[0].start();
+			threads[1].start();
+		}
+		
 	}
 	public ShaderProgram createDefaultShader () {
 		String vertexShader = "attribute vec4 " + ShaderProgram.POSITION_ATTRIBUTE + ";\n" //
@@ -118,7 +126,10 @@ public class World {
 		return shader;
 	}
 	public void update(SpriteBatch batch, Camera camera, World world, UI ui, BackgroundRenderer background, PlanetRenderer planet, Stage stage	){
-		
+		if (Gdx.app.getType() == ApplicationType.Desktop) {
+			runnable[0].run();
+			runnable[1].run();
+		}
 		accum += Gdx.graphics.getDeltaTime();
 		if (warpingToSolarSystemMap){
 			warpAlpha += Gdx.graphics.getDeltaTime();
@@ -179,7 +190,7 @@ public class World {
 	}
 	
 	private void showQuestScreen(UI ui, Stage stage) {
-		ui.showQuestScreen(info, stage, getPlayerShip());
+		ui.showQuestScreen(info, stage, getPlayerShip(), this);
 		
 	}
 	public void draw(SpriteBatch batch, OrthographicCamera camera, ShapeRenderer shape, UI ui, boolean paused){

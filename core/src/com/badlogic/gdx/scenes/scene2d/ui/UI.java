@@ -144,7 +144,7 @@ public class UI {
 		leftTable = new Table();
 		rightTable = new Table();
 		shipSystemTable = new Table();
-		questOptionPool = new QuestOptionDisplayPool(skin);
+		questOptionPool = new QuestOptionDisplayPool(skin, this);
 		
 		DragListener topDragL = new DragListenerSwap(this, entityActionTable, entityActionButtons){
 			@Override
@@ -1622,8 +1622,29 @@ public class UI {
 		questTextLabel = new Label("", skin);
 	}
 	
-	public void showQuestScreen(GameInfo info, Stage stage, Ship ship) {
+	public void showQuestScreen(GameInfo info, Stage stage, Ship ship, World world) {
+		
 		Planet planet = info.systems[info.currentSystem].planets[info.currentPlanet];
+		for (int i = 0; i < planet.quests.size; i++) {
+			int questHash = planet.quests.get(i);
+			Quest quest = info.getQuest(questHash);
+			if (!info.hasCompleted(questHash, info.currentSystem, info.currentPlanet) && info.isValid(questHash, ship)) {
+
+				showQuestScreen(info, stage, ship, quest, planet, world);
+				break;
+			}
+		}
+	}
+	
+	public void showQuestScreen(GameInfo info, Stage stage, Ship ship, String questName, World world) {
+		Planet planet = info.systems[info.currentSystem].planets[info.currentPlanet];
+		Quest quest = info.getQuest(questName);
+		if (quest == null) throw new GdxRuntimeException("quest name does not exist");
+		showQuestScreen(info, stage, ship, quest, planet, world);
+
+	}
+	
+	public void showQuestScreen(GameInfo info, Stage stage, Ship ship, Quest quest, Planet planet, World world) {
 		questWindow.getTitleLabel().setText(planet.toString());
 		for (Actor a : questWindow.getChildren()) {
 			if (a instanceof QuestOptionDisplay) {
@@ -1633,71 +1654,114 @@ public class UI {
 		questWindow.clearChildren();
 		questWindow.add(questTextLabel);
 		questWindow.row();
-		for (int i = 0; i < planet.quests.size; i++) {
-			int questHash = planet.quests.get(i);
-			Quest quest = info.getQuest(questHash);
-			if (!info.hasCompleted(questHash, info.currentSystem, info.currentPlanet) && info.isValid(questHash, ship)) {
-				questTextLabel.setText(quest.text);
-				Gdx.app.log(TAG, "ADD OPTIONS");
-				for (int k = 0; k < quest.options.size; k++) {
-					QuestOptionDisplay opt = questOptionPool.obtain();
-					opt.set(quest.options.get(k), info);
-					questWindow.add(opt);
-					questWindow.row();
-				}
-				break;
+		
+		questTextLabel.setText(quest.text);
+		//Gdx.app.log(TAG, "ADD OPTIONS");
+		if (quest.options.size == 0) {
+			throw new GdxRuntimeException("ndskjfl");
+		}
+		{
+			
+			for (int k = 0; k < quest.options.size; k++) {
+				QuestOptionDisplay opt = questOptionPool.obtain();
+				opt.set(quest.options.get(k), info, ship, world);
+				questWindow.add(opt);
+				questWindow.row();
+				Gdx.app.log(TAG, "ADD OPTION TO WINDOW");
 			}
 		}
-		Gdx.app.log(TAG, "DONE WINDOW");
+		if (quest.commands != null)
+			for (int i = 0; i < quest.commands.length; i++){
+				ship.doCommand(quest.commands[i], info, this, world);
+			}
+		
+		Gdx.app.log(TAG, "DONE WINDOW" + quest.name);
 		questWindow.pack();
 		questWindow.setPosition(Gdx.graphics.getWidth()/2, Gdx.graphics.getHeight()/2, Align.center);
 		stage.addActor(questWindow);
 	}
 	public static class QuestOptionDisplay extends TextButton{
 
-		private QuestOption quest;
+		private QuestOption questO;
 		private GameInfo info;
+		private UI ui;
+		private Stage mstage;
+		private Ship ship;
+		private World world;
 
-		public QuestOptionDisplay(String text, Skin skin) {
+		public QuestOptionDisplay(String text, Skin skin, UI ui) {
 			super(text, skin);
-			
+			this.ui = ui;
 		}
 
-		public void set(QuestOption questOption, GameInfo info) {
-			this.quest = questOption;
+		public void set(QuestOption questOption, GameInfo info, Ship ship, World world) {
+			this.questO = questOption;
+			this.world = world;
 			setText(questOption.text);
 			this.info = info;
+			this.ship = ship;
 		}
 
 		public void selected() {
-			for (int i = 0; i < quest.postCommands.size; i++){
+			for (int i = 0; i < questO.commands.length; i++){
+				ship.doCommand(questO.commands[i], info, ui, world);
+			}
+			
+			ui.clearQuestWindow();
+			if (questO.next == null || questO.next.length == 0) {
+				ui.closeQuestWindow();
+				return;
+			}
+			for (int i = 0; i < questO.next.length; i++) {
+				Quest q = info.getQuest(questO.next[i]);
+				if (q != null) {
+					Planet planet = info.systems[info.currentSystem].planets[info.currentPlanet];
+					Gdx.app.log(TAG, "OPEN NEW QUEST");
+					
+					ui.showQuestScreen(info, getStage(), ship, q, planet, world);
+					
+				}
 				
 			}
-			for (int i = 0; i < quest.next.length; i++){
-				Quest q = info.getQuest(quest.next[i]);
 			
-			}
+			
 		}
 		
 	}
 	public static class QuestOptionDisplayPool extends Pool<QuestOptionDisplay>{
 		private Skin skin;
-		public QuestOptionDisplayPool(Skin skin) {
+		private UI ui;
+		public QuestOptionDisplayPool(Skin skin, UI ui) {
 			this.skin = skin;
+			this.ui = ui;
 		}
 		@Override
 		protected QuestOptionDisplay newObject() {
-			QuestOptionDisplay d = new QuestOptionDisplay("fjsdklj", skin);
+			QuestOptionDisplay d = new QuestOptionDisplay("fjsdklj", skin, ui);
 			d.addListener(new ClickListener() {
 				@Override
 				public void clicked(InputEvent event, float x, float y) {
 					d.setChecked(false);
+					
 					d.selected();
 					super.clicked(event, x, y);
 				}
 			});
 			return d;
 		}
+		
+	}
+	public void clearQuestWindow() {
+		//if (true) return;
+		for (Actor a : questWindow.getChildren()) {
+			if (a instanceof QuestOptionDisplay) {
+				questOptionPool.free((QuestOptionDisplay) a);
+			}
+		}
+		
+	}
+	public void closeQuestWindow() {
+		questWindow.remove();
 		
 	}
 }

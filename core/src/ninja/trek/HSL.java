@@ -11,7 +11,7 @@ public class HSL
     /** Saturation */
     public float s;
     /** Lighting */
-    public float l;
+    public float v;
 
     private float a;
 
@@ -32,7 +32,7 @@ public class HSL
         Vector3 hslVec = rgbToHsl(color);
         h = hslVec.x;
         s = hslVec.y;
-        l = hslVec.z;
+        v = hslVec.z;
         a = color.a;
     }
 
@@ -47,7 +47,7 @@ public class HSL
     {
         this.h = s;
         this.s = s;
-        this.l = l;
+        this.v = l;
         this.a = a;
     }
 
@@ -65,14 +65,14 @@ public class HSL
 
         if(s == 0)
         {
-            r = l;
-            g = l;
-            b = l;
+            r = v;
+            g = v;
+            b = v;
         }
         else
         {
-            float q = (l < 0.5f) ? (l * (1.0f + s)) : (l + s - l * s);
-            float p = 2.0f * l - q;
+            float q = (v < 0.5f) ? (v * (1.0f + s)) : (v + s - v * s);
+            float p = 2.0f * v - q;
             r = hue2rgb(p, q, h + 1.0f / 3.0f);
             g = hue2rgb(p, q, h);
             b = hue2rgb(p, q, h - 1.0f / 3.0f);
@@ -83,24 +83,7 @@ public class HSL
     
     public void toRGB(Color color)
     {
-        float r, g, b;
-
-        if(s == 0)
-        {
-            r = l;
-            g = l;
-            b = l;
-        }
-        else
-        {
-            float q = (l < 0.5f) ? (l * (1.0f + s)) : (l + s - l * s);
-            float p = 2.0f * l - q;
-            r = hue2rgb(p, q, h + 1.0f / 3.0f);
-            g = hue2rgb(p, q, h);
-            b = hue2rgb(p, q, h - 1.0f / 3.0f);
-        }
-        color.set(r,  g,  b,  a);
-        //return new Color(r, g, b, a);
+        hsv2rgb(color);
     }
 
     private static float hue2rgb(float p, float q, float t)
@@ -182,13 +165,61 @@ public class HSL
         }
         hsl.h = h;
         hsl.s = s;
-        hsl.l = l;
+        hsl.v = l;
         hsl.a = 1f;
         //return new Vector3(h, s, l);
     }
 
 	public void fromRGB(Color color) {
-		HSL.rgbToHsl(color, this);
-		
+		//HSL.rgbToHsl(color, this);
+		rgb2hsv(color);
 	}
+	
+	private void rgb2hsv(Color c){
+		float r = c.r;//rgb[0] ;/// 255;
+		float g = c.g;//rgb[1] ;/// 255;
+		float b = c.b;//rgb[2] ;/// 255;
+		float max = Math.max(Math.max(r, g), b), min = Math.min(Math.min(r, g), b);
+		float h = 0, s, v = max;
+		float d = max - min;
+		s = max == 0 ? 0 : d / max;
+		if(max == min) {
+			h = 0;
+		} else {
+			if (max == r)
+				h = (g - b) / d + (g < b ? 6 : 0);
+			else if (max == g)
+				h = (b - r) / d + 2;
+			else if (max == b)
+				h = (r - g) / d + 4;
+					
+			
+			h /= 6;
+		}
+		this.h = h;
+		this.s = s;
+		this.v = v;
+		//return [h, s, v];
+	}
+	
+	private void hsv2rgb(Color c) {
+		
+		float r=0, g=0, b=0;
+		int i =  (int) (h * 6);
+		float f = h * 6 - i;
+		float p = v * (1 - s);
+		float q = v * (1 - f * s);
+		float t = v * (1 - (1 - f) * s);
+		switch(i % 6){
+			case 0: r = v; g = t; b = p; break;
+			case 1: r = q; g = v; b = p; break;
+			case 2: r = p; g = v; b = t; break;
+			case 3: r = p; g = q; b = v; break;
+			case 4: r = t; g = p; b = v; break;
+			case 5: r = v; g = p; b = q; break;
+		}
+		c.set(r, g, b, 1f);
+		//return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+	}
+	
 }
