@@ -55,10 +55,11 @@ public static void init(){
 	//Color.rgba8888ToColor(lerpToColor[Ship.OXYGEN], pixmap.getPixel(68, 8));
 	
 	WALL.set(1f, 1f, 1f, 1f);
-	
+	PHASER.g *= .925f;
+	PHASER.b *= .925f;
 	color = new Color[16];
 	for (int i = 0; i < color.length; i++) color[i] = new Color(Color.WHITE);
-	color[Ship.VACCUUM] = new Color(0f, 0f, 0f, 1f);
+	color[Ship.VACCUUM] = new Color(0f, 0f, 0f, 0f);
 	color[Ship.ENGINE] = ENGINE;
 	color[Ship.WEAPON] = PHASER;
 	//color[Ship.TORPEDO] = TORPEDO;
@@ -96,12 +97,6 @@ public static void init(){
 	colorFloatArray = new float[512];
 	lerpFloatArray = new float[color.length * 4];
 	flashFloatArray = new float[color.length * 4];
-	for (int i = 0; i < color.length; i++){
-		colorFloatArray[i*4] = color[i].r;
-		colorFloatArray[i*4+1] = color[i].g;
-		colorFloatArray[i*4+2] = color[i].b;
-		colorFloatArray[i*4+3] = 1f;
-	}
 	for (int i = 0; i < 128; i++){
 		float index = (float)i / 128f + 1f/128f;
 		mapDrawColors[i] = new Color(index, 1f, 1f, 1f);
@@ -112,12 +107,28 @@ public static void init(){
 		Color c = new Color(color[i]);
 		lerpToColorBoost[i] = c;
 		hc.fromRGB(c);
-		hc.s = .75f;
+		hc.s = 1f;
 		hc.toRGB(c);
-		//hc.s = 1f;
-		hc.toRGB(color[i]);
+		//hc.v = .75f;
+		if (i != Ship.FLOOR && i != Ship.WALL) hc.toRGB(color[i]);
 	}
 	
+	for (int i = 0; i < color.length; i++){
+		colorFloatArray[i*4] = color[i].r;
+		colorFloatArray[i*4+1] = color[i].g;
+		colorFloatArray[i*4+2] = color[i].b;
+		colorFloatArray[i*4+3] = color[i].a;
+		
+		colorFloatArray[64+i*4] = color[i].r;
+		colorFloatArray[64+i*4+1] = color[i].g;
+		colorFloatArray[64+i*4+2] = color[i].b;
+		colorFloatArray[64+i*4+3] = color[i].a;
+		
+		colorFloatArray[128+i*4] = color[i].r;
+		colorFloatArray[128+i*4+1] = color[i].g;
+		colorFloatArray[128+i*4+2] = color[i].b;
+		colorFloatArray[128+i*4+3] = color[i].a;
+	}
 	for (int i = 0; i < 16; i++){
 		mapLerpColors[i] = new Color(1f, 1f, 1f, 1f);
 		mapLerpColorsBoost[i] = new Color(1f, 1f, 1f, 1f);
@@ -134,7 +145,7 @@ public static float[] getFloatColorArray() {
 
 public static void updateColors(float dt, ShaderProgram shader){
 	time += dt;
-	int index = (int)((time % 1f) * 12);
+	/*int index = (int)((time % 1f) * 12);
 	if (time > .5f){
 		time = 0f;
 		for (int i = 0; i < lerpToColor.length; i++) lerpToColor[i].set(Color.RED).lerp(Color.YELLOW, MathUtils.random(.2f, .8f));
@@ -153,17 +164,7 @@ public static void updateColors(float dt, ShaderProgram shader){
 		mapLerpColorsBoost[i].set(color[i]);
 		mapLerpColorsBoost[i].lerp(lerpToColorBoost[i], alpha );
 		
-		/*hc.fromRGB(color[i]);
-		float s1 = Math.min(hc.s + VARIANCE, 1f);
-		float s0 = s1 - VARIANCE * 2;
-		//s0 = 1;
-		//s1 = 1;
-		//hc.h = lerp(hc.h - .02f, hc.h + .02f, alpha);
-		hc.s = lerp(.75f, 1, alpha);
-		//hc.l = lerp(hc.l, hc.l - .2f, alpha);
 		
-		hc.toRGB(mapLerpColorsBoost[i]);*/
-		//mapLerpColorsBoost[i].set(color[i]);
 		
 		mapFlashColorsFireB[i].set(mapLerpColors[i]);
 		mapFlashColorsFire[i].set(mapLerpColors[i]);
@@ -216,7 +217,7 @@ public static void updateColors(float dt, ShaderProgram shader){
 		colorFloatArray[i*4+1] = mapLerpColorsBoost[ind].g;
 		colorFloatArray[i*4+2] = mapLerpColorsBoost[ind].b;
 		colorFloatArray[i*4+3] = 1f;
-	}
+	}//*/
 	shader.begin();
 	shader.setUniform4fv("u_colors[0]", colorFloatArray, 0, colorFloatArray.length);
 	

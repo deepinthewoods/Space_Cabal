@@ -218,7 +218,7 @@ public class HSL
 			case 4: r = t; g = p; b = v; break;
 			case 5: r = v; g = p; b = q; break;
 		}
-		c.set(r, g, b, 1f);
+		c.set(r, g, b, c.a);
 		//return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
 	}
 	

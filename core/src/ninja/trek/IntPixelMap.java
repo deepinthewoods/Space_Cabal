@@ -218,11 +218,49 @@ public class IntPixelMap{
 		needsBoost[id].remove(x + y * width, 0);
 		
 	}
+	public void unBoost(int x, int y) {
+		if (x >= width || y >= height || x < 0 || y < 0) return ;
+		//if (specialConstructor)
+		//Gdx.app.log(TAG, "boost " + x + ", " + y);
+		int index = x  + y * Ship.CHUNKSIZE * chunksX;
+		int b = map[index];
+		int id = b & Ship.BLOCK_ID_MASK;
+		//if ((b & Ship.BLOCK_ID_MASK) == Ship.FLOOR) return;
+		int currentBoost = (b & Ship.BLOCK_BOOST_MASK) >> Ship.BLOCK_BOOST_BITS;
+		currentBoost = 0;
+		//currentFire = Math.min(Ship.MAX_DAMAGE, currentFire);
+		map[index] = b & (Ship.BLOCK_AIR_MASK | Ship.BLOCK_DATA_MASK | Ship.BLOCK_DAMAGE_MASK | Ship.BLOCK_ID_MASK | Ship.BLOCK_FIRE_MASK) 
+				| (currentBoost << Ship.BLOCK_BOOST_BITS)
+				;
+		//Gdx.app.log(TAG, "boost " + id); 
+		needsBoost[id].put(x + y * width, 0);
+		
+	}
 	public void boostAll() {
 		//Gdx.app.log(TAG, "BOOST ALLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL");
 		for (int x = 0; x < width; x++)
 			for (int y = 0; y < height; y++)
 				boost(x, y);
+	}
+	public void unBoostAll() {
+		
+			//Gdx.app.log(TAG, "BOOST ALLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL");
+			for (int x = 0; x < width; x++)
+				for (int y = 0; y < height; y++)
+					unBoost(x, y);
+		
+	}
+	public void setAirForNewGame() {
+		for (int x = 0; x < width; x++)
+			for (int y = 0; y < height; y++) {
+				int block = get(x, y);
+				int id = (block * Ship.BLOCK_ID_MASK);
+				if (id == Ship.VACCUUM) continue;
+				int nBlock = block & ~Ship.BLOCK_AIR_MASK;
+				nBlock |= (31 << Ship.BLOCK_AIR_BITS);
+				set(x, y, nBlock);
+			}
+		
 	}
 	public void processFloodFill(IntPixelMap m, int nodeX, int nodeY, int target, int replacement, int stack){
 		if (nodeX >= width || nodeY >= height || nodeX < 0 || nodeY < 0) return;
@@ -418,12 +456,13 @@ public class IntPixelMap{
 		int id = (block & Ship.BLOCK_ID_MASK); 
 		int boost = (block & Ship.BLOCK_BOOST_MASK) >> Ship.BLOCK_BOOST_BITS;
 		if (boost > 0){
-			tmpC.set(CustomColors.mapDrawColors[(id) + 96]);
+			tmpC.set(CustomColors.mapDrawColors[(id) + 32]);
 			return tmpC;
 		}
 		if ((block & Ship.BLOCK_FIRE_MASK) >> Ship.BLOCK_FIRE_BITS == 1){
+			
 			//if (id != Ship.FLOOR){
-				if (damage >=
+			/*	if (damage >=
 				ship.damageThreshold[id]
 						){
 					int mod = (x+y )%2;
@@ -435,9 +474,11 @@ public class IntPixelMap{
 					
 				} else 
 					tmpC.set(CustomColors.mapDrawColors[(id) + 16]);
-				return tmpC;
+				return tmpC;*/
 				
 			//}
+			tmpC.set(CustomColors.mapDrawColors[(id) + 16]);
+			return tmpC;
 		}
 		
 		if (id == Ship.FLOOR ){
@@ -459,11 +500,10 @@ public class IntPixelMap{
 		
 		float depl = ((block & Ship.BLOCK_DATA_MASK) >> Ship.BLOCK_DATA_BITS) / (float)ship.maxDepletionBySystem[id];
 		if (damage >= ship.damageThreshold[id]){
-			int mod = (x+y )%2;
-			mod = 0;
-			tmpC.set(CustomColors.mapDrawColors[id+32 + 16*mod]);
 			
-			//tmpC.g = 1f - damage/2f;
+			tmpC.set(CustomColors.mapDrawColors[id+48]);
+			
+			tmpC.g = 1f - damage/2f;
 			//Gdx.app.log(TAG, "damage" + damage);
 		} else {
 			

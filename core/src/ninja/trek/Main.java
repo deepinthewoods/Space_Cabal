@@ -44,7 +44,6 @@ public class Main extends ApplicationAdapter {
 	public static final int THREADS = 1;
 	public static final String MAP_INVENTORY_FILE_EXTENSION = "inv";;
 	
-	
 	SpriteBatch batch;
 	TextureAtlas atlas;
 	OrthographicCamera camera;
@@ -435,11 +434,11 @@ public class Main extends ApplicationAdapter {
 		if (!shader.isCompiled()) throw new GdxRuntimeException("shader \n"  + shader.getLog());
 		
 		float[] colorArray = CustomColors.getFloatColorArray();
-		shader.begin();
+		world.colorIndexShader.begin();
 		//Gdx.app.log(TAG, "shader " + shader.getUniformLocation("u_colors[0]") + shader.isCompiled() + shader.getLog());
-		shader.setUniform4fv("u_colors[0]", colorArray, 0, colorArray.length);
+		world.colorIndexShader.setUniform4fv("u_colors[0]", colorArray, 0, colorArray.length);
 		
-		shader.end();
+		world.colorIndexShader.end();
 		
 		batch.setShader(shader);
 		Ship amap = new Ship(new IntPixelMap(256, 256),  pixelSprite, fontManager, shader);
@@ -466,7 +465,7 @@ public class Main extends ApplicationAdapter {
 
 	@Override
 	public void render () {
-		CustomColors.updateColors(Gdx.graphics.getDeltaTime(), shader);
+		CustomColors.updateColors(Gdx.graphics.getDeltaTime(), world.colorIndexShader);
 		//stage.setDebugAll(true);
 		stage.act(Gdx.graphics.getDeltaTime());
 		Gdx.gl.glClearColor(0, 0, 0, 1);
@@ -482,6 +481,12 @@ public class Main extends ApplicationAdapter {
 		//batch.end();
 		//stage.getBatch().disableBlending();
 		stage.draw();
+		batch.getProjectionMatrix().setToOrtho2D(0, 0, 2, 2.1f);
+		batch.setShader(null);
+		batch.begin();
+		Texture tex = world.colorIndexBuffer.getColorBufferTexture();
+		//batch.draw(tex, .005f, 0, 2f, 2f);
+		batch.end();
 	}
 	@Override
 	public void resize(int width, int height) {

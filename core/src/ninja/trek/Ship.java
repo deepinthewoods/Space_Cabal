@@ -197,7 +197,7 @@ public class Ship {
 		zoomAlpha = 0f;
 		maxZoomForCentering *= 2f;
 		bloom = new BloomN();
-		
+		bloom.setTreshold(.8f);
 		
 	}
 	public FrameBuffer makeFrameBuffer(int i){
@@ -364,7 +364,7 @@ public class Ship {
 			}
 	}
 	
-	public void draw(SpriteBatch batch, OrthographicCamera wcamera, World world, boolean paused){
+	public void draw(SpriteBatch batch, OrthographicCamera wcamera, World world, boolean paused, Texture indexColors){
 		//batch.getProjectionMatrix().set(camera.combined);
 		if (!paused)stateTime += Gdx.graphics.getDeltaTime();
 		
@@ -376,11 +376,20 @@ public class Ship {
 			
 		}
 		batch.setShader(shader);
+		shader.begin();
+		shader.setUniformi("u_index_texture", 1); //passing first texture!!!
+		shader.setUniformf("u_time", stateTime);
+		//Colors.bind(0);
+		
+		//shader.setUniformi("u_texture", 0); //passing first texture!!!
 		//batch.setShader(null);
+		shader.end();
 		drawn.clear();
-		batch.disableBlending();
+		batch.enableBlending();
 		batch.setColor(Color.WHITE);
+		
 		batch.begin();
+		
 		//float[] colorArray = CustomColors.getFloatColorArray();
 		//shader.setUniform3fv("u_colors[0]", colorArray , 0, colorArray.length);
 		//bloom.capture();
@@ -388,7 +397,7 @@ public class Ship {
 		x0 = 0; y0 = 0;x1 = chunksX-1;y1 = chunksY-1;
 		for (int x = x0; x <= x1; x++)
 			for (int y = y0; y <= y1; y++){
-				drawChunk(x, y, batch, drawWires, drawFill);
+				drawChunk(x, y, batch, drawWires, drawFill, indexColors);
 				drawn.set(x + y * chunksX);
 			}
 		//batch.draw(img, 0, 0);
@@ -414,11 +423,18 @@ public class Ship {
 		//Gdx.gl.glDisable(GL20.GL_BLEND);
 	}
 
-	private void drawChunk(int x, int y, SpriteBatch batch, boolean wire, boolean fill) {		
+	private void drawChunk(int x, int y, SpriteBatch batch, boolean wire, boolean fill, Texture indexColors) {		
 		//Gdx.app.log(TAG, "draw chunk" + x + "," + y + "   " + x * CHUNK_SIZE+ "   " + y * CHUNK_SIZE+ "   " + CHUNK_SIZE+ "   " + CHUNK_SIZE);
 		//batch.setColor(MathUtils.random());
 		Texture texx = chunkTextures[x + y * chunksX];
-		if (texx != null) batch.draw(texx, (float)x * CHUNKSIZE, y * CHUNKSIZE, CHUNKSIZE, CHUNKSIZE);
+		if (texx != null) {
+			indexColors.bind(1);
+			batch.getShader().setUniformi("u_index_texture", 1);
+			texx.bind(0);
+			batch.getShader().setUniformi("u_texture", 0);
+			batch.draw(texx, (float)x * CHUNKSIZE, y * CHUNKSIZE, CHUNKSIZE, CHUNKSIZE);
+			
+		}
 		if (wire){
 			Texture tex = wireTextures[x + y * chunksX];
 			if (tex != null) batch.draw(tex,  (float)x * CHUNKSIZE, y * CHUNKSIZE, CHUNKSIZE, CHUNKSIZE);
@@ -1262,8 +1278,9 @@ public class Ship {
 		if (cmd.equals("reward")) {
 			Gdx.app.log(TAG, "REWARD");
 			
-		} else if (cmd.equals("spawn snail")) {
-			Gdx.app.log(TAG, "SPAWN SNAIL SHIP");
+		} else if (cmd.substring(0, 5).contains("spawn")) {
+			String shipName = cmd.split(" ")[1];
+			Gdx.app.log(TAG, "SPAWN " + shipName);
 		} else if (cmd.equals("hostile")) {
 			Gdx.app.log(TAG, "HOSTILE");
 			Ship enemy = world.getEnemy(this);
@@ -1280,6 +1297,10 @@ public class Ship {
 	
 	private void setHostile(boolean b) {
 		isHostile = b;
+	}
+	public void setForNewGamePreview() {
+		map.unBoostAll();
+		map.setAirForNewGame();
 	}
 	
 }

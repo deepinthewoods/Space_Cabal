@@ -10,12 +10,17 @@ import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.Pixmap.Format;
+import com.badlogic.gdx.graphics.PixmapIO;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.Texture.TextureFilter;
 import com.badlogic.gdx.graphics.VertexAttribute;
 import com.badlogic.gdx.graphics.VertexAttributes.Usage;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g3d.ModelBatch;
+import com.badlogic.gdx.graphics.glutils.FrameBuffer;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.MathUtils;
@@ -23,6 +28,7 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.UI;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.badlogic.gdx.utils.IntArray;
 import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.PauseableThread;
@@ -49,6 +55,8 @@ public class World {
 	private ShaderProgram cacheShader;
 	private PauseableThread[] threads;
 	private Runnable[] runnable;
+	public FrameBuffer colorIndexBuffer;
+	ShaderProgram colorIndexShader;
 	public final static float timeStep = 1f/60f;
 	
 	public World(FontManager fontManager, ShaderProgram shader, Sprite pixelSprite, PlanetRenderer planet, ModelBatch modelBatch) {
@@ -91,6 +99,14 @@ public class World {
 			threads[1].start();
 		}
 		
+		colorIndexBuffer = new FrameBuffer(Format.RGBA8888, 128, 32, false);
+		
+		colorIndexShader = new ShaderProgram(Gdx.files.internal("colorIndex.vert"), Gdx.files.internal("colorIndex.frag"));
+		
+		if (!colorIndexShader.isCompiled()) {
+			throw new GdxRuntimeException("index shader error " + colorIndexShader.getLog());
+		}
+		colorIndexBuffer.getColorBufferTexture().setFilter(TextureFilter.Nearest, TextureFilter.Nearest);
 	}
 	public ShaderProgram createDefaultShader () {
 		String vertexShader = "attribute vec4 " + ShaderProgram.POSITION_ATTRIBUTE + ";\n" //
@@ -193,11 +209,24 @@ public class World {
 		ui.showQuestScreen(info, stage, getPlayerShip(), this);
 		
 	}
+	boolean hasMadeIndexPNG = false;
 	public void draw(SpriteBatch batch, OrthographicCamera camera, ShapeRenderer shape, UI ui, boolean paused){
 		
-		
-		
-		 
+		colorIndexBuffer.begin();
+		batch.getProjectionMatrix().setToOrtho2D(0, 0, colorIndexBuffer.getWidth(), colorIndexBuffer.getHeight());
+		batch.setShader(colorIndexShader);
+		batch.begin();
+		batch.draw(pixelSprite.getTexture(), 0, 0, colorIndexBuffer.getWidth(), colorIndexBuffer.getHeight());
+		batch.end();
+		colorIndexBuffer.end();
+		if (!hasMadeIndexPNG) {
+			//hasMadeIndexPNG = true;
+			//Pixmap pix;
+			//Texture tex = colorIndexBuffer.getColorBufferTexture();
+			//if (!tex.getTextureData().isPrepared()) tex.getTextureData().prepare();
+			//pix = tex.getTextureData().consumePixmap();
+			//PixmapIO.writePNG(Gdx.files.external("screen.png"), pix);
+		}
 		
 		if (!warpingBetweenPlanets && !warpingToPlanet && !warpingToSolarSystemMap && !planetSelectOn)
 		for (int i = 0; i < maps.size; i++){
@@ -206,7 +235,7 @@ public class World {
 			map.enableScissor(this);
 			batch.disableBlending() ;
 			
-			map.draw(batch, camera, this, paused);
+			map.draw(batch, camera, this, paused, colorIndexBuffer.getColorBufferTexture());
 			batch.setProjectionMatrix(map.camera.combined);
 			batch.enableBlending();
 			batch.setShader(null);
@@ -268,12 +297,10 @@ public class World {
 	public void startTestBattle() {
 		loadShip("test", maps.get(1));
 		
-		
 		//Gdx.app.log(TAG, "IT " + maps.size);
 		for (int i = 0; i < maps.size; i++){
 			Ship m = maps.get(i);
 			m.categorizeSystems();
-			
 			
 			if (!m.hasShipEntity()){
 				ShipEntity shipE = Pools.obtain(ShipEntity.class);
@@ -324,27 +351,29 @@ public class World {
 		oldShip = maps.get(0);
 		maps.set(0, plShip);;*/
 		currentNewGameShipIndex = 0;
-		loadShip(playerShipNames[currentNewGameShipIndex], getPlayerShip());
+		loadShipForNew(playerShipNames[currentNewGameShipIndex], getPlayerShip());
 		getPlayerShip().removeEntity(getPlayerShip().getShipEntity());
 		//warpingToSolarSystemMap = true;
-		
+		getPlayerShip().setForNewGamePreview();
+
 	}
 	
 	public void showNextNewGameShip(){
 		currentNewGameShipIndex++;
 		if (currentNewGameShipIndex > playerShipNames.length-1)
 			currentNewGameShipIndex = 0;
-		loadShip(playerShipNames[currentNewGameShipIndex], getPlayerShip());
+		loadShipForNew(playerShipNames[currentNewGameShipIndex], getPlayerShip());
 		getPlayerShip().removeEntity(getPlayerShip().getShipEntity());
-
+		getPlayerShip().setForNewGamePreview();
 	}
 	
 	public void showPrevNewGameShip(){
 		currentNewGameShipIndex--;
 		if (currentNewGameShipIndex < 0)
 			currentNewGameShipIndex = playerShipNames.length-1;
-		loadShip(playerShipNames[currentNewGameShipIndex], getPlayerShip());
+		loadShipForNew(playerShipNames[currentNewGameShipIndex], getPlayerShip());
 		getPlayerShip().removeEntity(getPlayerShip().getShipEntity());
+		getPlayerShip().setForNewGamePreview();
 	}
 	
 	public GameInfo startNewGame(){
@@ -363,6 +392,11 @@ public class World {
 		warpingToSolarSystemMap = true;
 	}
 	
+	public void loadShipForNew(String name, Ship ship){
+		
+		FileHandle f = Gdx.files.internal(Main.SHIP_SAVE_LOCATION + name + "." + Main.MAP_FILE_EXTENSION);
+		loadShip(f, ship);
+	}
 	public void loadShip(String name, Ship ship){
 		
 		FileHandle f = Gdx.files.external(Main.SHIP_SAVE_LOCATION + name + "." + Main.MAP_FILE_EXTENSION);

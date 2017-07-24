@@ -114,6 +114,9 @@ public class UI {
 	private TextButton[] entityAddButtonRace;
 	private EntityInfoButton[] entityInfoButtons;
 	private QuestOptionDisplayPool questOptionPool;
+	private TextButton saveWInternalButton;
+	protected boolean saveInternal;
+
 	public UI(final Stage stage, final World world,  FontManager fontManager) {
 		String uiName = "holo"
 				, fontName = "kenpixel_high"
@@ -509,6 +512,7 @@ public class UI {
 		
 		
 		saveWButton = new TextButton("save", skin);
+		saveWInternalButton = new TextButton("save internal", skin);
 
 		//editTable.row();
 		saveFileWindow = new Window("Enter Ship Name", skin);
@@ -521,7 +525,7 @@ public class UI {
 		            	if (keycode == Keys.ENTER){
 		            		//saveWButton.toggle();
 		            		//saveWButton.getClickListener().clicked(null, 0, 0);
-		    				saveGameFromClick(world, stage);
+		    				//saveGameFromClick(world, stage);
 
 		            	}
 		                //System.out.println("event="+event+" key="+keycode);
@@ -540,8 +544,8 @@ public class UI {
 				saveFileWindow.remove();
 				String name = fileNameInput.getText();
 				Ship ship = world.getPlayerShip();
-
-				saveShip(name, ship);
+				
+				saveShip(name, ship, saveInternal);
 				return true;
 			}
 		});
@@ -567,7 +571,7 @@ public class UI {
 				String name = fileNameInput.getText();
 				Ship ship = world.getPlayerShip();
 
-				saveShip(name, ship);
+				saveShip(name, ship, saveInternal);
 				super.clicked(event, x, y);
 			}
 
@@ -594,20 +598,25 @@ public class UI {
 		});
 		saveFileWindow.add(closeButton);
 		saveWButton.addListener(new ClickListener(){
+
 			@Override
 			public void clicked(InputEvent event, float x, float y) {
-				saveGameFromClick(world, stage);
+				saveInternal = false;
+				saveGameFromClick(world, stage, false);
 				super.clicked(event, x, y);
 			}
-
-			
-
-			
-
-			
 		});
 		saveFileWindow.add(saveWButton);
+		saveWInternalButton.addListener(new ClickListener(){
+			@Override
+			public void clicked(InputEvent event, float x, float y) {
+				saveInternal = true;
+				saveGameFromClick(world, stage, true);
+				super.clicked(event, x, y);
+			}
+		});
 		
+		saveFileWindow.add(saveWInternalButton);
 		saveFileWindow.pack();
 		saveFileWindow.setPosition(Gdx.graphics.getWidth()/2, Gdx.graphics.getHeight()/2, Align.center);
 		
@@ -1426,8 +1435,11 @@ public class UI {
 		previewA .set(v);
 		previewB.set(v2);
 	}
-	private boolean fileExists(String name) {
+	private boolean fileExists(String name, boolean internal) {
 		FileHandle file = Gdx.files.external(Main.SHIP_SAVE_LOCATION + name + "." + Main.MAP_FILE_EXTENSION);
+		if (internal)
+			file = Gdx.files.internal(Main.SHIP_SAVE_LOCATION + name + "." + Main.MAP_FILE_EXTENSION);
+			
 		if (file.exists()){
 			return true;
 		}
@@ -1461,12 +1473,27 @@ public class UI {
 		loadWindow.pack();
 	}
 
-	public void saveShip(String name, Ship ship) {
+	public void saveShip(String name, Ship ship, boolean internal) {
 		//Gdx.app.log(TAG, "actually save " + name + Main.MAP_FILE_EXTENSION);
-		FileHandle file = Gdx.files.external(Main.SHIP_SAVE_LOCATION + name + "." + Main.MAP_FILE_EXTENSION);
-		FileHandle entityFile = Gdx.files.external(Main.SHIP_SAVE_LOCATION + name + "." + Main.ENTITY_FILE_EXTENSION);
-		FileHandle blocksFile = Gdx.files.external(Main.SHIP_SAVE_LOCATION + name + "." + Main.MAP_BLOCKS_FILE_EXTENSION);
-		FileHandle invFile = Gdx.files.external(Main.SHIP_SAVE_LOCATION + name + "." + Main.MAP_INVENTORY_FILE_EXTENSION);
+		Gdx.app.log(TAG, "SAVE" + internal);
+
+		FileHandle file;
+		if (internal) {
+			file = Gdx.files.internal(Main.SHIP_SAVE_LOCATION);
+			file = Gdx.files.absolute(file.file().getAbsolutePath());
+			file.mkdirs();
+			
+			file = file.child( name + "." + Main.MAP_FILE_EXTENSION);
+			Gdx.app.log(TAG, "INTERNAL" + file.file().getAbsolutePath());
+		} else {
+			
+			file = Gdx.files.external(Main.SHIP_SAVE_LOCATION + name + "." + Main.MAP_FILE_EXTENSION);
+			//if (true) throw new GdxRuntimeException("jfsdkl");
+		}
+		FileHandle entityFile = file.sibling(name + Main.ENTITY_FILE_EXTENSION);
+		FileHandle blocksFile = file.sibling( name + "." + Main.MAP_BLOCKS_FILE_EXTENSION);
+		FileHandle invFile = file.sibling( name + "." + Main.MAP_INVENTORY_FILE_EXTENSION);
+		
 		Json json = Pools.obtain(Json.class);
 		Gdx.app.log(TAG, "writing ship data");
 		String string = json.toJson(ship.map);
@@ -1487,7 +1514,7 @@ public class UI {
 		String invS = json.toJson(ship.inventory);
 		invFile.writeString(invS, false);
 		Gdx.app.log(TAG, "writing hull ");
-		FileHandle hullFile = Gdx.files.external(Main.SHIP_SAVE_LOCATION + name + "." + Main.MAP_HULL_EXTENSION);
+		FileHandle hullFile = file.sibling(name + "." + Main.MAP_HULL_EXTENSION);
 		
 		Pixmap hullPix =ship.hull.getPixmap();;
 		if (hullPix != null)
@@ -1503,16 +1530,16 @@ public class UI {
 
 		ship.savePreview(file, ship);
 	}
-	private void saveGameFromClick(World world, Stage stage) {
+	private void saveGameFromClick(World world, Stage stage, boolean internal) {
 		String name = fileNameInput.getText();
-		if (fileExists(name)){
+		if (fileExists(name, internal)){
 			stage.addActor(overConfirmSaveWindow);
 			;
 			stage.setKeyboardFocus(overConfirmSaveWindow);
 		} else if (isValidFileName(name, errorLabel)){
 			
 			Ship ship = world.getPlayerShip();
-			saveShip(name, ship);
+			saveShip(name, ship, internal);
 			saveFileWindow.remove();
 		} 
 		saveWButton.setChecked(false);
@@ -1703,9 +1730,10 @@ public class UI {
 		}
 
 		public void selected() {
-			for (int i = 0; i < questO.commands.length; i++){
-				ship.doCommand(questO.commands[i], info, ui, world);
-			}
+			if (questO.commands != null)
+				for (int i = 0; i < questO.commands.length; i++){
+					ship.doCommand(questO.commands[i], info, ui, world);
+				}
 			
 			ui.clearQuestWindow();
 			if (questO.next == null || questO.next.length == 0) {
