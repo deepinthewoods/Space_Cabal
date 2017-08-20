@@ -1657,7 +1657,14 @@ public class UI {
 	
 	public void showQuestScreen(GameInfo info, Stage stage, Ship ship, World world) {
 		
-		Planet planet = info.systems[info.currentSystem].planets[info.currentPlanet];
+		Planet planet = null;
+		if (info.currentPlanet == -1) {
+			planet = info.systems[info.currentSystem].sun;
+			
+		} else {
+			planet = info.systems[info.currentSystem].planets[info.currentPlanet];
+			
+		}
 		for (int i = 0; i < planet.quests.size; i++) {
 			int questHash = planet.quests.get(i);
 			Quest quest = info.getQuest(questHash);
@@ -1753,7 +1760,14 @@ public class UI {
 			for (int i = 0; i < questO.next.length; i++) {
 				Quest q = info.getQuest(questO.next[i]);
 				if (q != null) {
-					Planet planet = info.systems[info.currentSystem].planets[info.currentPlanet];
+					Planet planet = null;
+					if (info.currentPlanet == -1) {
+						planet = info.systems[info.currentSystem].sun;
+						
+					} else {
+						planet = info.systems[info.currentSystem].planets[info.currentPlanet];
+						
+					}
 					Gdx.app.log(TAG, "OPEN NEW QUEST");
 					
 					ui.showQuestScreen(info, getStage(), ship, q, planet, world);

@@ -115,6 +115,9 @@ public class MainSpaceCabal extends ApplicationAdapter {
 				} else if (keycode == Keys.SPACE) {
 					paused = !paused;
 				}
+				else if (keycode == Keys.R) {
+					background.rotate((MathUtils.random(0, 1) * 2 -1 ) * MathUtils.random(20, 120));
+				}
 					
 				
 				return false;
@@ -499,6 +502,7 @@ public class MainSpaceCabal extends ApplicationAdapter {
 		//viewport.apply();
 		//stage.setViewport(viewport);
 		//ui.table.invalidate();
+		background.resize(width, height);
 		super.resize(width, height);
 	}
 	

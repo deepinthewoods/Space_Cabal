@@ -409,7 +409,7 @@ public class PlanetRenderer implements RenderableProvider{
 	}
 	private float alpha = 0f;
 
-	public boolean starsFromSide = true, planetsFromSide = true;
+	public boolean sunFromSide = true, planetsFromSide = true;
 	int nextRenderPlanet = 0;
 
 	private int renderPlanet;
@@ -434,6 +434,7 @@ public class PlanetRenderer implements RenderableProvider{
 			}
 		}
 		for (int i = lerpingOut.size-1; i >= 0; i--){
+			if (lerpingOut.get(i) == -1) continue;
 			sizeModifier[lerpingOut.get(i)] -= Gdx.graphics.getDeltaTime() * SELECTED_PLANET_ZOOM_SPEED;
 			if (sizeModifier[lerpingOut.get(i)] < 1f){
 				sizeModifier[lerpingOut.get(i)] = 1f;
@@ -441,24 +442,24 @@ public class PlanetRenderer implements RenderableProvider{
 			}
 		}
 		int currentPlanet = 0;
+		boolean hasBufferQueue = true;
 		renderPlanet = 0;
 		if (info != null){
 			currentPlanet = info.currentPlanet;
 			Integer rend = renderQueue.poll();
 			if (rend != null) {
 				renderPlanet = rend;
-			} else
-			/*if (resetRenderCached) {
-				resetRenderCached = false;
-				nextRenderPlanet = 0;
-			}*/
-			if (nextRenderPlanet < info.systems[info.currentSystem].planets.length)
-				renderPlanet = nextRenderPlanet++;
-			else if (alpha > .95f) {
-				renderPlanet = selectedPlanet;
+			} else {
+				hasBufferQueue = false;
+				if (nextRenderPlanet < info.systems[info.currentSystem].planets.length)
+					renderPlanet = nextRenderPlanet++;
+				else if (alpha > .95f) {
+					renderPlanet = selectedPlanet;
+				}
+				else
+					renderPlanet = currentPlanet;
 			}
-			else
-				renderPlanet = currentPlanet;
+			
 			
 		}
 		
@@ -524,7 +525,8 @@ public class PlanetRenderer implements RenderableProvider{
     		modelBatch.render(this, environment);
     		modelBatch.end();
     		buffer[renderPlanet].end();
-    		
+    		if (renderPlanet != selectedPlanet) buffered = true;
+    		if (buffered) Gdx.app.log(TAG, "bufferred " + renderPlanet);
     	}
     	screenBatch.getProjectionMatrix().setToOrtho2D(0, 0, w/h, 1);
     	screenBatch.enableBlending();
@@ -535,14 +537,14 @@ public class PlanetRenderer implements RenderableProvider{
     		SolarSystem currentSystem = info.systems[info.currentSystem];
     		for (int i = 0; i < MAX_PLANET_VERT_ARRAYS && i < currentSystem.planets.length; i++){
     			if (toY[i] <= 0.0001f) continue;
-    			if (alpha < .98f && i != renderPlanet) continue;
-    			
+    			if ( (alpha < .998f && i != renderPlanet ) ) continue;
+    			if (buffered) continue;
+    			if (hasBufferQueue) continue;
     			Planet planet = currentSystem.planets[i];
     			float x = toX[i];
     			y = MathUtils.lerp(.3f, toY[i], alpha);
     			//if (alpha < .98f) continue;
     			Sprite spr = sprite[i];
-    			if (buffered) continue;
     			spr.setSize(s * sizeModifier[i] * planet.size, -s * sizeModifier[i] * planet.size);
     			spr.setCenter(x, y);
     			spr.draw(screenBatch);//draw planet
@@ -551,20 +553,21 @@ public class PlanetRenderer implements RenderableProvider{
     		if (info.systems[0] == null) throw new GdxRuntimeException("null info sys");
     		Sprite sun = Sprites.sun[info.systems[info.currentSystem].sunVariantID];
     		if (selectedPlanet == -1){
-    			sunRotation += Gdx.graphics.getDeltaTime() * SUN_ROTATE_SPEED;
-    			Gdx.app.log(TAG, "rotate sun " + sunRotation);
+    			float alp = 1f;
+    			if (alpha < .9f) alp = .1f;
+    			sunRotation += Gdx.graphics.getDeltaTime() * SUN_ROTATE_SPEED * alp;
+    			//Gdx.app.log(TAG, "rotate sun " + sunRotation);
     		}
-    		if (starsFromSide){
+    		if (!sunFromSide){
     			sun.setSize(.3f,  .3f);;
     			sun.setCenter(MathUtils.lerp(w/h , w/h * 0.8f, alpha), .5f);
     			sun.setOriginCenter();
     			sun.setRotation(sunRotation);
     			//Gdx.app.log(TAG, "side " + sunRotation);
     		}else{
+    			sun.setSize(.3f,  .3f);;
+    			sun.setCenter(MathUtils.lerp(w/h , w/h * 1.1f, alpha), .5f);
     			sun.setOriginCenter();
-    			sun.setSize(s* 3, -s * 3);
-    			sun.setSize(.8f * 3,  .8f * 3);;
-    			sun.setCenter(w/h * 0.8f, .5f);
     			sun.setRotation(sunRotation);
     		}
     		sun.draw(screenBatch);;
@@ -574,7 +577,7 @@ public class PlanetRenderer implements RenderableProvider{
     	
 		
 		
-		if (alpha < .99f || info == null){
+		if (alpha < .9f || info == null){
 			Gdx.gl.glDisable(GL20.GL_DEPTH_TEST | GL20.GL_BLEND | GL20.GL_CULL_FACE);
 			return;
 		}
@@ -697,7 +700,12 @@ public class PlanetRenderer implements RenderableProvider{
 		}
 		
 		float highestX = .3f + .2f + .1f * (SolarSystem.MAX_MOONS_PER_PLANET);;
-		if (x > highestX) {
+    	float w = Gdx.graphics.getWidth(), h = Gdx.graphics.getHeight();
+
+		float sunX = w/h * 0.8f;
+		float newD = dv.dst2(sunX, 0.5f);
+		if (newD < dist){
+			dist = newD;
 			index = -1;
 		}
 		if (index != -2 && index != selectedPlanet){

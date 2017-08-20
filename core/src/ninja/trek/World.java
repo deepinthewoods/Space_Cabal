@@ -208,7 +208,7 @@ public class World {
 	
 	private void showQuestScreen(UI ui, Stage stage) {
 		ui.showQuestScreen(info, stage, getPlayerShip(), this);
-		
+		planet.sunFromSide = false;
 	}
 	boolean hasMadeIndexPNG = false;
 	public void draw(SpriteBatch batch, OrthographicCamera camera, ShapeRenderer shape, UI ui, boolean paused){
@@ -230,7 +230,7 @@ public class World {
 			//PixmapIO.writePNG(Gdx.files.external("screen.png"), pix);
 		}
 		
-		if (!warpingBetweenPlanets && !warpingToPlanet && !warpingToSolarSystemMap && !planetSelectOn)
+		if (planet.sunFromSide || (!warpingBetweenPlanets && !warpingToPlanet && !warpingToSolarSystemMap && !planetSelectOn))
 		for (int i = 0; i < maps.size; i++){
 			Ship map = maps.get(i);
 			map.updateCamera(camera, this);
@@ -383,8 +383,8 @@ public class World {
 		MathUtils.random.setSeed(System.currentTimeMillis());
 		GameInfo info = new GameInfo(MathUtils.random(Integer.MAX_VALUE-1));
 		this.info = info;
-		warpAlpha = 1f;
-		warpingToSolarSystemMap = true;
+		warpAlpha = 0f;
+		warpingToPlanet = true;
 		planet.setInfo(info);
 		for (int i = 0; i < maps.size; i++){
 			Ship m = maps.get(i);
@@ -398,6 +398,8 @@ public class World {
 			//Gdx.app.log(TAG, "size " + i + "  " + maps.get(i).getEntities().size);
 		}
 		info.currentPlanet = -1;
+		planet.selectedPlanet = -1;
+		planet.sunFromSide = true;
 		return info;
 	}
 

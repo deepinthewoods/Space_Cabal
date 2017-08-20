@@ -5,7 +5,7 @@ import com.badlogic.gdx.utils.Array;
 public class QuestOption {
 	public enum QuestCommand {NORMAL_REWARD, SMALL_REWARD, BIG_REWARD};
 	public enum QuestRequirement {HAS_ENGINES, HAS_ROCKET, HAS_TRANSPORTER}
-	public enum QuestSpawnRequirement {EARTH_LIKE, MARS_LIKE, MOON};
+	public enum QuestSpawnRequirement {EARTH_LIKE, MARS_LIKE, MOON, SUN};
 	public static final int COMMAND_REWARD;;
 	public String text = "option";
 	public String[] next = {};

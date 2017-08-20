@@ -63,18 +63,23 @@ public class SolarSystem {
 			
 			planets[i].init();
 			
-			String questName = findAQuest(planets[i], gameInfo, questList);
-			if (questName != null) {
-				planets[i].quests.add(questName.hashCode());
-			} else {
-				Gdx.app.log(TAG, "didn't add quest, " + planets[i].planetType);
-			}
+			makeQuest(planets[i], gameInfo, questList);
 		}
-		
 		
 		//sun
 		sun = new Planet(MathUtils.random(Integer.MAX_VALUE-1), -1, Type.STAR);
 		sunVariantID = MathUtils.random(SUN_VARIANTS_TOTAL-1);
+		sun.init();
+		makeQuest(sun, gameInfo, questList);
+	}
+	private void makeQuest(Planet planet, GameInfo gameInfo, IntMap<Quest> questList) {
+		String questName = findAQuest(planet, gameInfo, questList);
+		if (questName != null) {
+			planet.quests.add(questName.hashCode());
+		} else {
+			Gdx.app.log(TAG, "didn't add quest, " + planet.planetType);
+		}
+		
 	}
 	private String findAQuest(Planet planet, GameInfo gameInfo, IntMap<Quest> quests) {
 		//IntMap<Quest> quests = gameInfo.getQuests();

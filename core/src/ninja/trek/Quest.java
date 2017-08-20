@@ -32,6 +32,9 @@ public class Quest {
 			case MOON:
 				if (planet.planetType == Type.MOON) valid = true;
 				break;
+			case SUN:
+				if (planet.planetType == Type.STAR) valid = true;
+				break;
 			}
 		}
 		

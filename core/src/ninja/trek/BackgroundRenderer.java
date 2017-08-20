@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
+import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
@@ -13,11 +14,13 @@ import com.badlogic.gdx.math.Vector3;
 import ninja.trek.Ship.Alignment;
 
 public class BackgroundRenderer {
-	private static final int MAX = 1000;
+	private int MAX = 1000;
 
 	private static final float STAR_SPEED = 0.05f;
+
+	private static final String TAG = "background renderer";
 	
-	private Vector3[] stars = new Vector3[300];
+	private Vector3[] stars = new Vector3[3300];
 
 	private SpriteBatch batch;
 
@@ -27,13 +30,8 @@ public class BackgroundRenderer {
 
 	
 	public BackgroundRenderer(TextureAtlas atlas) {
-		for (int i = 0; i < stars.length; i++){
-			stars[i] = new Vector3(
-					MathUtils.random(MAX)
-					, MathUtils.random(MAX)
-					, MathUtils.random(MAX)
-					);
-		}
+		resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+		
 		cam = new OrthographicCamera(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		cam.translate(MAX/2,  MAX/2);
 		batch = new SpriteBatch();
@@ -48,7 +46,7 @@ public class BackgroundRenderer {
 	public void setAlpha(float alpha){
 		this.alpha = Math.max(Math.min(alpha, 1f), 0f);
 	}
-	private float widthMod = 1f, maxWidth = 1000f, alpha = 0f;
+	private float widthMod = 1f, maxWidth = 1000f, alpha = 0f, rotateAlpha = 1f, rotation = 0f, rotationQueue = 0f, oldRotation;
 	public void draw(World world, boolean paused) {
 		widthMod = MathUtils.lerp(1f, maxWidth, alpha);
 		//if (true)return;
@@ -75,8 +73,12 @@ public class BackgroundRenderer {
 			mv.set(move);
 			mv.scl(v.z);
 			v.add(mv.x, mv.y, 0);
-			v.x = (((v.x % MAX) + MAX) % MAX);
-			v.y = (((v.y % MAX) + MAX) % MAX);
+			//v.x = (((v.x % MAX) + MAX) % MAX);
+			//v.y = (((v.y % MAX) + MAX) % MAX);
+			if (v.x < -MAX) v.x += MAX*2; 
+			if (v.y < -MAX) v.y += MAX*2; 
+			if (v.x > MAX) v.x -= MAX*2; 
+			if (v.y > MAX) v.y -= MAX*2; 
 			Sprite sprit = sprite[i%8];
 			//batch.draw(sprite[i%8], v.x, v.y);
 			sprit.setCenter(v.x, v.y);
@@ -84,17 +86,43 @@ public class BackgroundRenderer {
 			sprit.draw(batch);
 		}
 		batch.end();
-		//cam.rotate(1f, 0f, 0f, 1f);
+		cam.setToOrtho(false);
+		//cam.translate(MAX/2,  MAX/2);
+		//cam.translate(MAX/2,  MAX/2);
+		cam.rotate(rotation, 0f, 0f, 1f);
+		
 		cam.update();
 		if (alignment == Alignment.CENTRE){
 			Gdx.gl.glDisable(GL20.GL_SCISSOR_TEST);
 			
 		}
-		
+		if (rotateAlpha < 1f) {
+			rotateAlpha += Gdx.graphics.getDeltaTime();
+			Gdx.app.log(TAG, "rotate " + rotateAlpha + "  " + rotation);
+			rotation = Interpolation.pow2.apply(oldRotation, oldRotation + rotationQueue, Math.min(1f,  rotateAlpha));
+			
+		}
 	}
 	public void dispose() {
-		// TODO Auto-generated method stub
 		
+		
+	}
+	
+	public void rotate(float r) {
+		rotationQueue = r;
+		rotateAlpha = 0f;
+		oldRotation = rotation;
+		Gdx.app.log(TAG, "rotate " + r + "  rotation " + rotation);
+	}
+	public void resize(int width, int height) {
+		MAX = (int) (width * 1.2f);
+		for (int i = 0; i < stars.length; i++){
+			stars[i] = new Vector3(
+					MathUtils.random(-MAX, MAX)
+					, MathUtils.random(-MAX, MAX)
+					, MathUtils.random(MAX)
+					);
+		}
 	}
 
 }
