@@ -38,7 +38,7 @@ import ninja.trek.FontManager;
 import ninja.trek.GameInfo;
 import ninja.trek.IntPixelMap;
 import ninja.trek.Items;
-import ninja.trek.Main;
+import ninja.trek.MainSpaceCabal;
 import ninja.trek.Planet;
 import ninja.trek.Quest;
 import ninja.trek.QuestOption;
@@ -1282,7 +1282,13 @@ public class UI {
 		planetInfoLabel.setPosition(0, 0, Align.bottomLeft);
 	}
 	public void setPlanetInfo(int selectedPlanet) {
-		planetInfoLabel.setText(info.systems[info.currentSystem].planets[selectedPlanet].toString());
+		if (selectedPlanet == -1) {
+			planetInfoLabel.setText(info.systems[info.currentSystem].sun.toString());
+			
+		} else {
+			
+			planetInfoLabel.setText(info.systems[info.currentSystem].planets[selectedPlanet].toString());
+		}
 	}
 	private void makeInventoryWindow(Skin skin) {
 		invWindow = new Window("Inventory", skin);
@@ -1436,9 +1442,9 @@ public class UI {
 		previewB.set(v2);
 	}
 	private boolean fileExists(String name, boolean internal) {
-		FileHandle file = Gdx.files.external(Main.SHIP_SAVE_LOCATION + name + "." + Main.MAP_FILE_EXTENSION);
+		FileHandle file = Gdx.files.external(MainSpaceCabal.SHIP_SAVE_LOCATION + name + "." + MainSpaceCabal.MAP_FILE_EXTENSION);
 		if (internal)
-			file = Gdx.files.internal(Main.SHIP_SAVE_LOCATION + name + "." + Main.MAP_FILE_EXTENSION);
+			file = Gdx.files.internal(MainSpaceCabal.SHIP_SAVE_LOCATION + name + "." + MainSpaceCabal.MAP_FILE_EXTENSION);
 			
 		if (file.exists()){
 			return true;
@@ -1459,8 +1465,8 @@ public class UI {
 		}
 		loadWindow.clearChildren();
 		loadGroup.clear();
-		FileHandle folder = Gdx.files.external(Main.SHIP_SAVE_LOCATION);
-		FileHandle[] list = folder.list(Main.MAP_FILE_EXTENSION);
+		FileHandle folder = Gdx.files.external(MainSpaceCabal.SHIP_SAVE_LOCATION);
+		FileHandle[] list = folder.list(MainSpaceCabal.MAP_FILE_EXTENSION);
 		for (FileHandle f : list){
 			LoadLabel loadLabel = loadLabelPool.obtain();
 			loadLabel.set(f);
@@ -1479,20 +1485,20 @@ public class UI {
 
 		FileHandle file;
 		if (internal) {
-			file = Gdx.files.internal(Main.SHIP_SAVE_LOCATION);
-			file = Gdx.files.absolute(file.file().getAbsolutePath());
-			file.mkdirs();
+			//file = Gdx.files.internal(Main.SHIP_SAVE_LOCATION);
+			file = Gdx.files.absolute("C:\\Users\\n\\_spacecabal\\android\\assets\\SpaceCabal\\ships");
+			//file.mkdirs();
 			
-			file = file.child( name + "." + Main.MAP_FILE_EXTENSION);
+			file = file.child( name + "." + MainSpaceCabal.MAP_FILE_EXTENSION);
 			Gdx.app.log(TAG, "INTERNAL" + file.file().getAbsolutePath());
 		} else {
 			
-			file = Gdx.files.external(Main.SHIP_SAVE_LOCATION + name + "." + Main.MAP_FILE_EXTENSION);
+			file = Gdx.files.external(MainSpaceCabal.SHIP_SAVE_LOCATION + name + "." + MainSpaceCabal.MAP_FILE_EXTENSION);
 			//if (true) throw new GdxRuntimeException("jfsdkl");
 		}
-		FileHandle entityFile = file.sibling(name + Main.ENTITY_FILE_EXTENSION);
-		FileHandle blocksFile = file.sibling( name + "." + Main.MAP_BLOCKS_FILE_EXTENSION);
-		FileHandle invFile = file.sibling( name + "." + Main.MAP_INVENTORY_FILE_EXTENSION);
+		FileHandle entityFile = file.sibling(name + "." + MainSpaceCabal.ENTITY_FILE_EXTENSION);
+		FileHandle blocksFile = file.sibling( name + "." + MainSpaceCabal.MAP_BLOCKS_FILE_EXTENSION);
+		FileHandle invFile = file.sibling( name + "." + MainSpaceCabal.MAP_INVENTORY_FILE_EXTENSION);
 		
 		Json json = Pools.obtain(Json.class);
 		Gdx.app.log(TAG, "writing ship data");
@@ -1514,7 +1520,7 @@ public class UI {
 		String invS = json.toJson(ship.inventory);
 		invFile.writeString(invS, false);
 		Gdx.app.log(TAG, "writing hull ");
-		FileHandle hullFile = file.sibling(name + "." + Main.MAP_HULL_EXTENSION);
+		FileHandle hullFile = file.sibling(name + "." + MainSpaceCabal.MAP_HULL_EXTENSION);
 		
 		Pixmap hullPix =ship.hull.getPixmap();;
 		if (hullPix != null)
@@ -1526,7 +1532,7 @@ public class UI {
 	
 	
 	private void savePreview(String name, Ship ship) {
-		FileHandle file = Gdx.files.external(Main.SHIP_SAVE_LOCATION + name + "." + Main.MAP_PREVIEW_EXTENSION);
+		FileHandle file = Gdx.files.external(MainSpaceCabal.SHIP_SAVE_LOCATION + name + "." + MainSpaceCabal.MAP_PREVIEW_EXTENSION);
 
 		ship.savePreview(file, ship);
 	}
@@ -1655,6 +1661,7 @@ public class UI {
 		for (int i = 0; i < planet.quests.size; i++) {
 			int questHash = planet.quests.get(i);
 			Quest quest = info.getQuest(questHash);
+			if (quest == null) throw new GdxRuntimeException("!null quest" + questHash);
 			if (!info.hasCompleted(questHash, info.currentSystem, info.currentPlanet) && info.isValid(questHash, ship)) {
 
 				showQuestScreen(info, stage, ship, quest, planet, world);
@@ -1702,10 +1709,10 @@ public class UI {
 				ship.doCommand(quest.commands[i], info, this, world);
 			}
 		
-		Gdx.app.log(TAG, "DONE WINDOW" + quest.name);
 		questWindow.pack();
 		questWindow.setPosition(Gdx.graphics.getWidth()/2, Gdx.graphics.getHeight()/2, Align.center);
 		stage.addActor(questWindow);
+		Gdx.app.log(TAG, "DONE WINDOW" + quest.name);
 	}
 	public static class QuestOptionDisplay extends TextButton{
 
@@ -1740,6 +1747,9 @@ public class UI {
 				ui.closeQuestWindow();
 				return;
 			}
+			if (questO == null) throw new GdxRuntimeException("null ");
+			if (questO.next.length == 0) throw new GdxRuntimeException("null ");
+			Gdx.app.log(TAG, "length " + questO.next.length + questO.text);
 			for (int i = 0; i < questO.next.length; i++) {
 				Quest q = info.getQuest(questO.next[i]);
 				if (q != null) {

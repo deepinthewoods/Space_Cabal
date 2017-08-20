@@ -32,7 +32,6 @@ import com.badlogic.gdx.utils.Pool;
 import com.badlogic.gdx.utils.Pools;
 import com.badlogic.gdx.utils.ScreenUtils;
 
-import bloom.Bloom;
 import ninja.trek.ui.ItemDisplay;
 import ninja.trek.ui.ItemDisplay.ItemButton;
 import ninja.trek.ui.UIActionButton;
@@ -1281,6 +1280,8 @@ public class Ship {
 		} else if (cmd.substring(0, 5).contains("spawn")) {
 			String shipName = cmd.split(" ")[1];
 			Gdx.app.log(TAG, "SPAWN " + shipName);
+			Ship enemy = world.getEnemy(this);
+			world.loadShip(shipName, enemy);
 		} else if (cmd.equals("hostile")) {
 			Gdx.app.log(TAG, "HOSTILE");
 			Ship enemy = world.getEnemy(this);

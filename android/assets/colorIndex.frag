@@ -9,6 +9,7 @@ varying vec2 v_texCoords;
 uniform sampler2D u_texture;
 uniform vec4 u_colors[128];
 uniform float alpha;
+uniform float u_time;
 
 
 vec3 rgb2hsv(vec3 c)
@@ -65,7 +66,15 @@ vec3 lerpHSV(in vec3 a, in vec3 b, in float x)
 }
 #define HALF_PI 1.5707963267948966
 #define PI 3.141592653589793
-
+float rand(vec2 co)
+{
+    float a = 12.9898;
+    float b = 78.233;
+    float c = 43758.5453;
+    float dt= dot(co.xy ,vec2(a,b));
+    float sn= mod(dt,3.14);
+    return fract(sin(sn) * c);
+}
 
 float sineInOut(float t) {
   return -0.5 * (cos(PI * t) - 1.0);
@@ -101,34 +110,22 @@ void main()
 
 	  	  	  }
   } else if (index < 32){
-	  vec3 c = rgb2hsv(color.xyz);
-	  //c.y = v_texCoords.y;
-	  //color = vec4(hsv2rgb(c), color.a);
-	  float alpha = (v_texCoords.y) * 2.0;
-	    if (alpha > 1.0) alpha = 2.0 - alpha;
-	    alpha = 1.0 - alpha;
-	    alpha *= 2.0;
-	  vec3 rc = rgb2hsv(vec3(1.0, 0.0, 0.0));
-	    if (alpha > 1.0){
-	    	alpha = 2.0 - alpha ;
+	  //alpha *= alpha;
+	  //float alphar = abs(sin(v_texCoords.y * PI * 22.0));
+	  float alpha = (rand(vec2(v_texCoords * 23.0))) ;
+	  alpha = max(0.0, alpha * 2 - 1.0);
+	  alpha = sin(v_texCoords.y * PI * 13.0 ) * 0.5 + 0.5;
 
-	    	rc = rgb2hsv(vec3(1.0, 0.6, 0.0));
-	    }
+	  //float alphar = rand(v_texCoords);
+	  //alphar = mod(v_texCoords.y * 8.0, 2.0) * 0.5;
+	  float alphar = sin(v_texCoords.y * PI * 6) * 0.5 + 0.5;
 
-	  color = vec4(c, color.a);
-	  if (index == 17 || index == 24 || index == 18 ){
+	  vec4 rc = vec4(1.0, 0.0, 0.0, 1.0);
+	  rc =  mix(rc, vec4(1.0, 1.0, 0.0, 1.0), alphar);
 
-	  }
-	  c = lerpHSV(rc, color, alpha);
-	  float satAlpha = alpha * 2.0;
-	  if (satAlpha > 1.0)
-		  satAlpha = 2.0 - satAlpha;
-	  satAlpha = 1.0 - satAlpha;
-	  color = vec4(c, color.a);
-	  color.y *= satAlpha * 0.25 + 0.75;;
-	  //color.z *= satAlpha * 0.25 + 0.75;
+	  color = mix(rc, color, alpha);
 
-	  color = vec4(hsv2rgb(color.xyz), color.a);
+
   } else if (index < 48){
 	  float alpha = (v_texCoords.y) * 2.0;
 	    if (alpha > 1.0) alpha = 2.0 - alpha;
@@ -143,6 +140,23 @@ void main()
 	  		 // color = vec4(1.0, 1.0, 1.0, 1.0);
 
 	  	  }
+
+  }else if (index < 64){
+	  //alpha *= alpha;
+	  //float alphar = abs(sin(v_texCoords.y * PI * 22.0));
+	  float alpha = (rand(vec2(v_texCoords * 32.0))) ;
+	  alpha = max(0.0, alpha * 2 - 1.0);
+	  alpha = sin(v_texCoords.y * PI * 32.0 ) * 0.5 + 0.5;
+
+	  //float alphar = rand(v_texCoords);
+	  //alphar = mod(v_texCoords.y * 8.0, 2.0) * 0.5;
+	  float alphar = sin(v_texCoords.y * PI * 6) * 0.5 + 0.5;
+
+	  vec4 rc = vec4(1.0, 0.0, 1.0, 1.0);
+	  rc =  mix(rc, vec4(1.0, 0.0, 1.0, 1.0), alphar);
+
+	  color = mix(rc, color, alpha);
+
 
   }
 

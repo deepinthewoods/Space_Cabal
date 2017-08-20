@@ -120,7 +120,7 @@ public class Entity implements Poolable {
 		ActionList playerAction = new ActionList();
 		playerAction.addToStart(Pools.obtain(ABase.class));
 		setAI(playerAction);
-		setDefaultButtonOrder();
+		//setDefaultButtonOrder();
 		return this;
 	}
 

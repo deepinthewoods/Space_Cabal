@@ -395,14 +395,16 @@ public class IntPixelMap{
 	public int randomFillIterations, randomFillTriesLimit = 300, randomFillTotal
 	, randomFillTotalElements, randomFillSizeLimit = 200;
 	private int airUpdateReplaceIndex = 1;
+	private boolean randomFillFire = false;
 	public void resetRandomFloodFill(int sizeLimit, int triesLimit) {
 		randomFillIterations = 0;
 		randomFillTriesLimit = triesLimit;
 		randomFillTotal = 0;
 		randomFillTotalElements = 0;
 		randomFillSizeLimit = sizeLimit;
+		randomFillFire = false;
 	}
-	public void randomFloodFill(IntPixelMap map2, int x, int y, int replacement, int seed) {
+	public void randomFloodFill(IntPixelMap map2, int x, int y, int replacement, int seed, boolean propagateFire, Ship ship) {
 		if (x >= width || y >= height || x < 0 || y < 0) return;
 		int block = map2.get(x, y);
 		int id = (block & Ship.BLOCK_ID_MASK);
@@ -416,6 +418,8 @@ public class IntPixelMap{
 		randomFillIterations++;
 		int air = block & Ship.BLOCK_AIR_MASK;
 		air >>= Ship.BLOCK_AIR_BITS;
+		int fire = (block & Ship.BLOCK_FIRE_MASK) >> Ship.BLOCK_FIRE_BITS;
+		if (fire == 1) randomFillFire = propagateFire;
 		randomFillTotal += air;
 		randomFillTotalElements++;
 		
@@ -428,25 +432,35 @@ public class IntPixelMap{
 		int nseed = seed & 3;;
 		nseed = MathUtils.random(3);
 		if (randomFillTotalElements < randomFillSizeLimit)
-			randomFloodFill(map2, x+DX[nseed%4], y+DY[nseed%4], replacement, seed);
+			randomFloodFill(map2, x+DX[nseed%4], y+DY[nseed%4], replacement, seed, propagateFire, ship);
 		nseed++;
 		
 		if (randomFillTotalElements < randomFillSizeLimit)
-			randomFloodFill(map2, x+DX[nseed%4], y+DY[nseed%4], replacement, seed);
-		nseed++;
-		
-		
-		if (randomFillTotalElements < randomFillSizeLimit)
-			randomFloodFill(map2, x+DX[nseed%4], y+DY[nseed%4], replacement, seed);
+			randomFloodFill(map2, x+DX[nseed%4], y+DY[nseed%4], replacement, seed, propagateFire, ship);
 		nseed++;
 		
 		
 		if (randomFillTotalElements < randomFillSizeLimit)
-			randomFloodFill(map2, x+DX[nseed%4], y+DY[nseed%4], replacement, seed);
+			randomFloodFill(map2, x+DX[nseed%4], y+DY[nseed%4], replacement, seed, propagateFire, ship);
+		nseed++;
+		
+		
+		if (randomFillTotalElements < randomFillSizeLimit)
+			randomFloodFill(map2, x+DX[nseed%4], y+DY[nseed%4], replacement, seed, propagateFire, ship);
 		nseed++;
 		int nair = randomFillTotal / randomFillTotalElements ;
 		set(x, y, replacement);
 		int nBlock = block & ~Ship.BLOCK_AIR_MASK;
+		nBlock &= ~Ship.BLOCK_FIRE_MASK;
+		if (randomFillFire) {
+			nair = Math.max(0,  nair/3);
+			if (nair > 1) nBlock |= (1 << Ship.BLOCK_FIRE_BITS);
+			nBlock |= (nair << Ship.BLOCK_AIR_BITS);
+			map2.set(x, y, nBlock);
+			map2.damage(x, y, 1, ship);
+			
+			return;
+		}
 		nBlock |= (nair << Ship.BLOCK_AIR_BITS);
 		map2.set(x, y, nBlock);
 	}
@@ -454,30 +468,13 @@ public class IntPixelMap{
 		//if (block != 0) Gdx.app.log(TAG, "get color " + block);
 		int damage = ((block & Ship.BLOCK_DAMAGE_MASK) >> Ship.BLOCK_DAMAGE_BITS);
 		int id = (block & Ship.BLOCK_ID_MASK); 
+		if ((block & Ship.BLOCK_FIRE_MASK) >> Ship.BLOCK_FIRE_BITS == 1){
+			tmpC.set(CustomColors.mapDrawColors[(id) + 16]);
+			return tmpC;
+		}
 		int boost = (block & Ship.BLOCK_BOOST_MASK) >> Ship.BLOCK_BOOST_BITS;
 		if (boost > 0){
 			tmpC.set(CustomColors.mapDrawColors[(id) + 32]);
-			return tmpC;
-		}
-		if ((block & Ship.BLOCK_FIRE_MASK) >> Ship.BLOCK_FIRE_BITS == 1){
-			
-			//if (id != Ship.FLOOR){
-			/*	if (damage >=
-				ship.damageThreshold[id]
-						){
-					int mod = (x+y )%2;
-					//mod = 0;
-					if (mod == 0)
-						tmpC.set(CustomColors.mapDrawColors[(id) + 64]);
-					else 
-						tmpC.set(CustomColors.mapDrawColors[(id) + 80]);
-					
-				} else 
-					tmpC.set(CustomColors.mapDrawColors[(id) + 16]);
-				return tmpC;*/
-				
-			//}
-			tmpC.set(CustomColors.mapDrawColors[(id) + 16]);
 			return tmpC;
 		}
 		
@@ -503,11 +500,11 @@ public class IntPixelMap{
 			
 			tmpC.set(CustomColors.mapDrawColors[id+48]);
 			
-			tmpC.g = 1f - damage/2f;
+			//tmpC.g = 1f - damage/2f;
 			//Gdx.app.log(TAG, "damage" + damage);
 		} else {
 			
-			tmpC.g = 1f - depl/2f;
+			//tmpC.g = 1f - depl/2f;
 		}
 		
 		//if (depl > .01f && depl < 0.9f)Gdx.app.log(TAG, "depletion" + depl);
@@ -744,9 +741,21 @@ public class IntPixelMap{
 				fill.resetRandomFloodFill(600, 850);
 			//block = MathUtils.random(1, 3);
 			fill.randomFloodFill(this, x, y
-					, airUpdateReplaceIndex, MathUtils.random(20000, 100000));
+					, airUpdateReplaceIndex, MathUtils.random(20000, 100000), false, ship);
 			
 			}
+		for (int i = 0; i < 2; i++){
+			int x = MathUtils.random(1, width-2);
+			int y = MathUtils.random(1, height-2);
+			int block = get(x, y);
+			int air = (block & Ship.BLOCK_AIR_MASK) >> Ship.BLOCK_AIR_BITS;
+			
+			fill.resetRandomFloodFill(150, 200);
+			
+			//block = MathUtils.random(1, 3);
+			fill.randomFloodFill(this, x, y
+					, airUpdateReplaceIndex, MathUtils.random(20000, 100000), true, ship);
+		}
 		if (ship.systemBlocks[Ship.OXYGEN] != null && ship.systemBlocks[Ship.OXYGEN].size > 0)
 		{
 			int ind = MathUtils.random(ship.systemBlocks[Ship.OXYGEN].size-1);
@@ -756,12 +765,12 @@ public class IntPixelMap{
 			int block = get(x, y);
 			int air = (block & Ship.BLOCK_AIR_MASK) >> Ship.BLOCK_AIR_BITS;
 			//if (air > 10)
-				fill.resetRandomFloodFill(200, 250);
+				fill.resetRandomFloodFill(100, 150);
 			//else 
 			//	fill.resetRandomFloodFill(600, 850);
 			//block = MathUtils.random(1, 3);
 			fill.randomFloodFill(this, x, y
-					, airUpdateReplaceIndex, MathUtils.random(20000, 100000));
+					, airUpdateReplaceIndex, MathUtils.random(20000, 100000), false, ship);
 			//updateAir(x, y, block, ship);
 			
 		}

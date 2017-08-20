@@ -1,6 +1,5 @@
 package ninja.trek;
 import com.badlogic.gdx.Gdx;
-
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.Pixmap.Format;
@@ -9,8 +8,6 @@ import com.badlogic.gdx.graphics.VertexAttribute;
 import com.badlogic.gdx.graphics.VertexAttributes.Usage;
 import com.badlogic.gdx.graphics.glutils.FrameBuffer;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
-
-import bloom.bloomshaders.BloomShaderLoader;
 
 /**
  * Bloomlib allow easy but efficient way to add bloom effect as post process

@@ -19,7 +19,7 @@ public class Planet {
 	public int oceanColor;
 	public int beachColor;
 	public boolean exponentialHeightScaling = true;
-	public enum Type {INNER, EARTH_LIKE, MARS_LIKE, GAS_GIANT, METEOR, MOON};
+	public enum Type {INNER, EARTH_LIKE, MARS_LIKE, GAS_GIANT, METEOR, MOON, STAR};
 	public Type planetType;
 	public IntArray quests = new IntArray();
 	public IntArray completed = new IntArray();

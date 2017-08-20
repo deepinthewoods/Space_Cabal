@@ -99,7 +99,7 @@ public static void init(){
 	flashFloatArray = new float[color.length * 4];
 	for (int i = 0; i < 128; i++){
 		float index = (float)i / 128f + 1f/128f;
-		mapDrawColors[i] = new Color(index, 1f, 1f, 1f);
+		mapDrawColors[i] = new Color(index, 1f, 0f, 1f);
 	}
 	
 	lerpToColorBoost = new Color[16];
@@ -128,6 +128,11 @@ public static void init(){
 		colorFloatArray[128+i*4+1] = color[i].g;
 		colorFloatArray[128+i*4+2] = color[i].b;
 		colorFloatArray[128+i*4+3] = color[i].a;
+		
+		colorFloatArray[192+i*4] = color[i].r;
+		colorFloatArray[192+i*4+1] = color[i].g;
+		colorFloatArray[192+i*4+2] = color[i].b;
+		colorFloatArray[192+i*4+3] = color[i].a;
 	}
 	for (int i = 0; i < 16; i++){
 		mapLerpColors[i] = new Color(1f, 1f, 1f, 1f);

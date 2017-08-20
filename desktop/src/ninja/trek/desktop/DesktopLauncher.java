@@ -17,7 +17,7 @@ import com.badlogic.gdx.tools.texturepacker.TexturePacker;
 import com.badlogic.gdx.tools.texturepacker.TexturePacker.Settings;
 
 import ninja.trek.FontManager;
-import ninja.trek.Main;
+import ninja.trek.MainSpaceCabal;
 
 /** Launches the desktop (LWJGL) application. */
 public class DesktopLauncher {
@@ -26,7 +26,7 @@ public class DesktopLauncher {
     }
 
     private static LwjglApplication createApplication() {
-        return new LwjglApplication(new Main(){
+        return new LwjglApplication(new MainSpaceCabal(){
         	public void makeFonts() {
         		if (true) return;
         		//makeFont("kenpixel_high");
@@ -46,7 +46,7 @@ public class DesktopLauncher {
             	TexturePacker.process(settings, "C:/Users/n/Spacecabal/fonts", "C:/Users/n/_spacecabal/android/assets/ui", "ui.atlas");
 
             	FileHandle dest = Gdx.files.absolute("C:/Users/n/_spacecabal/android/assets/ui");
-            	FileHandle fontFolder = Gdx.files.external(Main.FONT_SAVE_LOCATION);
+            	FileHandle fontFolder = Gdx.files.external(MainSpaceCabal.FONT_SAVE_LOCATION);
             	for (FileHandle f : fontFolder.list()) {
             		if (f.extension().contains("fnt")) {
             			Gdx.app.log("main", "copy file " + f.name() + dest.path());
@@ -59,9 +59,9 @@ public class DesktopLauncher {
 
 			private void makeFont(String fontName, int fontSize) {
 				Gdx.app.log("desktop main", "MAKE FONT");
-				FileHandle fontFolder = Gdx.files.external(Main.FONT_SAVE_LOCATION);
+				FileHandle fontFolder = Gdx.files.external(MainSpaceCabal.FONT_SAVE_LOCATION);
         		fontFolder.mkdirs();
-        		FileHandle fontFile = Gdx.files.external(Main.FONT_SAVE_LOCATION + fontName + ".fnt");
+        		FileHandle fontFile = Gdx.files.external(MainSpaceCabal.FONT_SAVE_LOCATION + fontName + ".fnt");
         		if (!fontFile.exists()){
         			BitmapFontWriter writer = new BitmapFontWriter();
             		FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("fonts/" + fontName + ".ttf"));

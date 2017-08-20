@@ -1,5 +1,6 @@
 package ninja.trek;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.zip.GZIPInputStream;
@@ -66,7 +67,7 @@ public class World {
 		this.pixelSprite = pixelSprite;
 		fonts = fontManager; 
 		
-		vertsForThreads = new float[Main.THREADS][Ship.CHUNKSIZE * Ship.CHUNKSIZE * 4 * 3];
+		vertsForThreads = new float[MainSpaceCabal.THREADS][Ship.CHUNKSIZE * Ship.CHUNKSIZE * 4 * 3];
 		indicesForChunkMesh = new short[Ship.CHUNKSIZE * Ship.CHUNKSIZE * 6];
 		//for (int i = 0; i < vertsForThreads.length; i++)
 		mesh = new Mesh(true, vertsForThreads[0].length , indicesForChunkMesh.length, 
@@ -216,6 +217,7 @@ public class World {
 		batch.getProjectionMatrix().setToOrtho2D(0, 0, colorIndexBuffer.getWidth(), colorIndexBuffer.getHeight());
 		batch.setShader(colorIndexShader);
 		batch.begin();
+		colorIndexShader.setUniformf("u_time", MathUtils.random(10000));
 		batch.draw(pixelSprite.getTexture(), 0, 0, colorIndexBuffer.getWidth(), colorIndexBuffer.getHeight());
 		batch.end();
 		colorIndexBuffer.end();
@@ -384,6 +386,18 @@ public class World {
 		warpAlpha = 1f;
 		warpingToSolarSystemMap = true;
 		planet.setInfo(info);
+		for (int i = 0; i < maps.size; i++){
+			Ship m = maps.get(i);
+			m.categorizeSystems();
+			
+			if (!m.hasShipEntity()){
+				ShipEntity shipE = Pools.obtain(ShipEntity.class);
+				shipE.setDefaultAI();
+				maps.get(i).addEntity(shipE );
+			}
+			//Gdx.app.log(TAG, "size " + i + "  " + maps.get(i).getEntities().size);
+		}
+		info.currentPlanet = -1;
 		return info;
 	}
 
@@ -394,22 +408,28 @@ public class World {
 	
 	public void loadShipForNew(String name, Ship ship){
 		
-		FileHandle f = Gdx.files.internal(Main.SHIP_SAVE_LOCATION + name + "." + Main.MAP_FILE_EXTENSION);
+		FileHandle f = Gdx.files.internal(MainSpaceCabal.SHIP_SAVE_LOCATION + name + "." + MainSpaceCabal.MAP_FILE_EXTENSION);
+		Gdx.app.log(TAG, "load ship " + f.file().getAbsolutePath());
 		loadShip(f, ship);
 	}
 	public void loadShip(String name, Ship ship){
 		
-		FileHandle f = Gdx.files.external(Main.SHIP_SAVE_LOCATION + name + "." + Main.MAP_FILE_EXTENSION);
+		FileHandle f = Gdx.files.external(MainSpaceCabal.SHIP_SAVE_LOCATION + name + "." + MainSpaceCabal.MAP_FILE_EXTENSION);
+		if (!f.exists())
+			f = Gdx.files.internal(MainSpaceCabal.SHIP_SAVE_LOCATION + name + "." + MainSpaceCabal.MAP_FILE_EXTENSION);
+		if (!f.exists())
+			throw new GdxRuntimeException("shpi file not found " + name);
+
 		loadShip(f, ship);
 	}
 	public void loadShip(FileHandle f, Ship ship){
 		
 		Json json = Data.jsonPool.obtain();
 		IntPixelMap map = json.fromJson(IntPixelMap.class, f.readString());
-		FileHandle entityFile = Gdx.files.external(f.pathWithoutExtension() + "." + Main.ENTITY_FILE_EXTENSION);
-		FileHandle hullFile = Gdx.files.external(f.pathWithoutExtension() + "." + Main.MAP_HULL_EXTENSION);
-		FileHandle invFile = Gdx.files.external(f.pathWithoutExtension() + "." + Main.MAP_INVENTORY_FILE_EXTENSION);
-		FileHandle mapBlocksFile = Gdx.files.external(f.pathWithoutExtension() + "." + Main.MAP_BLOCKS_FILE_EXTENSION);
+		FileHandle entityFile = f.sibling(f.nameWithoutExtension() + "." + MainSpaceCabal.ENTITY_FILE_EXTENSION);
+		FileHandle hullFile = f.sibling(f.nameWithoutExtension() + "." + MainSpaceCabal.MAP_HULL_EXTENSION);
+		FileHandle invFile = f.sibling(f.nameWithoutExtension() + "." + MainSpaceCabal.MAP_INVENTORY_FILE_EXTENSION);
+		FileHandle mapBlocksFile = f.sibling(f.nameWithoutExtension() + "." + MainSpaceCabal.MAP_BLOCKS_FILE_EXTENSION);
 		EntityArray entities = json.fromJson(EntityArray.class, entityFile.readString());
 		Texture hull = null;
 		if (hullFile.exists())
