@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.util.zip.GZIPOutputStream;
 
+import com.badlogic.gdx.Application.ApplicationType;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.files.FileHandle;
@@ -116,8 +117,17 @@ public class UI {
 	private QuestOptionDisplayPool questOptionPool;
 	private TextButton saveWInternalButton;
 	protected boolean saveInternal;
-
+	private TextButton solarSystemJumpButton;
+	private Actor mapButtonSpacer;
+	public final String SPACER;
 	public UI(final Stage stage, final World world,  FontManager fontManager) {
+		if (Gdx.app.getType() == ApplicationType.Android) {
+			SPACER = "\\n\\n";
+		}
+		else { 
+			SPACER = "\n";
+			fontScale = 1f;
+		}
 		String uiName = "holo"
 				, fontName = "kenpixel_high"
 				;
@@ -295,7 +305,7 @@ public class UI {
 				int boost = ship.map.damaged[Ship.WEAPON].size;
 				//setText("needboost:" + boost + "\nres:" + reser + "\nfire:" + fires);
 				setText("fps" + Gdx.graphics.getFramesPerSecond()
-				+ "\nair:" + air
+				//+ "\nair:" + air
 						);
 				super.draw(batch, parentAlpha);
 			}
@@ -773,13 +783,27 @@ public class UI {
 			}
 		});
 		
-		
+		UI ui = this;
 		final TextButton solarSystemButton = new TextButton("SS map", skin);
 		solarSystemButton.addListener(new ClickListener(){
 			@Override
 			public void clicked(InputEvent event, float x, float y) {
 				solarSystemButton.setChecked(false);
-				world.showSolarSystemView();
+				world.showSolarSystemView(ui);
+				super.clicked(event, x, y);
+			}
+		});
+		
+		solarSystemJumpButton = new TextButton("MAP", skin);
+		mapButtonSpacer = new Label("  ", skin);
+	
+		//mapButtonSpacer = new WidgetGroup();
+		
+		solarSystemJumpButton.addListener(new ClickListener(){
+			@Override
+			public void clicked(InputEvent event, float x, float y) {
+				solarSystemJumpButton.setChecked(false);
+				world.showSolarSystemView(ui);
 				super.clicked(event, x, y);
 			}
 		});
@@ -888,6 +912,8 @@ public class UI {
 
 		weaponButtons = new WeaponButton[MAX_WEAPON_BUTTONS];
 		weaponTable = new Table();
+		weaponTable.add(solarSystemJumpButton);
+
 		for (int i = 0; i < MAX_WEAPON_BUTTONS; i++){
 			final int index = i;
 			weaponButtons[i] = new WeaponButton(skin, i);
@@ -997,12 +1023,12 @@ public class UI {
 		topTable.add(shipSystemTable);
 		topTable.row();
 		topTable.add(shipControlButton);
-		topTable.add(weaponTable).colspan(10).right();
+		topTable.add(weaponTable).right().colspan(13);//.right();
 		topTable.row();
-		topTable.add(infoTextLabel).colspan(3).left();
+		topTable.add(infoTextLabel);//.colspan(3).left();
 		
 		newGameSelectTable = new Table();
-		final TextButton nextShipButton = new TextButton("\n\nNext Ship >>\n\n", skin);
+		final TextButton nextShipButton = new TextButton(SPACER + "Next Ship >>" + SPACER, skin);
 		nextShipButton.addListener(new ClickListener(){
 			@Override
 			public void clicked(InputEvent event, float x, float y) {
@@ -1013,7 +1039,7 @@ public class UI {
 				super.clicked(event, x, y);
 			}
 		});
-		final TextButton prevShipButton = new TextButton("\n\n<< Prev Ship\n\n", skin);
+		final TextButton prevShipButton = new TextButton(SPACER + "<< Prev Ship" + SPACER, skin);
 		prevShipButton.addListener(new ClickListener(){
 			@Override
 			public void clicked(InputEvent event, float x, float y) {
@@ -1030,7 +1056,7 @@ public class UI {
 		middleTable.getTitleTable().setTouchable(Touchable.disabled);
 		
 		final TextButton newGameButton = new TextButton("New Game", skin);
-		final TextButton startNewGameButton = new TextButton("\nStart Campaign\n", skin);
+		final TextButton startNewGameButton = new TextButton(SPACER + "Start Campaign" + SPACER, skin);
 		startNewGameButton.addListener(new ClickListener(){
 
 			@Override
@@ -1312,6 +1338,7 @@ public class UI {
 	public void set(Ship ship) {
 		this.ship = ship;
 		shipSystemTable.clearChildren();
+		weaponTable.clearChildren();
 		//bottomTable.row();
 		if (ship != null){
 			
@@ -1323,7 +1350,11 @@ public class UI {
 			}
 			//currentEntity = e;
 			shipSystemTable.layout();
-			weaponTable.clearChildren();
+			
+			weaponTable.add(solarSystemJumpButton).left();
+			weaponTable.add(mapButtonSpacer).expandX().fillX();
+			//weaponTable.add(new Label("  ", skin)).fillX().expandX();
+
 			float maxW = 0, total = 0;
 			for (int i = 0; i < shipSystemottomButtons.length; i++){
 				if (ship.editMode || (i != Ship.VACCUUM && i != Ship.FLOOR && i != Ship.WALL))

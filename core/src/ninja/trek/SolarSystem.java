@@ -6,8 +6,8 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.IntMap;
-import com.badlogic.gdx.utils.Pools;
 import com.badlogic.gdx.utils.IntMap.Entry;
+import com.badlogic.gdx.utils.Pools;
 
 import ninja.trek.Planet.Type;
 
@@ -26,9 +26,9 @@ public class SolarSystem {
 		Planet planet;
 		planet = new Planet(MathUtils.random(Integer.MAX_VALUE-1), 0, Type.INNER);
 		
-		plan.add(planet);
+		//plan.add(planet);
 		planet = new Planet(MathUtils.random(Integer.MAX_VALUE-1), 1, Type.INNER);
-		plan.add(planet);
+		//plan.add(planet);
 		planet = new Planet(MathUtils.random(Integer.MAX_VALUE-1), 2, Type.EARTH_LIKE);
 		
 		//planet.quests.add(basicQuests.get(0).hashCode());
@@ -36,11 +36,11 @@ public class SolarSystem {
 		
 		
 		plan.add(planet);
-		planet = new Planet(MathUtils.random(Integer.MAX_VALUE-1), 3, Type.MARS_LIKE);
+		planet = new Planet(MathUtils.random(Integer.MAX_VALUE-1), 3, Type.EARTH_LIKE);//Type.MARS_LIKE);
 		plan.add(planet);
-		planet = new Planet(MathUtils.random(Integer.MAX_VALUE-1), 4, Type.GAS_GIANT);
+		planet = new Planet(MathUtils.random(Integer.MAX_VALUE-1), 4, Type.EARTH_LIKE);//Type.GAS_GIANT);
 		plan.add(planet);
-		planet = new Planet(MathUtils.random(Integer.MAX_VALUE-1), 5, Type.GAS_GIANT);
+		planet = new Planet(MathUtils.random(Integer.MAX_VALUE-1), 5, Type.EARTH_LIKE);//Type.GAS_GIANT);
 		plan.add(planet);
 		
 		int numberOfOther = OTHER_BODIES_PER_SYSTEM;
@@ -53,7 +53,7 @@ public class SolarSystem {
 			moon = new Planet(MathUtils.random(Integer.MAX_VALUE-1), i, Type.METEOR);
 			moon.parent = MathUtils.random(MAX_PLANETS_PER_SYSTEM-1);
 			moon.parentOrder = totalChildren[moon.parent]++;
-			plan.add(moon);
+			//plan.add(moon);
 			//TODO enforce max_moons_PER_planet
 		}
 		

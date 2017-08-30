@@ -20,7 +20,7 @@ public class BackgroundRenderer {
 
 	private static final String TAG = "background renderer";
 	
-	private Vector3[] stars = new Vector3[3300];
+	private Vector3[] stars = new Vector3[600];
 
 	private SpriteBatch batch;
 

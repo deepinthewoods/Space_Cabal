@@ -1,10 +1,17 @@
 package ninja.trek;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.IntArray;
+
+import squidpony.squidgrid.gui.gdx.SColor;
 
 public class Planet {
 
+	private static final String TAG = "planet";
 	int seed;
 	int index;
 	public int parent = -1;
@@ -68,7 +75,7 @@ public class Planet {
 				//oceanHeight = .56f;
 				colorIndex = MathUtils.random(1);
 				oceanColor = MathUtils.random(2)+1;
-				beachAmount = .05f;
+				beachAmount = .02f;
 				//colorIndex = 3;
 				//oceanHeight = 0f;
 				//height = .43f;
@@ -104,6 +111,63 @@ public class Planet {
 			exponentialHeightScaling = false;
 			break;
 		}
+		
+		
+	}
+	public static final Color[] OCEAN_COLORS = {SColor.BONDI_BLUE, SColor.CERULEAN, SColor.LIGHT_BLUE_SILK, SColor.CERULEAN_BLUE};
+	private static final Color[] BEACH_COLORS = {SColor.YELLOW, SColor.TAN, SColor.LIGHT_GRAY, SColor.PEACH_YELLOW};
+
+	Vector3 v = new Vector3();
+	Color color, tc = new Color();
+	static SimplexNoise noise = new SimplexNoise();
+	public void makeTexture(Pixmap pix, PlanetRenderer rend) {
+		float deltax = 360f / pix.getWidth();
+		float deltay = 180f / pix.getHeight();
+		for (int y = 0; y < pix.getHeight(); y++) {
+			
+			v.set(0, 1, 0);
+			v.rotate(deltay * y, 0, 0, 1);
+			//Gdx.app.log(TAG, "x "  + " y " + y + " v" + v + "  = "  );
+			for (int x = 0; x < pix.getWidth(); x++) {
+				v.rotate(deltax,  0, 1, 0);
+				float sA = ( 1000 + seed ) % 10000f;
+				float sB = ( 433433 + seed ) % 10000f;
+				float sC = ( 4 + seed ) % 10000f;
+				float temp = noise.scaled(v.x +sA, v.y * .5f + sB, v.z + sC, 5f)/2f+.5f;;
+				temp = 1f - Math.abs(v.y) - temp * .5f;
+				temp = Math.max(0, Math.min(1f,  temp));
+				//if (Math.abs(v.y) < .1f) temp = 1f;
+				float rainfall = noise.scaled(v.x+ 33333, v.y, v.z, 3f)/2f+.5f;
+				float height = noise.scaled(v.x +sA, v.y * 1f + sB, v.z +sC, 1f)/2f+.5f;
+	    		float oceanThreshold = oceanHeight ;
+	    		//temp *= 1f - height;
+	    		float adjHeight = Math.max(0, height - oceanThreshold);
+	    		adjHeight *=  1f / (1f - oceanThreshold);
+				//Gdx.app.log(TAG, "x " + x  + " adj " + adjHeight);
+	    		//temp = 1f - adjHeight;
+				if (height > oceanThreshold)
+					color = rend.lookupColor(1f-temp, 1f-rainfall, height, this);
+				else if (height > oceanThreshold - beachAmount)
+					color = BEACH_COLORS[beachColor];
+				else color = OCEAN_COLORS[oceanColor];
+				/*if (adjHeight > .5f) {
+					color = tc;
+					color.set(Color.MAGENTA);
+					color.lerp(Color.PINK, adjHeight);
+					//color = Color.MAGENTA;//
+					temp = 0f;//1f - adjHeight * .5f;
+					Gdx.app.log(TAG, "JKSDFSDKLJDSKL" + adjHeight);;
+				}*/
+				//if (temp < .5f)color = Color.WHITE;
+				//else color = Color.RED;
+				//color.set(Color.WHITE);
+				//color.lerp(Color.BLACK, adjHeight);
+				//if (adjHeight > .9f) color.set(Color.WHITE);
+				pix.drawPixel(x, y, Color.rgba8888(color));
+				
+			}
+		}
+		
 		
 		
 	}

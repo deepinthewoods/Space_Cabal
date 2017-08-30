@@ -168,6 +168,9 @@ public class World {
 				warpAlpha = 0f;
 				planetSelectOn = false;
 				showQuestScreen(ui, stage);
+				Ship ship = getPlayerShip();
+				ui.set(ship);
+				
 			}
 		
 		}
@@ -403,9 +406,12 @@ public class World {
 		return info;
 	}
 
-	public void showSolarSystemView(){
+	public void showSolarSystemView(UI ui){
+		ui.set(null);
+		ui.setEntity(null);
 		warpAlpha = 0f;
 		warpingToSolarSystemMap = true;
+		//MainSpaceCabal.paused = true;
 	}
 	
 	public void loadShipForNew(String name, Ship ship){

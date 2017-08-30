@@ -15,6 +15,7 @@ import com.badlogic.gdx.math.MathUtils;
  */
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.FloatArray;
 import com.badlogic.gdx.utils.IntMap;
 import com.badlogic.gdx.utils.Pools;
 import com.badlogic.gdx.utils.ShortArray;
@@ -28,6 +29,7 @@ private final float t = (float) ((1.0f + Math.sqrt(5.0f)) / 2.0f);
 final Array<Vector3> vertices = new Array<Vector3>();
 
 public ShortArray indices = new ShortArray(); // @formatter:on
+public FloatArray textureCoords = new FloatArray();
 public ShortArray quads = new ShortArray(); // @formatter:on
 public Array<ShortArray> connectedPoints = new Array<ShortArray>(); // @formatter:on
 
@@ -43,7 +45,7 @@ private int mSegmentsH = 70;
 
 private float mRadius = 8f;
 
-private boolean mCreateTextureCoords = false;
+private boolean mCreateTextureCoords = true;
 
 private boolean mCreateVertexColorBuffer = false;
 
@@ -214,6 +216,7 @@ protected void init(boolean createVBOs) {
 				textureCoords[numUvs++] = (float) j / mSegmentsH;
 			}
 		}
+		Gdx.app.log(TAG, "uvs " + numUvs + " / " + vertices.size);
 	}
 
 	float[] colors = null;
@@ -232,10 +235,15 @@ protected void init(boolean createVBOs) {
 	}
 
 	//setData(vertices, normals, textureCoords, colors, indices, createVBOs);
-	this.vertices.addAll(vertices);
+	Gdx.app.log(TAG, "verts pre " +  " / " + this.vertices.size);
+	//this.vertices.clear();
+	//this.vertices.addAll(vertices);
 	this.indices.addAll(indices);;
+	if (mCreateTextureCoords)
+		this.textureCoords.addAll(textureCoords);
 	
-	
+	Gdx.app.log(TAG, "verts " +  " / " + this.vertices.size);
+
 	
 }
 

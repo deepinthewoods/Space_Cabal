@@ -66,7 +66,7 @@ public class MainSpaceCabal extends ApplicationAdapter {
 	private BackgroundRenderer background;
 	private PlanetRenderer planet;
 	private ModelBatch modelBatch;
-	private boolean paused;
+	public static boolean paused;
 	@Override
 	public void create () {
 		String[] args = {""};
