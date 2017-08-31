@@ -66,6 +66,7 @@ public class MainSpaceCabal extends ApplicationAdapter {
 	private BackgroundRenderer background;
 	private PlanetRenderer planet;
 	private ModelBatch modelBatch;
+	private Sprite pixelSprite;
 	public static boolean paused;
 	@Override
 	public void create () {
@@ -431,7 +432,7 @@ public class MainSpaceCabal extends ApplicationAdapter {
 		TextureAtlas fontAtlas = new TextureAtlas("ui/ui.atlas");
 		fontManager = new FontManager(fontAtlas);
 		
-		Sprite pixelSprite = new Sprite(new Texture("pixel.png"));
+		pixelSprite = new Sprite(new Texture("pixel.png"));
 		world = new World(fontManager, shader, pixelSprite, planet, modelBatch);
 		
 		if (!Gdx.files.internal("lighting.vert").exists()) throw new GdxRuntimeException("kdls");
@@ -482,7 +483,7 @@ public class MainSpaceCabal extends ApplicationAdapter {
 		//batch.begin();
 		//batch.draw(img, 0, 0);
 		background.draw(world, paused);
-		planet.draw(batch, shape, paused);
+		planet.draw(batch, shape, paused, pixelSprite);
 		world.draw(batch, camera, shape, ui, paused);
 		//batch.end();
 		//stage.getBatch().disableBlending();

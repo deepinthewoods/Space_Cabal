@@ -39,9 +39,9 @@ private int vertDivisions;
 
 Vector3 v = new Vector3();
 
-private int mSegmentsW = 70;
+private int mSegmentsW = 32;
 
-private int mSegmentsH = 70;
+private int mSegmentsH = 32;
 
 private float mRadius = 8f;
 

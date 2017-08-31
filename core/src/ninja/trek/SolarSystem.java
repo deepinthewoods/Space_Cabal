@@ -26,9 +26,9 @@ public class SolarSystem {
 		Planet planet;
 		planet = new Planet(MathUtils.random(Integer.MAX_VALUE-1), 0, Type.INNER);
 		
-		//plan.add(planet);
+		plan.add(planet);
 		planet = new Planet(MathUtils.random(Integer.MAX_VALUE-1), 1, Type.INNER);
-		//plan.add(planet);
+		plan.add(planet);
 		planet = new Planet(MathUtils.random(Integer.MAX_VALUE-1), 2, Type.EARTH_LIKE);
 		
 		//planet.quests.add(basicQuests.get(0).hashCode());
@@ -53,7 +53,7 @@ public class SolarSystem {
 			moon = new Planet(MathUtils.random(Integer.MAX_VALUE-1), i, Type.METEOR);
 			moon.parent = MathUtils.random(MAX_PLANETS_PER_SYSTEM-1);
 			moon.parentOrder = totalChildren[moon.parent]++;
-			//plan.add(moon);
+			plan.add(moon);
 			//TODO enforce max_moons_PER_planet
 		}
 		

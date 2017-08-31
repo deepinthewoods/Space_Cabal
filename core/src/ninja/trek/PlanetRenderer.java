@@ -82,9 +82,9 @@ public class PlanetRenderer implements RenderableProvider{
 
 	private static final float SUN_ROTATE_SPEED = 40;
 
-	private static final int TEXTURE_WIDTH = 200;
+	private static final int TEXTURE_WIDTH = 300;
 
-	private static final int TEXTURE_HEIGHT = 160;
+	private static final int TEXTURE_HEIGHT = 200;
 	
     private Map<Long, Integer> middlePointIndexCache = new HashMap<>();
     
@@ -155,7 +155,9 @@ public class PlanetRenderer implements RenderableProvider{
 
 	private Texture[] planetTextures;
 
-	private Pixmap[] planetPix;
+	private FrameBuffer[] surfaceTextureBuffer;
+
+	//private Pixmap[] planetPix;
 
 
 	
@@ -240,7 +242,7 @@ public class PlanetRenderer implements RenderableProvider{
     	
     	
     	
-    	baseSphere = new Icosphere(5, 16, 8f);
+    	baseSphere = new Icosphere(1, 1, 8f);
     	sphere = new Icosphere(baseSphere);
     	sphere.initTwins();
     	
@@ -289,30 +291,21 @@ public class PlanetRenderer implements RenderableProvider{
 				, VertexAttribute.Normal()
 				);*/
 		
-		planetPix = new Pixmap[MAX_PLANET_VERT_ARRAYS];
-		for (int i = 0; i < planetPix.length; i++){
-			planetPix[i] = new Pixmap(TEXTURE_WIDTH, TEXTURE_HEIGHT, Format.RGBA8888);
-			planetPix[i].setColor(Color.BLACK);
-			planetPix[i].fill();
-			planetPix[i].setColor(Color.WHITE);
-			for (int k = 0; k < TEXTURE_WIDTH; k+= 10) {
-				planetPix[i].drawLine(k, 0, k, TEXTURE_HEIGHT);
-			}
-			
-		}
+		
 		planetTextures = new Texture[MAX_PLANET_VERT_ARRAYS];
 		//(pix);
-		
+		surfaceTextureBuffer = new FrameBuffer[MAX_PLANET_VERT_ARRAYS];
 		
 		materials = new Material[MAX_PLANET_VERT_ARRAYS];
 		for (int i = 0; i < materials.length; i++) {
-			planetTextures[i] = new Texture(TEXTURE_WIDTH, TEXTURE_HEIGHT, Format.RGBA8888);
+			surfaceTextureBuffer[i] = new FrameBuffer(Format.RGBA8888, TEXTURE_WIDTH, TEXTURE_HEIGHT, false);
+			planetTextures[i] = surfaceTextureBuffer[i].getColorBufferTexture();//new Texture(TEXTURE_WIDTH, TEXTURE_HEIGHT, Format.RGBA8888);
 			
 			materials[i] = new Material();
 			if (MAKE_TEXTURE) {
 				
 				materials[i].set(TextureAttribute.createDiffuse(planetTextures[i]));
-				planetTextures[i].draw(planetPix[0], 0, 0);
+				//planetTextures[i].draw(planetPix[0], 0, 0);
 			}
 		}
 		//material.set(TextureAttribute.createDiffuse(texture));
@@ -372,12 +365,12 @@ public class PlanetRenderer implements RenderableProvider{
     		v.set(pos).nor();
     		float height = noise.scaled(v.x, v.y, v.z, planet.seed / 100002f, 10 * (planet.landScale + .02f));
     		float oceanThreshold = planet.oceanHeight * 2 - 1;
-    		/*if (height > oceanThreshold){
+    		//if (height > oceanThreshold){
     			if (planet.exponentialHeightScaling)
     				pos.scl(height * height * planet.height + 1);
     			else
     				pos.scl(height * .5f * planet.height + 1);
-    		}*/
+    		//}
     		
     		verts[p++] = pos.y;
     		verts[p++] = pos.x;
@@ -459,7 +452,7 @@ public class PlanetRenderer implements RenderableProvider{
 	private int renderPlanet;
 
 	private float sunRotation;
-	public void draw(SpriteBatch screenBatch, ShapeRenderer shape, boolean paused){
+	public void draw(SpriteBatch screenBatch, ShapeRenderer shape, boolean paused, Sprite pixelSprite){
 		//cam.position.rotate(10, 0, 0, 1);
 		//if (info == null) return;
 		
@@ -495,6 +488,9 @@ public class PlanetRenderer implements RenderableProvider{
 			Integer rend = renderQueue.poll();
 			if (rend != null) {
 				renderPlanet = rend;
+				SolarSystem currentSystem = info.systems[info.currentSystem];
+				Planet planet = currentSystem.planets[renderPlanet];
+				planet.makeTexture(surfaceTextureBuffer[renderPlanet], this, screenBatch, pixelSprite);
 			} else {
 				hasBufferQueue = false;
 				if (nextRenderPlanet < info.systems[info.currentSystem].planets.length)
@@ -505,8 +501,8 @@ public class PlanetRenderer implements RenderableProvider{
 				else
 					renderPlanet = currentPlanet;
 			}
-			
-			
+			//if (renderPlanet != -1)
+				//makePlanetTexture(renderPlanet);
 		}
 		
 		
@@ -517,7 +513,6 @@ public class PlanetRenderer implements RenderableProvider{
 				
 			} else {
 				
-				planetTextures[renderPlanet].draw(planetPix[renderPlanet], 0, 0);
 				mesh.setVertices(verts[renderPlanet]);
 				//if (alpha > .925f)buffered =false;
 				//Gdx.app.log(TAG, "renderplanet " + renderPlanet);
@@ -560,10 +555,14 @@ public class PlanetRenderer implements RenderableProvider{
     	float toS = .1f;
     	s = MathUtils.lerp(s, toS, alpha);
     	if (renderPlanet != -1) {
+    		//planetTextures[renderPlanet].draw(planetPix[renderPlanet], 0, 0);
     		buffer[renderPlanet].begin();
+    		//if (renderPlanet != selectedPlanet)
+    			
         	modelBatch.begin(cam);
         	//texture.bind();
     		//mesh.render(null, GL20.GL_TRIANGLES);
+        	
         	Gdx.gl.glEnable(GL20.GL_DEPTH_TEST );
         	Gdx.gl.glClear( GL20.GL_DEPTH_BUFFER_BIT);
         	Gdx.gl.glClearColor(0f,  0f,  0f,  0f);
@@ -575,7 +574,11 @@ public class PlanetRenderer implements RenderableProvider{
     		modelBatch.end();
     		buffer[renderPlanet].end();
     		if (renderPlanet != selectedPlanet) buffered = true;
-    		if (buffered) Gdx.app.log(TAG, "bufferred " + renderPlanet);
+    		if (buffered) {
+				
+
+				Gdx.app.log(TAG, "bufferred " + renderPlanet);
+    		}
     	}
     	screenBatch.getProjectionMatrix().setToOrtho2D(0, 0, w/h, 1);
     	screenBatch.enableBlending();
@@ -674,6 +677,7 @@ public class PlanetRenderer implements RenderableProvider{
 		
 		Gdx.gl.glDisable(GL20.GL_DEPTH_TEST | GL20.GL_BLEND | GL20.GL_CULL_FACE);
     }
+	
 	int nextCachePlanet = 0;
 
 	public void cachePlanet() {
@@ -687,7 +691,7 @@ public class PlanetRenderer implements RenderableProvider{
 		vectorsToVerts(verts[cachePlanet], sphere.vertices, sphere.indices, planet, sphere.textureCoords);
 		//resetRenderCached = true;
 		renderQueue.put((cachePlanet));
-		planet.makeTexture(planetPix[cachePlanet], this);
+		
 	}
 	AtomicQueue<Integer> renderQueue = new AtomicQueue<Integer>(30);
     Vector2 dv = new Vector2();
