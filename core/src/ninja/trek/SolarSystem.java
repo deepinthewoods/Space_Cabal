@@ -36,11 +36,11 @@ public class SolarSystem {
 		
 		
 		plan.add(planet);
-		planet = new Planet(MathUtils.random(Integer.MAX_VALUE-1), 3, Type.EARTH_LIKE);//Type.MARS_LIKE);
+		planet = new Planet(MathUtils.random(Integer.MAX_VALUE-1), 3, Type.MARS_LIKE);
 		plan.add(planet);
-		planet = new Planet(MathUtils.random(Integer.MAX_VALUE-1), 4, Type.EARTH_LIKE);//Type.GAS_GIANT);
+		planet = new Planet(MathUtils.random(Integer.MAX_VALUE-1), 4, Type.GAS_GIANT);
 		plan.add(planet);
-		planet = new Planet(MathUtils.random(Integer.MAX_VALUE-1), 5, Type.EARTH_LIKE);//Type.GAS_GIANT);
+		planet = new Planet(MathUtils.random(Integer.MAX_VALUE-1), 5, Type.GAS_GIANT);
 		plan.add(planet);
 		
 		int numberOfOther = OTHER_BODIES_PER_SYSTEM;
