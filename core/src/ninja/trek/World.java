@@ -240,7 +240,7 @@ public class World {
 			map.enableScissor(this);
 			batch.disableBlending() ;
 			
-			map.draw(batch, camera, this, paused, colorIndexBuffer.getColorBufferTexture());
+			map.draw(batch, camera, this, paused, colorIndexBuffer.getColorBufferTexture(), mesh, cacheShader);
 			batch.setProjectionMatrix(map.camera.combined);
 			batch.enableBlending();
 			batch.setShader(null);
@@ -370,6 +370,7 @@ public class World {
 		loadShipForNew(playerShipNames[currentNewGameShipIndex], getPlayerShip());
 		getPlayerShip().removeEntity(getPlayerShip().getShipEntity());
 		getPlayerShip().setForNewGamePreview();
+		getPlayerShip().setRedrawMap();
 	}
 	
 	public void showPrevNewGameShip(){
@@ -379,6 +380,7 @@ public class World {
 		loadShipForNew(playerShipNames[currentNewGameShipIndex], getPlayerShip());
 		getPlayerShip().removeEntity(getPlayerShip().getShipEntity());
 		getPlayerShip().setForNewGamePreview();
+		getPlayerShip().setRedrawMap();
 	}
 	
 	public GameInfo startNewGame(){

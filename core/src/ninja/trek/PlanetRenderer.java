@@ -305,6 +305,7 @@ public class PlanetRenderer implements RenderableProvider{
 			if (MAKE_TEXTURE) {
 				
 				materials[i].set(TextureAttribute.createDiffuse(planetTextures[i]));
+				//materials[i].set(TextureAttribute.create);
 				//planetTextures[i].draw(planetPix[0], 0, 0);
 			}
 		}

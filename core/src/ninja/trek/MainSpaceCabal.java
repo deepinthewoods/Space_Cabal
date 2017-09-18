@@ -213,7 +213,7 @@ public class MainSpaceCabal extends ApplicationAdapter {
 						ship.fill.randomFloodFill(ship.map, (int)v.x, (int)v.y
 								, block, MathUtils.random(20000, 100000), false, ship);
 						ship.fill.clear();
-						ship.setAllDirty();
+						//ship.setAllDirty();
 						//ship.setDirty((int)v.x, (int)v.y);
 					} else
 					if (ui.fillBtn.isChecked() && !ui.editLineButton.isChecked()){
@@ -224,7 +224,7 @@ public class MainSpaceCabal extends ApplicationAdapter {
 						int b = ship.map.get((int)v.x, (int)v.y);
 						ship.map.floodFill(ship.map, (int)v.x, (int)v.y
 								, b & Ship.BLOCK_ID_MASK, block);
-						ship.setAllDirty();
+						//ship.setAllDirty();
 						//ship.setDirty((int)v.x, (int)v.y);
 					} else {
 						v.set(Gdx.input.getX(), Gdx.input.getY(), 0);
@@ -320,8 +320,9 @@ public class MainSpaceCabal extends ApplicationAdapter {
 				if (ship.editMode){
 					ship.map.overWriteFrom(ship.fill);
 					ship.fill.clear();
-					ship.setAllDirty();
+					//ship.setAllDirty();
 				}
+				ship.setRedrawFill();
 				return false;
 			}
 
@@ -393,6 +394,7 @@ public class MainSpaceCabal extends ApplicationAdapter {
 					current.set(screenX, screenY);
 					
 				}
+				ship.setRedrawFill();
 				return false;
 			}
 

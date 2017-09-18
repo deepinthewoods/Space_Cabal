@@ -1,5 +1,7 @@
 package ninja.trek;
 
+import com.badlogic.gdx.math.MathUtils;
+
 public class MapCacheRunnable implements Runnable {
 	
 	private int index;
@@ -12,7 +14,10 @@ public class MapCacheRunnable implements Runnable {
 	public void run() {
 		Ship ship = world.getShipForThread(index);
 		if (ship != null) {
-			ship.cacheChunk(ship.map);
+			//if (MathUtils.randomBoolean())
+			//	ship.cacheChunk(ship.fill, ship.cacheVertsFill);
+			//else
+				ship.cacheChunk(ship.map, ship.cacheVerts);
 			
 			//Gdx.app.log("thread runnable", "cache chunk");
 		} 

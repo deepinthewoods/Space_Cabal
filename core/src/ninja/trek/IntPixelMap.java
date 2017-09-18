@@ -396,6 +396,7 @@ public class IntPixelMap{
 	, randomFillTotalElements, randomFillSizeLimit = 200;
 	private int airUpdateReplaceIndex = 1;
 	private boolean randomFillFire = false;
+	boolean cleared;
 	public void resetRandomFloodFill(int sizeLimit, int triesLimit) {
 		randomFillIterations = 0;
 		randomFillTriesLimit = triesLimit;
@@ -607,7 +608,6 @@ public class IntPixelMap{
 					self = (block & (Ship.BLOCK_DAMAGE_MASK | Ship.BLOCK_DATA_MASK | Ship.BLOCK_ID_MASK | Ship.BLOCK_BOOST_MASK));
 					set(x, y, self);
 					onFire.remove(x + y * width, 0);
-					ship.setDirty(x,  y);
 					//Gdx.app.log(TAG, "reset air");
 					return;
 				}
@@ -618,7 +618,6 @@ public class IntPixelMap{
 				self |= (block & (Ship.BLOCK_DAMAGE_MASK | Ship.BLOCK_DATA_MASK | Ship.BLOCK_ID_MASK | Ship.BLOCK_BOOST_MASK));
 				set(x, y, self);
 				onFire.put(x + y * width, 0);
-				ship.setDirty(x,  y);
 				return;
 			} else if (otherID == Ship.VACCUUM){
 				//Gdx.app.log(TAG, "air diff " + diff + " air " + self + "  other " + other  + " block " + block);
@@ -627,7 +626,6 @@ public class IntPixelMap{
 
 				set(x, y, self);
 				onFire.remove(x + y * width, 0);
-				ship.setDirty(x,  y);
 				return;
 			}
 
@@ -639,7 +637,6 @@ public class IntPixelMap{
 					set(x, y, self);
 					onFire.remove(x + y * width, 0);
 					//Gdx.app.log(TAG, "reset air SPREAD");
-					ship.setDirty(x,  y);
 					return;
 				}
 				int otherAir = otherb & Ship.BLOCK_AIR_MASK;
@@ -653,7 +650,6 @@ public class IntPixelMap{
 
 				set(x+dx, y+dy, otherAir);
 				onFire.put(x + dx + (y + dy) * width, 0);
-				ship.setDirty(x+dx,  y+dy);
 				damage(x+dx, y+dy, 1, ship);
 				//Gdx.app.log(TAG, "damage");
 				self <<= Ship.BLOCK_AIR_BITS;
@@ -662,7 +658,6 @@ public class IntPixelMap{
 				self |= (block & (Ship.BLOCK_DAMAGE_MASK | Ship.BLOCK_DATA_MASK | Ship.BLOCK_ID_MASK | Ship.BLOCK_BOOST_MASK));
 				set(x, y, self);
 				onFire.put(x + y * width, 0);
-				ship.setDirty(x,  y);
 
 
 			} else if (otherFire == 1){
@@ -676,7 +671,6 @@ public class IntPixelMap{
 					set(x, y, self);
 					onFire.remove(x + y * width, 0);
 					//Gdx.app.log(TAG, "reset air");
-					ship.setDirty(x,  y);
 					return;
 				}
 				self <<= Ship.BLOCK_AIR_BITS;
@@ -686,7 +680,6 @@ public class IntPixelMap{
 
 				set(x, y, self);
 				onFire.put(x + y * width, 0);
-				ship.setDirty(x,  y);
 			}
 
 		}//selffire == 1
@@ -714,6 +707,7 @@ public class IntPixelMap{
 		for (int i = 0; i < map.length; i++){
 			map[i] = 0;
 		}
+		cleared = true;
 	}
 	public void clear(int replacement) {
 		for (int i = 0; i < map.length; i++){

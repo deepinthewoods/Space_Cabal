@@ -78,7 +78,7 @@ public class Ship {
 	public int mapHeight;
 	public int chunksX;
 	public int chunksY;
-	private final int cacheIterations = 1;
+	private final int cacheIterations = 2;
 	private static final int MAP_EXTRA_PIXELS = 64;
 	static final float GAP = 10;
 	private static final int SHIELD_SPACING = 12;
@@ -106,7 +106,7 @@ public class Ship {
 	public transient final AStar2 aStar;
 	private transient Vector3 v = new Vector3(), v2 = new Vector3();
 	public transient OrthographicCamera camera = new OrthographicCamera();
-	public transient boolean drawFill = false;
+	public transient boolean drawFill = true;
 	public transient boolean drawWires = false;
 	public transient boolean editMode = false;
 	private transient ShaderProgram shader;
@@ -122,7 +122,7 @@ public class Ship {
 	public boolean[] disabledButton = new boolean[systemNames.length];
 	public boolean hullFront;
 	public Array<GridPoint2> roomCentres = new Array<GridPoint2>();
-	private float[][] cacheVerts;
+	public float[][] cacheVerts;
 	private int[] cacheDrawCount;
 	private float maxZoomForCentering;
 	private float zoomedOutEnemyZoom;
@@ -133,6 +133,7 @@ public class Ship {
 	private Entity selectedEntity;
 	public boolean zoomingIn;
 	private BloomN bloom;
+	public float[][] cacheVertsFill;
 	
 	public Ship(IntPixelMap map, Sprite pixelSprite, FontManager fonts, ShaderProgram shader){
 		if (pixelSprite.getHeight() != pixelSprite.getWidth()) throw new GdxRuntimeException(" prites not square");
@@ -187,6 +188,7 @@ public class Ship {
 		populateRandomChunkOrder();
 
 		cacheVerts = new float[(MAX_WIDTH / CHUNKSIZE) * (MAX_HEIGHT / CHUNKSIZE)][CHUNKSIZE * CHUNKSIZE * 3 * 4];
+		cacheVertsFill = new float[(MAX_WIDTH / CHUNKSIZE) * (MAX_HEIGHT / CHUNKSIZE)][CHUNKSIZE * CHUNKSIZE * 3 * 4];
 		cacheDrawCount = new int[(MAX_WIDTH / CHUNKSIZE) * (MAX_HEIGHT / CHUNKSIZE)];
 		
 		maxZoomForCentering =  (float)mapHeight / (float)Gdx.graphics.getHeight();
@@ -225,7 +227,6 @@ public class Ship {
 	
 	public void set(IntPixelMap map){
 		this.map = map;
-		setAllDirty();
 	}
 	public void setEntities(EntityArray ent){
 		entities = ent;
@@ -259,10 +260,15 @@ public class Ship {
 	
 	
 
-	public void cacheChunk(IntPixelMap map) {
-		cacheProgress++;
-		if (cacheProgress >= chunksInRandomOrderForCaching.size) cacheProgress = 0;
-		GridPoint2 pt = chunksInRandomOrderForCaching.get(cacheProgress);
+	public void cacheChunk(IntPixelMap map, float[][] cacheVerts) {
+		if (map == fill) Gdx.app.log(TAG,  "draw fill");;
+		GridPoint2 pt;
+		//if dirty do that chunk first else 
+		{
+			cacheProgress++;
+			if (cacheProgress >= chunksInRandomOrderForCaching.size) cacheProgress = 0;
+			pt = chunksInRandomOrderForCaching.get(cacheProgress);
+		}
 		int x = pt.x, y = pt.y;
 		//Gdx.app.log(TAG, "cache chunk" + x + "," + y);
 		int chunkIndex = x + y * chunksX;
@@ -296,8 +302,10 @@ public class Ship {
 	}
 	Matrix4 proj = new Matrix4();
 	private int renderProgress;
-	public void drawCachedChunk(int x, int y, FrameBuffer[] buffer, IntPixelMap map, Mesh mesh, ShaderProgram cacheShader) {
-		
+	private boolean redrawFill;
+	private boolean redrawMap;
+	public void drawCachedChunk(int x, int y, FrameBuffer[] buffer, IntPixelMap map, Mesh mesh, ShaderProgram cacheShader, float[][] cacheVerts) {
+		//if (map == fill) Gdx.app.log(TAG,  "draw fill");;
 		//Gdx.app.log(TAG, "cache chunk" + x + "," + y);
 		int chunkIndex = x + y * chunksX;
 		//int[] chunk = chunkData[chunkIndex];
@@ -333,7 +341,7 @@ public class Ship {
 			GridPoint2 pt = chunksInRandomOrder.get(renderProgress);
 			//cacheChunk(pt.x, pt.y, map);
 			//if (editMode)cacheChunk(pt.x, pt.y, batch, fillBuffer, fill);
-			drawCachedChunk(pt.x, pt.y, chunkBuffer, map, mesh, cacheShader);
+			drawCachedChunk(pt.x, pt.y, chunkBuffer, map, mesh, cacheShader, cacheVerts);
 			
 		}
 	}
@@ -347,6 +355,18 @@ public class Ship {
 		dirtyChunk[chunkIndex] = true;
 	}
 	
+	public void setRedrawFill() {
+		redrawFill = true;
+	}
+	
+	public void setRedrawMap() {
+		redrawMap = true;
+	}
+	
+	public void setAllDirty() {
+		for (int i = 0; i < dirtyChunk.length; i++)
+			dirtyChunk[i] = true;
+	}
 	/** Sets all chunks in a rectangle to dirty
 	 * @param x0
 	 * @param y0
@@ -363,9 +383,33 @@ public class Ship {
 			}
 	}
 	
-	public void draw(SpriteBatch batch, OrthographicCamera wcamera, World world, boolean paused, Texture indexColors){
+	public void draw(SpriteBatch batch, OrthographicCamera wcamera, World world, boolean paused, Texture indexColors, Mesh mesh, ShaderProgram cacheShader){
 		//batch.getProjectionMatrix().set(camera.combined);
 		if (!paused)stateTime += Gdx.graphics.getDeltaTime();
+		
+		if (editMode && redrawFill) {
+			redrawFill = false;
+			int x0, x1, y0, y1;
+			x0 = 0; y0 = 0;x1 = chunksX-1;y1 = chunksY-1;
+			for (int x = x0; x <= x1; x++)
+				for (int y = y0; y <= y1; y++){
+					cacheChunk(fill, cacheVertsFill);
+					drawCachedChunk(x, y, fillBuffer, fill, mesh, cacheShader, cacheVertsFill);
+				}
+		}
+		
+		if (redrawMap) {
+			Gdx.app.log(TAG, "redraw map");
+			redrawMap = false;
+			int x0, x1, y0, y1;
+			x0 = 0; y0 = 0;x1 = chunksX-1;y1 = chunksY-1;
+			for (int x = x0; x <= x1; x++)
+				for (int y = y0; y <= y1; y++){
+					cacheChunk(map, cacheVerts);
+					drawCachedChunk(x, y, chunkBuffer, map, mesh, cacheShader, cacheVerts);
+				}
+		}
+
 		
 		
 		batch.setProjectionMatrix(camera.combined);
@@ -794,11 +838,6 @@ public class Ship {
 		//wire.clear();
 	}
 
-	public void setAllDirty() {
-		for (int i = 0; i < dirtyChunk.length; i++)
-			dirtyChunk[i] = true;
-	}
-
 	public EntityArray getEntities() {
 		return entities;
 	}
@@ -874,7 +913,7 @@ public class Ship {
 		inventory.clear();
 		inventory.addAll(inv);
 		
-		setAllDirty();
+		//setAllDirty();
 		hasCategorizedBlocks = false;
 		populateRandomChunkOrder();
 		//aStar = new AStar2(mapWidth, mapHeight, this);

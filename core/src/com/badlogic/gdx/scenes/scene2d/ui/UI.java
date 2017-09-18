@@ -122,11 +122,11 @@ public class UI {
 	public final String SPACER;
 	public UI(final Stage stage, final World world,  FontManager fontManager) {
 		if (Gdx.app.getType() == ApplicationType.Android) {
-			SPACER = "\\n\\n";
+			SPACER = "\n\n";
 		}
 		else { 
 			SPACER = "\n";
-			fontScale = 1f;
+			fontScale = 1.5f;
 		}
 		String uiName = "holo"
 				, fontName = "kenpixel_high"
