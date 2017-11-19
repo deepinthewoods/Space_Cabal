@@ -497,6 +497,7 @@ public class IntPixelMap{
 		
 		
 		float depl = ((block & Ship.BLOCK_DATA_MASK) >> Ship.BLOCK_DATA_BITS) / (float)ship.maxDepletionBySystem[id];
+
 		if (damage >= ship.damageThreshold[id]){
 			
 			tmpC.set(CustomColors.mapDrawColors[id+48]);
@@ -505,7 +506,7 @@ public class IntPixelMap{
 			//Gdx.app.log(TAG, "damage" + damage);
 		} else {
 			
-			//tmpC.g = 1f - depl/2f;
+			tmpC.g = 1f - depl/2f;
 		}
 		
 		//if (depl > .01f && depl < 0.9f)Gdx.app.log(TAG, "depletion" + depl);

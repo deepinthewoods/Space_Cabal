@@ -453,7 +453,7 @@ public class MainSpaceCabal extends ApplicationAdapter {
 		Ship amap = new Ship(new IntPixelMap(256, 256),  pixelSprite, fontManager, shader);
 		world.addMap(amap);
 		amap.inventory.add(Items.laser1);
-		amap.inventory.add(Items.rocket1);
+		amap.inventory.add(Items.rocket2);
 		
 		Ship amap2 = new Ship(new IntPixelMap(256, 256),  pixelSprite, fontManager, shader);
 		world.addMap(amap2);

@@ -465,9 +465,12 @@ public class DetailedMimicPartial {
                     }
                 }
                 double asum = sum;
+                //if (isBlackRadius[candidates[c]])
+                    //asum = 0f;
+
                 if (isBlackPixel(sample[candidates[c]]))
-                	//asum = 0;
-                	asum *= probabilities[f];
+                	//asum = 1;
+                    asum *= probabilities[f];
                 
                 if (asum >= max) 
                 {

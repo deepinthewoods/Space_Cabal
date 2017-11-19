@@ -7,6 +7,9 @@ import java.util.zip.GZIPInputStream;
 
 import com.badlogic.gdx.Application.ApplicationType;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.ai.pfa.Connection;
+import com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinder;
+import com.badlogic.gdx.ai.pfa.indexed.IndexedGraph;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Mesh;
@@ -40,6 +43,7 @@ import ninja.trek.Ship.EntityArray;
 
 public class World {
 	private static final String TAG = "world";
+	public final SolarSystemGraph solarSystemGraph;
 	private Array<Ship> maps = new Array<Ship>(true, 4);
 	private FontManager fonts;
 	private float accum = 0f;
@@ -59,13 +63,19 @@ public class World {
 	public FrameBuffer colorIndexBuffer;
 	ShaderProgram colorIndexShader;
 	public final static float timeStep = 1f/60f;
+	public IndexedAStarPathFinder<PlanetNode> universePath;
 	
 	public World(FontManager fontManager, ShaderProgram shader, Sprite pixelSprite, PlanetRenderer planet, ModelBatch modelBatch) {
 		this.modelBatch = modelBatch;
 		this.planet = planet;
 		this.shader = shader;
 		this.pixelSprite = pixelSprite;
-		fonts = fontManager; 
+		fonts = fontManager;
+
+		solarSystemGraph = new SolarSystemGraph();
+		universePath = new IndexedAStarPathFinder<PlanetNode>(solarSystemGraph
+		);
+
 		
 		vertsForThreads = new float[MainSpaceCabal.THREADS][Ship.CHUNKSIZE * Ship.CHUNKSIZE * 4 * 3];
 		indicesForChunkMesh = new short[Ship.CHUNKSIZE * Ship.CHUNKSIZE * 6];
@@ -371,6 +381,7 @@ public class World {
 		getPlayerShip().removeEntity(getPlayerShip().getShipEntity());
 		getPlayerShip().setForNewGamePreview();
 		getPlayerShip().setRedrawMap();
+
 	}
 	
 	public void showPrevNewGameShip(){

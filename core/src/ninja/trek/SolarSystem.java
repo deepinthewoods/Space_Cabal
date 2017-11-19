@@ -48,9 +48,9 @@ public class SolarSystem {
 		for (int i = 0; i < numberOfOther ; i++){
 			Planet moon;
 			if (MathUtils.randomBoolean())
-				moon = new Planet(MathUtils.random(Integer.MAX_VALUE-1), i, Type.MOON);
+				moon = new Planet(MathUtils.random(Integer.MAX_VALUE-1), i + 6, Type.MOON);
 			else
-			moon = new Planet(MathUtils.random(Integer.MAX_VALUE-1), i, Type.METEOR);
+			moon = new Planet(MathUtils.random(Integer.MAX_VALUE-1), i + 6, Type.METEOR);
 			moon.parent = MathUtils.random(MAX_PLANETS_PER_SYSTEM-1);
 			moon.parentOrder = totalChildren[moon.parent]++;
 			plan.add(moon);
@@ -71,6 +71,7 @@ public class SolarSystem {
 		sunVariantID = MathUtils.random(SUN_VARIANTS_TOTAL-1);
 		sun.init();
 		makeQuest(sun, gameInfo, questList);
+
 	}
 	private void makeQuest(Planet planet, GameInfo gameInfo, IntMap<Quest> questList) {
 		String questName = findAQuest(planet, gameInfo, questList);

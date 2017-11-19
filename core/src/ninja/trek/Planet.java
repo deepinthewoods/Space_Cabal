@@ -41,8 +41,14 @@ public class Planet {
 	}
 
 	public String toString(){
-		String s = "pPanet " + index;
-		return s;
+		if (parent == -1){
+			String s = "Planet " + index;
+			return s;
+
+		} else {
+			String s = "Moon " + index;
+			return s;
+		}
 	}
 	
 	public void init(){

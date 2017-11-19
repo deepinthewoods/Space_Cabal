@@ -48,6 +48,7 @@ public class Ship {
 			
 			;
 	public static final int MAX_DAMAGE = 15;
+	private final Sprite[] chunkSprites;
 
 	public enum Alignment {CENTRE, TOP_RIGHT};
 	public Alignment alignment = Alignment.CENTRE;
@@ -88,6 +89,7 @@ public class Ship {
 	public static final int MAX_ENTITIES = 10;
 	private transient FrameBuffer[] chunkBuffer, fillBuffer, wireBuffer;
 	private transient Texture[] chunkTextures, fillTextures, wireTextures;;
+
 	private transient boolean[] dirtyChunk;
 	private transient TextureRegion pixel;
 	private float backR = .01f//.31f
@@ -160,6 +162,7 @@ public class Ship {
 		//Gdx.app.log(TAG, "map width " + chunksX + "  ,  " + chunksY + "  chunksize " + CHUNKSIZE + "  w " + mapWidth);
 		chunkBuffer = new FrameBuffer[8 * 8];
 		chunkTextures = new Texture[8 * 8];
+		chunkSprites = new Sprite[8 * 8];
 		fillBuffer = new FrameBuffer[8 * 8];
 		fillTextures = new Texture[8 * 8];
 		wireBuffer = new FrameBuffer[8 * 8];
@@ -212,6 +215,7 @@ public class Ship {
 		chunkBuffer[i] = buff;
 		chunkTextures[i] = chunkBuffer[i].getColorBufferTexture();
 		chunkTextures[i].setFilter(TextureFilter.Nearest, TextureFilter.Nearest);
+		chunkSprites[i] = new Sprite(chunkTextures[i]);
 		buff = bufferPool.obtain();
 		fillBuffer[i] = buff;
 		fillTextures[i] = fillBuffer[i].getColorBufferTexture();
@@ -242,6 +246,7 @@ public class Ship {
 		bufferPool.free(chunkBuffer[i]);
 		chunkBuffer[i] = null;
 		chunkTextures[i] = null;
+		chunkSprites[i] = null;
 		bufferPool.free(fillBuffer[i]);
 		fillBuffer[i] = null;
 		fillTextures[i] = null;
@@ -382,7 +387,7 @@ public class Ship {
 				dirtyChunk[chunkIndex] = true;
 			}
 	}
-	
+	Color col = new Color(Color.WHITE);
 	public void draw(SpriteBatch batch, OrthographicCamera wcamera, World world, boolean paused, Texture indexColors, Mesh mesh, ShaderProgram cacheShader){
 		//batch.getProjectionMatrix().set(camera.combined);
 		if (!paused)stateTime += Gdx.graphics.getDeltaTime();
@@ -429,7 +434,10 @@ public class Ship {
 		shader.end();
 		drawn.clear();
 		batch.enableBlending();
+		//col.set(Color.WHITE);
+		//col.a = .5f;
 		batch.setColor(Color.WHITE);
+
 		
 		batch.begin();
 		
@@ -470,12 +478,17 @@ public class Ship {
 		//Gdx.app.log(TAG, "draw chunk" + x + "," + y + "   " + x * CHUNK_SIZE+ "   " + y * CHUNK_SIZE+ "   " + CHUNK_SIZE+ "   " + CHUNK_SIZE);
 		//batch.setColor(MathUtils.random());
 		Texture texx = chunkTextures[x + y * chunksX];
+		Sprite s = chunkSprites[x + y * chunksX];
 		if (texx != null) {
 			indexColors.bind(1);
 			batch.getShader().setUniformi("u_index_texture", 1);
 			texx.bind(0);
 			batch.getShader().setUniformi("u_texture", 0);
-			batch.draw(texx, (float)x * CHUNKSIZE, y * CHUNKSIZE, CHUNKSIZE, CHUNKSIZE);
+			batch.setColor(1f, 1f, 1f, .25f);
+			//batch.draw(texx, (float)x * CHUNKSIZE, y * CHUNKSIZE, CHUNKSIZE, CHUNKSIZE);
+			s.setBounds((float)x * CHUNKSIZE, y * CHUNKSIZE, CHUNKSIZE, CHUNKSIZE);
+			s.setAlpha(.15f);
+			s.draw(batch);
 			
 		}
 		if (wire){
@@ -1199,7 +1212,7 @@ public class Ship {
 	private int lastPoweredSystem;
 	public float stateTime;
 	public float shieldRadius2, shieldRadius;
-	public boolean showHull;
+	public boolean showHull = true;
 	private float zoomPause;
 	private int nextGlyphIndex;
 	private boolean isHostile;

@@ -101,7 +101,14 @@ public class OuterHull {
 				//blackProb[i + k * ship.mapWidth] = 10f;
 			}
 		int[] result = mim.neoProcess(pixels, pix.getWidth(), pix.getHeight(), ship.mapWidth, ship.mapHeight, reps, radius, false, blackProb);
-		
+        if (radius > 1){
+		    int[] result1 = mim.neoProcess(pixels, pix.getWidth(), pix.getHeight(), ship.mapWidth, ship.mapHeight, 1, 1, false, blackProb);
+            for (int i = 0; i < result.length; i++){
+                if (DetailedMimicPartial.isBlackPixel(result[i]))result[i] = result1[i];
+            }
+
+        }
+
 		Pixmap npix;// = new Pixmap(ship.mapWidth, ship.mapHeight, Format.RGBA8888);
 		if (mainPixmap == null || mainPixmap.getWidth() != ship.mapWidth || mainPixmap.getHeight() != ship.mapHeight){
 			npix = new Pixmap(ship.mapWidth, ship.mapHeight, Format.RGBA8888);			

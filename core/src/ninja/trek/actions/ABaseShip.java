@@ -20,7 +20,7 @@ public class ABaseShip extends Action{
 	}
 	@Override
 	public void update(float dt, World world, Ship map, UI ui) {
-		int power = 1000;
+		int power = 100;
 		//Gdx.app.log(TAG, "update " + parent.e);
 		AWaitForPath wait = Pools.obtain(AWaitForPath.class);
 		Ship ship = parent.e.ship;

@@ -8,6 +8,7 @@ import java.util.zip.GZIPOutputStream;
 import com.badlogic.gdx.Application.ApplicationType;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input.Keys;
+import com.badlogic.gdx.ai.pfa.Heuristic;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
@@ -41,11 +42,15 @@ import ninja.trek.IntPixelMap;
 import ninja.trek.Items;
 import ninja.trek.MainSpaceCabal;
 import ninja.trek.Planet;
+import ninja.trek.PlanetNode;
 import ninja.trek.Quest;
 import ninja.trek.QuestOption;
 import ninja.trek.Ship;
 import ninja.trek.Ship.EntityArray;
 import ninja.trek.ShipEntity;
+import ninja.trek.SolarSystem;
+import ninja.trek.SolarSystemGraph;
+import ninja.trek.SystemPath;
 import ninja.trek.Weapon;
 import ninja.trek.World;
 import ninja.trek.ui.DragListenerSwap;
@@ -59,6 +64,7 @@ public class UI {
 	public static final String[] tileFileLocations = {"balls.png", "bluejunk.png", "chromey.png", "greyJunk.png", "greyShip.png", "redround.png"
 			, "smallred.png", "smallships.png", "sourcegh.png", "weirdgrey.png", "white.png"};
 	private static final int MAX_WEAPON_BUTTONS = 10;
+	private final World world;
 	private DragAndDrop dnd;
 	public UIActionButton[] entityActionButtons = new UIActionButton[EntityAI.names.length];
 	public UISystemButton[] shipSystemottomButtons = new UISystemButton[Ship.systemNames.length];
@@ -121,6 +127,7 @@ public class UI {
 	private Actor mapButtonSpacer;
 	public final String SPACER;
 	public UI(final Stage stage, final World world,  FontManager fontManager) {
+		this.world = world;
 		if (Gdx.app.getType() == ApplicationType.Android) {
 			SPACER = "\n\n";
 		}
@@ -1033,7 +1040,7 @@ public class UI {
 			@Override
 			public void clicked(InputEvent event, float x, float y) {
 				world.showNextNewGameShip();
-				set(ship);
+				set(world.getPlayerShip());
 				setEntity(null);
 				nextShipButton.setChecked(false);
 				super.clicked(event, x, y);
@@ -1044,7 +1051,7 @@ public class UI {
 			@Override
 			public void clicked(InputEvent event, float x, float y) {
 				world.showPrevNewGameShip();
-				set(ship);
+				set(world.getPlayerShip());
 				setEntity(null);
 				prevShipButton.setChecked(false);
 				super.clicked(event, x, y);
@@ -1310,12 +1317,59 @@ public class UI {
 	public void setPlanetInfo(int selectedPlanet) {
 		if (selectedPlanet == -1) {
 			planetInfoLabel.setText(info.systems[info.currentSystem].sun.toString());
-			
 		} else {
-			
 			planetInfoLabel.setText(info.systems[info.currentSystem].planets[selectedPlanet].toString());
 		}
+		setPathCost(geoOrbitButton, "Orbit ", selectedPlanet, PlanetNode.NodeType.ORBIT);
+		setPathCost(ellOrbitButton, "Elliptical orbit ", selectedPlanet, PlanetNode.NodeType.ELLIPTICAL);
+		setPathCost(landOrbitButton, "Land ", selectedPlanet, PlanetNode.NodeType.LAND);
+
+        solarSystemWindow.pack();
+		//landOrbitButton;
+		//ellOrbitButton;
 	}
+
+	private void setPathCost(TextButton button, String text, int selectedPlanet, PlanetNode.NodeType type) {
+		PlanetNode startNode;
+		Planet planet;
+		if (info.currentPlanet == -1){
+			planet = info.systems[info.currentSystem].sun;
+			startNode = world.solarSystemGraph.getSolar(info.currentOrbitalDepth);
+		} else {
+			planet = info.systems[info.currentSystem].planets[info.currentPlanet];
+			if (planet.parent == -1){
+				startNode = world.solarSystemGraph.getNode(info.currentPlanet, info.currentOrbitalDepth);
+			} else {
+				startNode = world.solarSystemGraph.getNode(planet.parent, planet.parentOrder, info.currentOrbitalDepth);
+			}
+		}
+		Planet sel;
+		PlanetNode endNode = null;
+		if (selectedPlanet == -1){
+			sel = info.systems[info.currentSystem].sun;
+			endNode = world.solarSystemGraph.getSolar(type);
+
+		} else {
+			sel = info.systems[info.currentSystem].planets[selectedPlanet];
+			if (sel.parent == -1){
+				endNode = world.solarSystemGraph.getNode(selectedPlanet, type);
+			} else{
+				endNode = world.solarSystemGraph.getNode(sel.parent, sel.parentOrder, type);
+			}
+		}
+		Heuristic<PlanetNode> heur = SolarSystemGraph.heuristic;
+		SystemPath outPath = new SystemPath();
+		world.universePath.searchConnectionPath(startNode, endNode, heur, outPath);
+		Gdx.app.log(TAG, "found path " + startNode.type + " " + endNode.type);
+		int orbitCost = (int) outPath.cost();
+		button.setText(text + orbitCost);
+		if (outPath.getCount() == 0){
+			button.setDisabled(true);
+		} else {
+			button.setDisabled(false);
+		}
+	}
+
 	private void makeInventoryWindow(Skin skin) {
 		invWindow = new Window("Inventory", skin);
 		invItemDisplay = new ItemDisplay(skin, invWindow, this);
@@ -1385,11 +1439,11 @@ public class UI {
 				if (e instanceof Weapon){
 					Weapon w = (Weapon) e;
 					//ship.equippedWeapons[w.index];
-					//Gdx.app.log(TAG, "ADDDD WEAPONNNNNNNNNNNNN");
 					WeaponButton b = weaponButtons[i];
 					if (w.equippedItemID != -1){
 						b.setText(Items.getDef(w.equippedItemID).name);
 					} else b.setText(" ");
+					//Gdx.app.log(TAG, "ADDDD WEAPONNNNNNNNNNNNN " + b.getText());
 					weaponTable.add(b);
 					
 					

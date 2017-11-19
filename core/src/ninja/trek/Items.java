@@ -2,6 +2,7 @@ package ninja.trek;
 
 import ninja.trek.items.LaserA;
 import ninja.trek.items.RocketA;
+import ninja.trek.items.RocketB;
 
 public class Items {
 private static final int MAX_ITEMS = 100;
@@ -20,7 +21,7 @@ private static Item defaultItem;
 public static void init(){
 	defs[laser1] = new LaserA();
 	defs[rocket1] = new RocketA();
-		
+	defs[rocket2] = new RocketB();
 			
 			
 	defaultItem = new Item("defname", "default item"){
