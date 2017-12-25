@@ -28,9 +28,12 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Bits;
 import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.badlogic.gdx.utils.IntArray;
+import com.badlogic.gdx.utils.IntIntMap;
 import com.badlogic.gdx.utils.Pool;
 import com.badlogic.gdx.utils.Pools;
 import com.badlogic.gdx.utils.ScreenUtils;
+
+import java.util.Iterator;
 
 import ninja.trek.ui.ItemDisplay;
 import ninja.trek.ui.ItemDisplay.ItemButton;
@@ -38,17 +41,69 @@ import ninja.trek.ui.UIActionButton;
 import ninja.trek.ui.UISystemButton;
 
 public class Ship {
-	private static final String TAG = "pixel canvas";
+	private static final String TAG = "Ship";
 	public static final int BLOCK_ID_MASK = 0x007f
 			, BLOCK_BOOST_BITS = 7, BLOCK_BOOST_MASK = 0x01 << BLOCK_BOOST_BITS
 			, BLOCK_DAMAGE_BITS = 8, BLOCK_DAMAGE_MASK = 0x0f << BLOCK_DAMAGE_BITS
 			, BLOCK_AIR_BITS = 12, BLOCK_AIR_MASK = 0x1ff << BLOCK_AIR_BITS
 			, BLOCK_FIRE_BITS = 21, BLOCK_FIRE_MASK = 0x03 << BLOCK_FIRE_BITS
-			, BLOCK_DATA_BITS = 23, BLOCK_DATA_MASK = 0xff << BLOCK_DATA_BITS;
-			
-			;
-	public static final int MAX_DAMAGE = 15;
+			, BLOCK_DATA_BITS = 23, BLOCK_DATA_MASK = 0x3f << BLOCK_DATA_BITS
+			, BLOCK_EXTRA_BITS = 30, BLOCK_EXTRA_MASK = 0x3 << BLOCK_EXTRA_BITS;
+
+	public static final int MAX_DAMAGE = 15
+			, MAX_FIRE_SPRITES = 170;
 	private final Sprite[] chunkSprites;
+	public boolean placeDoor;
+	public boolean deleteDoor;
+	private GridPoint2[] roomBlocks = new GridPoint2[1000];
+	private int maxSysRoomID;
+	private float fireTime;
+	private IntIntMap fireBlockIndices = new IntIntMap();
+	private boolean hasCalculatedConnectivity;
+
+	public void openDoor(Door door) {
+		int s = door.radius, h = s/2;
+		int x = door.x;
+		int y = door.y;
+		for (int bx = x - h; bx < x -h+s; bx++)
+			for (int by = y - h; by < y -h+s; by++){
+
+			int block = map.get(bx, by);
+			int id = block & Ship.BLOCK_ID_MASK;
+			BlockDef def = IntPixelMap.defs[id];
+			if (id == DOOR){
+				id = DOOR;
+				//block &= ~BLOCK_ID_MASK;
+				//block |= id;
+				block &= ~BLOCK_BOOST_MASK;
+				block |= 1 << BLOCK_EXTRA_BITS;
+
+				map.set(bx, by, block);
+			}
+		}
+	}
+
+	public void closeDoor(Door door) {
+		int s = door.radius, h = s/2;
+		int x = door.x;
+		int y = door.y;
+		for (int bx = x - h; bx < x -h+s; bx++)
+			for (int by = y - h; by < y -h+s; by++){
+
+				int block = map.get(bx, by);
+				int id = block & Ship.BLOCK_ID_MASK;
+				BlockDef def = IntPixelMap.defs[id];
+				if (id == DOOR){
+					//id = DOOR;
+					//block &= ~BLOCK_ID_MASK;
+					//block |= id;
+					block &= ~BLOCK_BOOST_MASK;
+
+					map.set(bx, by, block);
+				}
+			}
+	}
+
 
 	public enum Alignment {CENTRE, TOP_RIGHT};
 	public Alignment alignment = Alignment.CENTRE;
@@ -73,7 +128,8 @@ public class Ship {
 	public static final int DRONE = 7;
 	public static final int TELEPORTER = 8;
 	public static final int SCIENCE = 9;
-	protected int[] damageThreshold = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+	public static final int DOOR = 10;
+	protected int[] damageThreshold = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
 	public static final int CHUNKSIZE = 64;
 	public int mapWidth;
 	public int mapHeight;
@@ -96,7 +152,7 @@ public class Ship {
 			, backG = .01f//.31f
 			, backB = .01f;//0.1872974f;
 	public IntPixelMap map, fill, wire;
-	private IntPixelMap room;
+	public IntPixelMap room;
 	private transient Bits drawn = new Bits(), hasBuffer = new Bits(), toFree = new Bits();
 	public transient Pool<FrameBuffer> bufferPool;
 	transient Vector3 vec = new Vector3();
@@ -119,8 +175,9 @@ public class Ship {
 	Vector2 q = new Vector2(), r = new Vector2();
 	
 	public IntArray inventory = new IntArray(true, 8);
-	private IntPixelMap systemRooms;
+	public IntPixelMap systemRooms;
 	private IntArray[] roomsBySystem;
+
 	public boolean[] disabledButton = new boolean[systemNames.length];
 	public boolean hullFront;
 	public Array<GridPoint2> roomCentres = new Array<GridPoint2>();
@@ -204,6 +261,7 @@ public class Ship {
 		bloom.setTreshold(.8f);
 		
 	}
+
 	public FrameBuffer makeFrameBuffer(int i){
 		int ind = hasBuffer.nextSetBit(0), count = 0;
 		while (ind != -1){
@@ -388,8 +446,9 @@ public class Ship {
 			}
 	}
 	Color col = new Color(Color.WHITE);
-	public void draw(SpriteBatch batch, OrthographicCamera wcamera, World world, boolean paused, Texture indexColors, Mesh mesh, ShaderProgram cacheShader){
+	public void draw(SpriteBatch batch, OrthographicCamera wcamera, World world, boolean paused, Texture indexColors, Mesh mesh, ShaderProgram cacheShader, boolean overrideHullFront){
 		//batch.getProjectionMatrix().set(camera.combined);
+		//Gdx.app.log(TAG, "draw map");
 		if (!paused)stateTime += Gdx.graphics.getDeltaTime();
 		
 		if (editMode && redrawFill) {
@@ -448,6 +507,7 @@ public class Ship {
 		x0 = 0; y0 = 0;x1 = chunksX-1;y1 = chunksY-1;
 		for (int x = x0; x <= x1; x++)
 			for (int y = y0; y <= y1; y++){
+				//Gdx.app.log(TAG, "draw map");
 				drawChunk(x, y, batch, drawWires, drawFill, indexColors);
 				drawn.set(x + y * chunksX);
 			}
@@ -462,9 +522,72 @@ public class Ship {
 		while (nextFreeIndex != -1) {
 			clearFrameBuffer(nextFreeIndex);
 			nextFreeIndex = toFree.nextSetBit(nextFreeIndex+1);
-		} 
-		
-		if (hullFront && showHull){
+		}
+		//Gdx.app.log(TAG, "onfire " + map.onFire.size);
+		batch.setProjectionMatrix(camera.combined);
+		batch.setColor(Color.WHITE);
+		batch.setShader(null);
+		batch.begin();
+		IntIntMap.Entries fireIterator = fireBlockIndices.entries();
+		fireTime += Gdx.graphics.getDeltaTime();
+		while (fireIterator.hasNext()){
+
+			int val = fireIterator.next().key;
+			int x = val % map.width;
+			int y = val / map.width;
+
+			TextureRegion fireS = Sprites.fire.getKeyFrame(fireTime);
+			batch.draw(fireS, x-8, y-3);
+			//Gdx.app.log(TAG, "fire" + x + ", " + y);
+		}
+
+		if (fireTime > .01f && fireBlockIndices.size > 0){
+			fireIterator = fireBlockIndices.entries();
+			int c = 0;
+
+			int index = 1;
+			if (fireBlockIndices.size > 1)
+				index = MathUtils.random(1, fireBlockIndices.size-1);
+
+			while (c++ < index && fireIterator.hasNext())
+				fireIterator.next();
+
+			fireIterator.remove();
+			//fireTime = 0f;
+
+		}
+
+		batch.end();
+
+		IntIntMap.Entries onFireIter = map.onFire.entries();
+
+		int c = 0;
+		if (map.onFire.size > 0){
+
+			int index = MathUtils.random(0, map.onFire.size-1);
+			for (int i = 0; i < index; i++){
+				onFireIter.next();
+			}
+			int maxSprites = Math.min(MAX_FIRE_SPRITES, map.onFire.size / 32);
+			while (onFireIter.hasNext() && fireBlockIndices.size < maxSprites
+					){
+				int key = onFireIter.next().key;
+				if (!fireBlockIndices.containsKey(key)){
+					fireBlockIndices.put(key, 0);
+				}
+			}
+			onFireIter = map.onFire.entries();
+			while (onFireIter.hasNext() && fireBlockIndices.size < maxSprites
+					&& c < index){
+				int key = onFireIter.next().key;
+				if (!fireBlockIndices.containsKey(key)){
+					fireBlockIndices.put(key, 0);
+				}
+			}
+		}
+
+
+		if ((hullFront && showHull) || overrideHullFront){
 			//batch.enableBlending();
 			hull.draw(batch, wcamera, world, this);
 			
@@ -528,13 +651,15 @@ public class Ship {
 			Gdx.gl.glScissor(width, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		}
 	}
-	public void drawEntities(SpriteBatch batch, World world){
+	public void drawEntities(SpriteBatch batch, World world, boolean forceHullOver){
 		fonts.setZoom(camera);
 		//camera.update();
 		//Gdx.app.log(TAG, "draw entities " + entities.size + "  "  + camera.position);
 		//batch.setProjectionMatrix(camera.combined);//.translate(offset.x, offset.y, 0);
 		//batch.setShader(null);
-		
+		if (forceHullOver){
+			return;
+		}
 		
 		
 		for (Entity e : entities){
@@ -546,6 +671,7 @@ public class Ship {
 		for (Entity e : entities){
 			e.draw(batch, camera, world);
 		}
+
 		if (editMode) fonts.drawSpawn(map.spawn, batch);
 		//batch.disableBlending();
 		//batch.end();
@@ -889,12 +1015,17 @@ public class Ship {
 	}
 
 	public void load(IntPixelMap map2, EntityArray entities2, Texture hull2, IntArray inv) {
+		Gdx.app.log(TAG, "loadddd");
 		for (Entity e : entities){
 			Pools.free(e);
 		}
 		entities.clear();
 		Pools.free(entities);
 		entities = entities2;
+		Gdx.app.log(TAG, "size " + entities.size);
+
+		for (Entity e : entities)
+			Gdx.app.log(TAG, "ENTITY " + e);
 		map = map2;
 		if (mapWidth != map.width || mapHeight != map.height){
 			fill = new IntPixelMap(map);
@@ -913,13 +1044,31 @@ public class Ship {
 		if (hull2 != null){
 			hull.setTexture(hull2);			
 		}
-		
+		Gdx.app.log(TAG, "size " + entities.size);
+
 		System.gc();
-		for (Entity e : entities){
-			if (e instanceof ShipEntity) removeEntity(e);
-			else {
+		Gdx.app.log(TAG, "size " + entities.size);
+		for (int i = 0; i < entities.size; i++){
+			Entity e = entities.get(i);
+			Gdx.app.log(TAG, "ent " + i + " : " + e + " / " + entities.size);
+			//if (e instanceof ShipEntity){
+				//Gdx.app.log(TAG, "remove AI " + e.getClass() + e.glyph);
+			//	removeEntity(e);
+			//}
+			//else
+			{
 				e.ship = this;
 				e.setDefaultAI();
+                //if (e instanceof Door)
+                   // Gdx.app.log(TAG, "DEFAULT AI " + e.getClass() + e.glyph);
+			}
+		}
+		for (int i = entities.size-1; i >= 0; i--) {
+			Entity e = entities.get(i);
+			Gdx.app.log(TAG, "ent " + i + " : " + e + " / " + entities.size);
+			if (e instanceof ShipEntity){
+				Gdx.app.log(TAG, "remove AI " + e.getClass() + e.glyph);
+				removeEntity(e);
 			}
 		}
 		
@@ -928,12 +1077,15 @@ public class Ship {
 		
 		//setAllDirty();
 		hasCategorizedBlocks = false;
+		hasCalculatedConnectivity = false;
 		populateRandomChunkOrder();
 		//aStar = new AStar2(mapWidth, mapHeight, this);
 		depleter = new AStarDeplete(mapWidth, mapHeight, this);
 
 		cacheVerts = new float[chunksX * chunksY][CHUNKSIZE * CHUNKSIZE * 3 * 4];
 		cacheDrawCount = new int[chunksX * chunksY];
+
+
 	}
 
 	
@@ -986,8 +1138,79 @@ public class Ship {
 	public void placeSpawn(int x, int y) {
 		map.spawn.set(x, y);
 	}
+
+	public void placeDoor(int x, int y, int radius) {
+		Door door = Pools.obtain(Door.class);
+		door.clear();
+		int currentWeaponCount = 0;
+		door.x = x;
+		door.y = y;
+		door.radius = radius;
+		door.setDefaultAI();
+		addEntity(door);
+		//for (Entity e : entities) if (e instanceof Weapon) ((Weapon)e).setIndex(currentWeaponCount++);
+
+		int s = door.radius, h = s/2;
+
+		for (int bx = x - h; bx < x -h+s; bx++)
+			for (int by = y - h; by < y -h+s; by++){
+
+				int block = map.get(bx, by);
+				int id = block & Ship.BLOCK_ID_MASK;
+				BlockDef def = IntPixelMap.defs[id];
+				if (id == WALL){
+					id = DOOR;
+					//block &= ~BLOCK_ID_MASK;
+					//block |= id;
+					block &= ~BLOCK_BOOST_MASK;
+					block |= 1 << BLOCK_EXTRA_BITS;
+
+					map.set(bx, by, block);
+				}
+			}
+
+		Gdx.app.log(TAG, "ADD DOOR");
+	}
+
+	public void deleteDoor(int x, int y) {
+		Door w = null;
+		float dst = 100000000;
+		vec2.set(x, y);
+		for (Entity e : entities) if (e instanceof Door){
+			Door door = ((Door)e);
+			float d = vec2.dst2(e.x, e.y);
+			if (d < dst){
+				dst = d;
+				w = door;
+			}
+		}
+		if (w != null){
+			removeEntity(w);
+		}
+	}
+	public boolean[][] roomsConnected = new boolean[100][100];
+	public void calculateConnectivity(World world){
+		//Gdx.app.log(TAG, "connectivity ");
+		for (int i = 0; i < maxSysRoomID; i++){
+			GridPoint2 bl = roomBlocks[i];
+			for (int k = 0; k < maxSysRoomID; k++){
+				roomsConnected[i][k] = false;
+				GridPoint2 tar = roomBlocks[k];
+				IntArray path = aStar.getPath(bl.x, bl.y, tar.x, tar.y);
+				if (path.size > 0){
+					//Gdx.app.log(TAG, "connectivity " + bl);
+					roomsConnected[i][k] = true;
+				}
+				Pools.free(path);
+			}
+
+		}
+		hasCalculatedConnectivity = true;
+	}
 	
 	public void categorizeSystems() {
+		roomBlocks = new GridPoint2[1000];
+
 		for (int i = 0; i <systemNames.length; i++){
 			if (systemBlocks[i] == null) systemBlocks[i] = new Array<GridPoint2>();
 			for (int r = 0; r < systemBlocks[i].size; r++) Pools.free(systemBlocks[i].get(r));
@@ -1025,19 +1248,22 @@ public class Ship {
 					map.needsBoost[id].put(x + y * mapWidth, 0);
 				
 				int fillB = room.get(x, y) & BLOCK_ID_MASK;
-				if (fillB == -1 && id !=WALL && id !=VACCUUM){
+				if (fillB == -1 && id !=WALL && id !=VACCUUM && id != DOOR){
 					//Gdx.app.log(TAG, "fill " + x);
 					room.floodFillWalkable(map, x, y, roomID++);
 				}
 				int sysRoomB = systemRooms.get(x,  y);
-				if (sysRoomB == -1 && id !=WALL && id !=VACCUUM){
+				if (sysRoomB == -1 && id !=WALL && id !=VACCUUM && id != DOOR){
 					//Gdx.app.log(TAG, "sysFill " + id);
 					systemRooms.floodFillSystem(map, x, y, id, sysRoomID);
 					roomsBySystem[id].add(sysRoomID);
+					if (roomBlocks[sysRoomID] == null)
+						roomBlocks[sysRoomID] = new GridPoint2();
+					roomBlocks[sysRoomID].set(x, y);
 					sysRoomID++;
 				}
 			}
-		
+		maxSysRoomID = sysRoomID;
 		//GridPoint2 average = Pools.obtain(GridPoint2.class);
 		for (int i = 0; i < average.length; i++){
 			if (average[i] == null){

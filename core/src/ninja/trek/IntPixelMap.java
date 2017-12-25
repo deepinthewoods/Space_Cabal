@@ -11,9 +11,10 @@ import com.badlogic.gdx.utils.Pools;
 public class IntPixelMap{
 	private static final String TAG = "int pixel map";
 	private static final int FIRE_THRESHOLD = 1;
+	private static final int MIN_AIR_FOR_FIRE = 4;
 	private static int[] updateOrder;
 	private static int updateOrderLength;
-	private static BlockDef[] defs;
+	public static BlockDef[] defs;
 	transient int[] map;
 	public int width, height, chunksX, chunksY;
 	;
@@ -302,7 +303,7 @@ public class IntPixelMap{
 		//if (target == replacement) return;
 		
 		int id = (m.get(nodeX, nodeY) & Ship.BLOCK_ID_MASK);
-		if (id == Ship.WALL || id == Ship.VACCUUM) return;
+		if (id == Ship.WALL || id == Ship.VACCUUM || id == Ship.DOOR) return;
 		if (get(nodeX, nodeY) != 0) return;
 		//f ((get(nodeX, nodeY) & Ship.BLOCK_ID_MASK) != target) return;
 		if (stack > 4000) return;
@@ -455,12 +456,25 @@ public class IntPixelMap{
 		nBlock &= ~Ship.BLOCK_FIRE_MASK;
 		if (randomFillFire) {
 			nair = Math.max(0,  nair/3);
-			if (nair > 1) nBlock |= (1 << Ship.BLOCK_FIRE_BITS);
+			if (nair > MIN_AIR_FOR_FIRE){
+				nBlock |= (1 << Ship.BLOCK_FIRE_BITS);
+				map2.onFire.put(x + y * map2.width, 1);
+			} else {
+				map2.onFire.remove(x + y * map2.width, 0);
+				nBlock &= ~((1 << Ship.BLOCK_FIRE_BITS));
+			}
 			nBlock |= (nair << Ship.BLOCK_AIR_BITS);
 			map2.set(x, y, nBlock);
 			map2.damage(x, y, 1, ship);
-			
+
 			return;
+		}
+		if (nair > MIN_AIR_FOR_FIRE){
+			//nBlock |= (1 << Ship.BLOCK_FIRE_BITS);
+			//map2.onFire.put(x + y * map2.width, 1);
+		} else {
+			map2.onFire.remove(x + y * map2.width, 0);
+			nBlock &= ~((1 << Ship.BLOCK_FIRE_BITS));
 		}
 		nBlock |= (nair << Ship.BLOCK_AIR_BITS);
 		map2.set(x, y, nBlock);
@@ -469,10 +483,10 @@ public class IntPixelMap{
 		//if (block != 0) Gdx.app.log(TAG, "get color " + block);
 		int damage = ((block & Ship.BLOCK_DAMAGE_MASK) >> Ship.BLOCK_DAMAGE_BITS);
 		int id = (block & Ship.BLOCK_ID_MASK); 
-		if ((block & Ship.BLOCK_FIRE_MASK) >> Ship.BLOCK_FIRE_BITS == 1){
+		/*if ((block & Ship.BLOCK_FIRE_MASK) >> Ship.BLOCK_FIRE_BITS == 1){
 			tmpC.set(CustomColors.mapDrawColors[(id) + 16]);
 			return tmpC;
-		}
+		}*/
 		int boost = (block & Ship.BLOCK_BOOST_MASK) >> Ship.BLOCK_BOOST_BITS;
 		if (boost > 0){
 			tmpC.set(CustomColors.mapDrawColors[(id) + 32]);

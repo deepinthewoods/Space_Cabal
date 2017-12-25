@@ -118,7 +118,10 @@ public class MainSpaceCabal extends ApplicationAdapter {
 				}
 				else if (keycode == Keys.R) {
 					background.rotate((MathUtils.random(0, 1) * 2 -1 ) * MathUtils.random(20, 120));
-				}
+				} else if (keycode == Keys.C){
+                    world.getPlayerShip().categorizeSystems();
+                    world.getPlayerShip().calculateConnectivity(world);
+                }
 					
 				
 				return false;
@@ -167,8 +170,19 @@ public class MainSpaceCabal extends ApplicationAdapter {
 					world.targettingIndex = -1;
 					return true;
 				}
-				
-				if (ship.editMode && ship.placeSpawn == true){
+
+				if (ship.editMode && ship.placeDoor == true){
+					v.set(screenX, screenY, 0);
+					ship.camera.unproject(v);
+					ship.placeDoor = false;
+					ship.placeDoor((int)v.x, (int)v.y, (int)ui.brushSizeSlider.getValue());
+					//if (true) throw new GdxRuntimeException("placed door");
+				} else if (ship.editMode && ship.deleteDoor == true){
+					v.set(screenX, screenY, 0);
+					ship.camera.unproject(v);
+					ship.deleteDoor = false;
+					ship.deleteDoor((int)v.x, (int)v.y);
+				} else if (ship.editMode && ship.placeSpawn == true){
 					v.set(screenX, screenY, 0);
 					ship.camera.unproject(v);
 					ship.placeSpawn = false;

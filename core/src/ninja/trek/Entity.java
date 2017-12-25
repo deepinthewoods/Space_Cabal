@@ -23,6 +23,12 @@ public class Entity implements Poolable {
 	public int[] buttonOrder = new int[EntityAI.names.length];
 	public boolean[] disabledButton = new boolean[EntityAI.names.length];
 
+	public void handleOtherButton(ButtonType type) {
+
+	}
+
+	public enum ButtonType {DOOR_OPEN, DOOR_CLOSE};
+	public ButtonType[] otherButtons = null;
 	public int[] fixOrder = new int[FIX_ACTIONS_LENGTH];//block ids
 	public static final int FIX_ACTIONS_LENGTH = 7;
 	public transient GridPoint2 target = new GridPoint2();
@@ -38,6 +44,10 @@ public class Entity implements Poolable {
 		return this;
 	}
 	public void update(World world, UI ui){
+		if (ai == null){
+			Gdx.app.log(TAG, "no ai " + glyph);
+			return;
+		}
 		ai.update(world, ship, ui);
 	};
 	

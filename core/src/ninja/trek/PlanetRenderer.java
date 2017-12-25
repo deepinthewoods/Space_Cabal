@@ -772,9 +772,7 @@ public class PlanetRenderer implements RenderableProvider{
 		//selectedPlanet = SolarSystem.MAX_PLANETS_PER_SYSTEM-1 - selectedPlanet;
 		ui.setPlanetInfo(selectedPlanet);
 	}
-	
-	
-	
+
 	public void setInfo(GameInfo info){
 		this.info = info;
 	}

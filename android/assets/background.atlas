@@ -4,212 +4,240 @@ size: 1024,1024
 format: RGBA8888
 filter: Nearest,Nearest
 repeat: none
+Fire 16x
+  rotate: false
+  xy: 776, 908
+  size: 48, 48
+  orig: 48, 48
+  offset: 0, 0
+  index: -1
 aura
   rotate: false
-  xy: 2, 694
+  xy: 2, 700
   size: 256, 256
   orig: 256, 256
   offset: 0, 0
   index: -1
 bigstar
   rotate: false
-  xy: 2, 2
+  xy: 41, 47
   size: 5, 5
   orig: 5, 5
   offset: 0, 0
   index: -1
 divine
   rotate: false
-  xy: 2, 436
+  xy: 2, 442
   size: 256, 256
   orig: 256, 256
   offset: 0, 0
   index: -1
+fire
+  rotate: false
+  xy: 826, 940
+  size: 16, 16
+  orig: 16, 16
+  offset: 0, 0
+  index: 0
+fire
+  rotate: false
+  xy: 826, 940
+  size: 16, 16
+  orig: 16, 16
+  offset: 0, 0
+  index: 1
+fire
+  rotate: false
+  xy: 2, 15
+  size: 16, 16
+  orig: 16, 16
+  offset: 0, 0
+  index: 2
 iris
   rotate: false
-  xy: 260, 694
+  xy: 260, 700
   size: 256, 256
   orig: 256, 256
   offset: 0, 0
   index: -1
 laserbody
   rotate: false
-  xy: 539, 549
+  xy: 776, 872
   size: 11, 13
   orig: 11, 13
   offset: 0, 0
   index: -1
 medstar
   rotate: false
-  xy: 41, 43
+  xy: 132, 140
   size: 3, 3
   orig: 3, 3
   offset: 0, 0
   index: -1
 nova
   rotate: false
-  xy: 2, 48
+  xy: 2, 54
   size: 128, 128
   orig: 128, 128
   offset: 0, 0
   index: -1
 pearlring
   rotate: false
-  xy: 2, 178
+  xy: 2, 184
   size: 256, 256
   orig: 256, 256
   offset: 0, 0
   index: -1
 pollen
   rotate: false
-  xy: 260, 436
+  xy: 260, 442
   size: 256, 256
   orig: 256, 256
   offset: 0, 0
   index: -1
 projectile0
   rotate: false
-  xy: 132, 140
+  xy: 539, 553
   size: 15, 15
   orig: 15, 15
   offset: 0, 0
   index: 0
 projectile0
   rotate: false
-  xy: 153, 161
+  xy: 648, 662
   size: 15, 15
   orig: 15, 15
   offset: 0, 0
   index: 1
 projectile0
   rotate: false
-  xy: 518, 526
+  xy: 669, 683
   size: 15, 15
   orig: 15, 15
   offset: 0, 0
   index: 2
 projectile1
   rotate: false
-  xy: 776, 931
+  xy: 2, 33
   size: 19, 19
   orig: 19, 19
   offset: 0, 0
   index: 0
 projectile1
   rotate: false
-  xy: 2, 27
+  xy: 132, 163
   size: 19, 19
   orig: 19, 19
   offset: 0, 0
   index: 1
 projectile1
   rotate: false
-  xy: 132, 157
+  xy: 518, 549
   size: 19, 19
   orig: 19, 19
   offset: 0, 0
   index: 2
 projectile2
   rotate: false
-  xy: 518, 543
+  xy: 648, 679
   size: 19, 19
   orig: 19, 19
   offset: 0, 0
   index: 0
 projectile2
   rotate: false
-  xy: 518, 543
+  xy: 648, 679
   size: 19, 19
   orig: 19, 19
   offset: 0, 0
   index: 2
 projectile2
   rotate: false
-  xy: 648, 673
+  xy: 776, 887
   size: 19, 19
   orig: 19, 19
   offset: 0, 0
   index: 1
 projectile3
   rotate: false
-  xy: 648, 660
+  xy: 797, 895
   size: 11, 11
   orig: 11, 11
   offset: 0, 0
   index: 0
 projectile3
   rotate: false
-  xy: 669, 681
+  xy: 826, 927
   size: 11, 11
   orig: 11, 11
   offset: 0, 0
   index: 1
 projectile3
   rotate: false
-  xy: 776, 900
+  xy: 844, 945
   size: 11, 11
   orig: 11, 11
   offset: 0, 0
   index: 2
 projectile3
   rotate: false
-  xy: 815, 939
+  xy: 2, 2
   size: 11, 11
   orig: 11, 11
   offset: 0, 0
   index: 3
 projectile4
   rotate: false
-  xy: 776, 913
+  xy: 23, 36
   size: 16, 16
   orig: 16, 16
   offset: 0, 0
   index: 0
 projectile4
   rotate: false
-  xy: 797, 934
+  xy: 132, 145
   size: 16, 16
   orig: 16, 16
   offset: 0, 0
   index: 1
 projectile4
   rotate: false
-  xy: 2, 9
+  xy: 153, 166
   size: 16, 16
   orig: 16, 16
   offset: 0, 0
   index: 2
 projectile4
   rotate: false
-  xy: 23, 30
+  xy: 518, 531
   size: 16, 16
   orig: 16, 16
   offset: 0, 0
   index: 3
 smallstar
   rotate: false
-  xy: 132, 135
+  xy: 171, 179
   size: 3, 3
   orig: 3, 3
   offset: 0, 0
   index: -1
 sparkle
   rotate: false
-  xy: 518, 564
+  xy: 518, 570
   size: 128, 128
   orig: 128, 128
   offset: 0, 0
   index: -1
 star
   rotate: false
-  xy: 518, 694
+  xy: 518, 700
   size: 256, 256
   orig: 256, 256
   offset: 0, 0
   index: -1
 sun
   rotate: false
-  xy: 260, 178
+  xy: 260, 184
   size: 256, 256
   orig: 256, 256
   offset: 0, 0

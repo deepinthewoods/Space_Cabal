@@ -37,7 +37,7 @@ public class AWaitForPath extends Action {
 	@Override
 	public void update(float dt, World world, Ship map, UI ui) {
 		if (!hasStartedPath){
-			hasStartedPath = true;			
+			hasStartedPath = true;
 		}
 		if (hasStartedPath){
 			//path = parent.e.ship.aStar.getPath(parent.e.x, parent.e.y, parent.e.buttonOrder, parent.e.fixOrder);
@@ -56,7 +56,76 @@ public class AWaitForPath extends Action {
 				int[] fixOrder;
 				switch (action){
 				
-				case EntityAI.FIRE:
+				case EntityAI.FIRE://Gdx.app.log(TAG, "look fire " + list.size);
+					if (list.size != 0){
+						//if (list.nextClearBit(0) == -1) return;
+						candidates.clear();
+						int startRoom = map.room.get(parent.e.x, parent.e.y);
+						Iterator<Entry> iter = list.iterator();
+						while (iter.hasNext()){
+							Entry ent = iter.next();
+							int ind = ent.key;
+							int x = ind % m.width;
+							int y = ind / m.width;
+							int dist = getDistanceTo(x, y, map);
+							///Gdx.app.log(TAG, "look fire " + dist);
+							int block = m.get(x, y);
+							int room = map.room.get(x, y);
+							if (
+									 !parent.e.ship.isReserved(x, y)
+											//&& startRoom >= 0 && map.roomsConnected[startRoom][room]
+									){
+								GridPoint2 newEnt = Pools.obtain(GridPoint2.class);
+								newEnt.set(x, y);
+								candidates.add(newEnt);
+								//
+								// Gdx.app.log(TAG, "add candidate " + x + ", " + y + "  " + ent.key);
+							}
+						}
+						posIndexComparator.set(parent.e.x, parent.e.y);
+						candidates.sort(posIndexComparator);
+
+						if (candidates.size == 0) break;
+						boolean hasFoundCandidate = false;
+						int candidateI = 0;
+						while (!hasFoundCandidate && candidateI < candidates.size){
+							GridPoint2 target = candidates.get(candidateI);
+							if (target.x == parent.e.x && target.y == parent.e.y){
+								candidateI++;
+								//Gdx.app.log(TAG, "early skip candidate " + candidateI + "  " + candidates.size );
+								continue;
+							}
+							path = parent.e.ship.aStar.getPath(parent.e.x, parent.e.y, target.x, target.y);
+							if (path.size != 0){
+								hasFoundCandidate = true;
+								//Gdx.app.log(TAG, "found candidate " + parent.e.x + ", " + parent.e.y + ", " + path.get(0) + ", " + path.get(1));
+							} else {
+								//Gdx.app.log(TAG, "0 found candidate " );
+							}
+							candidateI++;
+						}
+						if (!hasFoundCandidate){
+							//Gdx.app.log(TAG, "found NO candidate " + parent.e.glyph + candidates.size +  " c " + candidateI);
+							break;
+						}
+						parent.e.path = path;
+						parent.e.actionIndexForPath = parent.e.buttonOrder[i];
+						AFollowPath follow = Pools.obtain(AFollowPath.class);
+						addBeforeMe(follow);
+						isFinished = true;
+						//Gdx.app.log(TAG, "found" + parent.e);// + targetX + ", " + targetY + "  from " + parent.e.x + ", " + parent.e.y);
+						if (path.size == 0){
+							Gdx.app.log(TAG, "0 PATH");
+							parent.e.ship.reserve(parent.e.target.x, parent.e.target.y);
+							throw new GdxRuntimeException("fdjk2)");
+							//parent.e.target.set(targetX, targetY);
+						} else {
+							parent.e.target.set(path.get(0), path.get(1));
+							parent.e.ship.reserve(parent.e.target.x, parent.e.target.y);
+						}
+						return;
+					}
+					break;
 				case EntityAI.ENGINE:
 				case EntityAI.OXYGEN:
 				case EntityAI.DRONE:
@@ -66,10 +135,12 @@ public class AWaitForPath extends Action {
 				case EntityAI.SCIENCE:
 					
 					//found.clear();
-					//Gdx.app.log(TAG, "STARTRTARTSDGTDFSFD " + list.length());
 					if (list.size != 0){
 						//if (list.nextClearBit(0) == -1) return;
 						candidates.clear();
+                        //map.calculateConnectivity();
+						int startRoom = map.systemRooms.get(parent.e.x, parent.e.y);
+					    Gdx.app.log(TAG, "STARTRTARTSDGTDFSFD " + startRoom );
 						Iterator<Entry> iter = list.iterator();
 						while (iter.hasNext()){
 							Entry ent = iter.next();
@@ -78,7 +149,11 @@ public class AWaitForPath extends Action {
 							int y = ind / m.width;
 							int dist = getDistanceTo(x, y, map);
 							int block = m.get(x, y);
-							if (( block & Ship.BLOCK_DATA_MASK ) == 0 && !parent.e.ship.isReserved(x, y)){
+							int room = map.room.get(x, y);
+							if (
+									( block & Ship.BLOCK_DATA_MASK ) == 0 && !parent.e.ship.isReserved(x, y)
+									//&& startRoom >= 0 && map.roomsConnected[startRoom][room]
+									){
 								GridPoint2 newEnt = Pools.obtain(GridPoint2.class);
 								newEnt.set(x, y);
 								candidates.add(newEnt);

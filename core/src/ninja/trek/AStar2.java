@@ -111,7 +111,7 @@ public class AStar2 {
 	protected boolean isValid (int x, int y) {
 		int block = ship.map.get(x, y);
 		block &= Ship.BLOCK_ID_MASK;
-		if (block == Ship.VACCUUM || block == Ship.WALL) return false;
+		if (block == Ship.VACCUUM || block == Ship.WALL || block == Ship.DOOR) return false;
 		return true;
 	}
 

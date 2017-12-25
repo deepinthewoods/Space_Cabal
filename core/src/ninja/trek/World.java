@@ -1,22 +1,17 @@
 package ninja.trek;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.zip.GZIPInputStream;
 
 import com.badlogic.gdx.Application.ApplicationType;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.ai.pfa.Connection;
 import com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinder;
-import com.badlogic.gdx.ai.pfa.indexed.IndexedGraph;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Pixmap.Format;
-import com.badlogic.gdx.graphics.PixmapIO;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.Texture.TextureFilter;
 import com.badlogic.gdx.graphics.VertexAttribute;
@@ -243,19 +238,21 @@ public class World {
 			//PixmapIO.writePNG(Gdx.files.external("screen.png"), pix);
 		}
 		
-		if (planet.sunFromSide || (!warpingBetweenPlanets && !warpingToPlanet && !warpingToSolarSystemMap && !planetSelectOn))
+		if (planet.sunFromSide || (!warpingBetweenPlanets  && warpAlpha < .99f//&& !warpingToPlanet && !warpingToSolarSystemMap
+				&& !planetSelectOn
+		))
 		for (int i = 0; i < maps.size; i++){
 			Ship map = maps.get(i);
 			map.updateCamera(camera, this);
 			map.enableScissor(this);
-			batch.disableBlending() ;
+			batch.disableBlending();
 			
-			map.draw(batch, camera, this, paused, colorIndexBuffer.getColorBufferTexture(), mesh, cacheShader);
+			map.draw(batch, camera, this, paused, colorIndexBuffer.getColorBufferTexture(), mesh, cacheShader, warpingToPlanet || warpingToSolarSystemMap);
 			batch.setProjectionMatrix(map.camera.combined);
 			batch.enableBlending();
 			batch.setShader(null);
 			batch.begin();
-			map.drawEntities(batch, this);
+			map.drawEntities(batch, this, warpingToPlanet || warpingToSolarSystemMap);
 			batch.end();
 			batch.begin();
 			map.drawLines(shape, ui, targettingIndex != -1, camera, this);
@@ -316,7 +313,7 @@ public class World {
 		for (int i = 0; i < maps.size; i++){
 			Ship m = maps.get(i);
 			m.categorizeSystems();
-			
+			m.calculateConnectivity(this);
 			if (!m.hasShipEntity()){
 				ShipEntity shipE = Pools.obtain(ShipEntity.class);
 				shipE.setDefaultAI();
@@ -405,7 +402,7 @@ public class World {
 		for (int i = 0; i < maps.size; i++){
 			Ship m = maps.get(i);
 			m.categorizeSystems();
-			
+			m.calculateConnectivity(this);
 			if (!m.hasShipEntity()){
 				ShipEntity shipE = Pools.obtain(ShipEntity.class);
 				shipE.setDefaultAI();
@@ -452,6 +449,9 @@ public class World {
 		FileHandle invFile = f.sibling(f.nameWithoutExtension() + "." + MainSpaceCabal.MAP_INVENTORY_FILE_EXTENSION);
 		FileHandle mapBlocksFile = f.sibling(f.nameWithoutExtension() + "." + MainSpaceCabal.MAP_BLOCKS_FILE_EXTENSION);
 		EntityArray entities = json.fromJson(EntityArray.class, entityFile.readString());
+		//for (Entity e : entities)
+			//Gdx.app.log(TAG, "ENTITY " + e);
+
 		Texture hull = null;
 		if (hullFile.exists())
 			hull = new Texture(hullFile);
@@ -472,6 +472,7 @@ public class World {
 		
 		Data.jsonPool.free(json);
 		ship.categorizeSystems();
+		ship.calculateConnectivity(this);
 		if (!ship.hasShipEntity()){
 			ShipEntity shipE = Pools.obtain(ShipEntity.class);
 			shipE.setDefaultAI();
