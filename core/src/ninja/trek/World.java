@@ -252,7 +252,7 @@ public class World {
 			batch.enableBlending();
 			batch.setShader(null);
 			batch.begin();
-			map.drawEntities(batch, this, warpingToPlanet || warpingToSolarSystemMap);
+			map.drawEntities(batch, this, warpingToPlanet || warpingToSolarSystemMap, i == 0);
 			batch.end();
 			batch.begin();
 			map.drawLines(shape, ui, targettingIndex != -1, camera, this);
@@ -268,6 +268,10 @@ public class World {
 			
 			
 		}
+		batch.getProjectionMatrix().setToOrtho2D(0, 0, 10, 10);
+        batch.begin();
+        //batch.draw(colorIndexBuffer.getColorBufferTexture(), 0, 0, 10, 10);
+        batch.end();
 	}
 	
 	public void addMap(Ship map){

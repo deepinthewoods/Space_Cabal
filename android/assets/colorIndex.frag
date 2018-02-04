@@ -11,7 +11,6 @@ uniform vec4 u_colors[128];
 uniform float alpha;
 uniform float u_time;
 
-
 vec3 rgb2hsv(vec3 c)
 {
     vec4 K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
@@ -97,18 +96,16 @@ void main()
   //gl_FragColor = v_color * DiffuseColor;
   //if (index == 0) discard;
   vec4 color = u_colors[index];// * DiffuseColor.g;
+  if (index != 4 && index != 5){
+  	  	  		  vec3 c = rgb2hsv(color.xyz);
+  	  	  		  c.y = .5f ;
+  	  	  		  color = vec4(hsv2rgb(c), color.a);
+  	  	  	  }
   if (index < 16){
 	  float alpha = (v_texCoords.y) * 2.0;
 	  	    if (alpha > 1.0) alpha = 2.0 - alpha;
 	  	    alpha = 1.0 - alpha;
-	  	  if (index != 4){
-	  	  		  vec3 c = rgb2hsv(color.xyz);
-	  	  		  c.y *= alpha ;
-	  	  		  //color = vec4(hsv2rgb(c), color.a);
-	  	  	  }else {
 
-
-	  	  	  }
   } else if (index < 32){
 	  //alpha *= alpha;
 	  //float alphar = abs(sin(v_texCoords.y * PI * 22.0));
@@ -146,16 +143,16 @@ void main()
 	  //float alphar = abs(sin(v_texCoords.y * PI * 22.0));
 	  float alpha = (rand(vec2(v_texCoords * 32.0))) ;
 	  alpha = max(0.0, alpha * 2 - 1.0);
-	  alpha = sin(v_texCoords.y * PI * 32.0 ) * 0.5 + 0.5;
-
+	  alpha = sin(v_texCoords.y * PI * 16.0 ) * 0.5 + 0.5;
+      alpha = mod(v_texCoords.y * 2, 1.0);
 	  //float alphar = rand(v_texCoords);
 	  //alphar = mod(v_texCoords.y * 8.0, 2.0) * 0.5;
-	  float alphar = sin(v_texCoords.y * PI * 6) * 0.5 + 0.5;
+	  float alphar = sin(v_texCoords.y * PI * 1) * 0.5 + 0.5;
 
 	  vec4 rc = vec4(1.0, 0.0, 1.0, 1.0);
 	  rc =  mix(rc, vec4(1.0, 0.0, 1.0, 1.0), alphar);
 
-	  color = mix(rc, color, alpha);
+	  color = mix(rc, color, floor(alpha * 2));
 
 
   }

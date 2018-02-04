@@ -11,6 +11,7 @@ public class RocketA extends MissileItem {
 		chargeDrawLimit = 100;
 		weaponType = WeaponType.missile;
 		variantIndex = 0;
+
 	}
 
 }

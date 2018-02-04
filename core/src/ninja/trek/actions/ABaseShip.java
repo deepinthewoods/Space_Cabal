@@ -8,12 +8,13 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Pools;
 
 import ninja.trek.Ship;
+import ninja.trek.ShipEntity;
 import ninja.trek.World;
 import ninja.trek.action.Action;
 
 public class ABaseShip extends Action{
 	private static final String TAG = "base ship action";
-	
+	float shieldTimer = 0;
 	public ABaseShip() {
 		lanes = LANE_ACTING;
 		//isBlocking = true;
@@ -22,8 +23,22 @@ public class ABaseShip extends Action{
 	public void update(float dt, World world, Ship map, UI ui) {
 		int power = 100;
 		//Gdx.app.log(TAG, "update " + parent.e);
+
 		AWaitForPath wait = Pools.obtain(AWaitForPath.class);
 		Ship ship = parent.e.ship;
+        ShipEntity shipE = ship.getShipEntity();
+        if (shipE.shield < shipE.shieldTotal){
+            shieldTimer += dt;
+            Gdx.app.log(TAG, "update " + shieldTimer + "  " + dt);
+            float shieldTimeout = 5f;
+            if (shieldTimer > shieldTimeout){
+                shieldTimer = 0f;
+                shipE.shield++;
+            }
+        }
+        if (shipE.shieldTotal < shipE.shield)
+            shipE.shield = shipE.shieldTotal;
+
 		if (!ship.hasCategorizedBlocks) return;
 		int maxSystem = 0;
 		for (int i = 0; i < ship.systemButtonOrder.length; i++){
@@ -52,6 +67,7 @@ public class ABaseShip extends Action{
 		}
 		parent.e.ship.setSystemMarker(maxSystem);
 		//Gdx.app.log(TAG, "last system " + Ship.systemNames[maxSystem]);
+
 	}
 
 	@Override

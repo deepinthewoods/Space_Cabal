@@ -24,7 +24,7 @@ public class AMissile extends Action {
 		//Gdx.app.log(TAG, "update missile " + miss.position);
 		dt = World.timeStep;
 		miss.time += dt;
-		MissileItem weI = (MissileItem) Items.getDef(miss.weeaponItemID);
+		MissileItem weI = (MissileItem) Items.getDef(miss.weaponItemID);
 		tmpV.set(miss.direction).scl(weI.moveSpeed * dt);
 		
 		miss.position.add(tmpV);
@@ -33,8 +33,9 @@ public class AMissile extends Action {
 		if (parent.e.isHostile){
 			tmpV.set(miss.position).sub(miss.target.x, miss.target.y);
 			if (tmpV.x > 0 == miss.direction.x > 0){
-				//Gdx.app.log(TAG, "AWAT");
+				//Gdx.app.log(TAG, "DAMAGE" + miss.position);
 				//TODO do damage
+                miss.ship.missileDamage((int)miss.target.x, (int)miss.target.y, weI.damage);
 				isFinished = true;
 			}
 			if (miss.time > TIMEOUT*10){
@@ -43,8 +44,14 @@ public class AMissile extends Action {
 			tmpV.set(miss.ship.mapWidth/2, miss.ship.mapHeight/2);
 			float dist2 = tmpV.dst2(miss.position);
 			if (dist2 < miss.ship.shieldRadius2){
-				isFinished = true;
+
 				//TODO damage shields / continue
+
+                if (miss.ship.getShipEntity().shield > 0){
+                    miss.ship.damageShield(weI.shieldDamage);
+                    isFinished = true;
+                    Gdx.app.log(TAG, "HIT SHIELDS");
+                }
 			}
 			
 		} else {//not hostile

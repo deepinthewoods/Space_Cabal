@@ -31,6 +31,7 @@ void main()
 
 
   float v = rand(floor(v_texCoords.xy * 64.0) + mod(floor(u_time * 8.0), 8000.0)) * 0.139;
+  v = v * v_color.a;
   vec4 color = texture2D(u_index_texture, vec2(DiffuseColor.r, mod(v + u_time + shift, 1.0)));
   //gl_FragColor = v_color * DiffuseColor;
   //if (index == 0) discard;

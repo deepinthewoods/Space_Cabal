@@ -1,12 +1,10 @@
 package ninja.trek;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Pools;
 
 import ninja.trek.action.ActionList;
@@ -16,10 +14,13 @@ public class Missile extends Entity {
 	public Vector2 direction = new Vector2(), position = new Vector2();
 	public float time;
 	public Vector2 target = new Vector2();
-	public int weeaponItemID;
-	public Missile() {
+	public int weaponItemID;
+
+
+    public Missile() {
 		glyph = " ";
 	}
+
 @Override
 public Entity setDefaultAI() {
 	
@@ -34,7 +35,7 @@ public Entity setDefaultAI() {
 
 @Override
 public void draw(SpriteBatch batch, OrthographicCamera camera, World world) {
-	WeaponItem weI = (WeaponItem) Items.getDef(weeaponItemID);
+	WeaponItem weI = (WeaponItem) Items.getDef(weaponItemID);
 	//Gdx.app.log("missile", "missile draw " + ship.stateTime);
 	Sprite sprite = (Sprite) Sprites.projectile[weI.variantIndex].getKeyFrame(ship.stateTime, true);
 	batch.setProjectionMatrix(camera.combined);

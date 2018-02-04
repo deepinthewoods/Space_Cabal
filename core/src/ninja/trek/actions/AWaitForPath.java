@@ -115,7 +115,7 @@ public class AWaitForPath extends Action {
 						isFinished = true;
 						//Gdx.app.log(TAG, "found" + parent.e);// + targetX + ", " + targetY + "  from " + parent.e.x + ", " + parent.e.y);
 						if (path.size == 0){
-							Gdx.app.log(TAG, "0 PATH");
+							//Gdx.app.log(TAG, "0 PATH");
 							parent.e.ship.reserve(parent.e.target.x, parent.e.target.y);
 							throw new GdxRuntimeException("fdjk2)");
 							//parent.e.target.set(targetX, targetY);
@@ -140,7 +140,7 @@ public class AWaitForPath extends Action {
 						candidates.clear();
                         //map.calculateConnectivity();
 						int startRoom = map.systemRooms.get(parent.e.x, parent.e.y);
-					    Gdx.app.log(TAG, "STARTRTARTSDGTDFSFD " + startRoom );
+					    //Gdx.app.log(TAG, "STARTRTARTSDGTDFSFD " + startRoom );
 						Iterator<Entry> iter = list.iterator();
 						while (iter.hasNext()){
 							Entry ent = iter.next();
@@ -193,7 +193,7 @@ public class AWaitForPath extends Action {
 						isFinished = true;
 						//Gdx.app.log(TAG, "found" + parent.e);// + targetX + ", " + targetY + "  from " + parent.e.x + ", " + parent.e.y);
 						if (path.size == 0){
-							Gdx.app.log(TAG, "0 PATH");
+							//Gdx.app.log(TAG, "0 PATH");
 							parent.e.ship.reserve(parent.e.target.x, parent.e.target.y);
 							throw new GdxRuntimeException("fdjk2)");
 							//parent.e.target.set(targetX, targetY);
@@ -262,7 +262,7 @@ public class AWaitForPath extends Action {
 							isFinished = true;
 							//Gdx.app.log(TAG, "found" + parent.e);// + targetX + ", " + targetY + "  from " + parent.e.x + ", " + parent.e.y);
 							if (path.size == 0){
-								Gdx.app.log(TAG, "0 PATH");
+								//Gdx.app.log(TAG, "0 PATH");
 								parent.e.ship.reserve(parent.e.target.x, parent.e.target.y);
 								throw new GdxRuntimeException("fdjk2)");
 								//parent.e.target.set(targetX, targetY);

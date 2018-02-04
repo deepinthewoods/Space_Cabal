@@ -8,6 +8,8 @@ public class WeaponItem extends Item {
 	public float fireWindDownTime = .5f;
 	public int chargeDrawLimit = 100;
 	public int variantIndex;
+    public int damage = 2000;
+    public int shieldDamage;
 
 	public WeaponItem(String name, String desc) {
 		super(name, desc);

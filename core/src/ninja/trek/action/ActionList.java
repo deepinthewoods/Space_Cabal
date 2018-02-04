@@ -234,7 +234,7 @@ public class ActionList extends EntityAI implements Poolable{//, KryoSerializabl
 
 	@Override
 	public void update(World world, Ship map, UI ui) {
-		update(1, world, map, ui);
+		update(Gdx.graphics.getDeltaTime(), world, map, ui);
 	}
 	@Override
 	public void setParent(Entity e) {

@@ -74,7 +74,7 @@ public static void init(){
 		hc.fromRGB(color[i]);
 		//
 		if (i != Ship.FLOOR && i != Ship.WALL){
-			//hc.s = 1f;
+			hc.s = .5f;
 			//hc.l = .65f;
 		}
 		

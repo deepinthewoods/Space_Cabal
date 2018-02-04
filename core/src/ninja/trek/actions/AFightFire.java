@@ -18,7 +18,10 @@ public class AFightFire extends Action {
 
 	@Override
 	public void update(float dt, World world, Ship map, UI ui) {
-		map.map.fightFire(parent.e.target.x, parent.e.target.y);
+        int radius = 4;
+        for (int i = -radius; i <= radius; i++)
+            for (int k = -radius; k <= radius; k++)
+		        map.map.fightFire(parent.e.target.x + i, parent.e.target.y + k);
 		Gdx.app.log("fix action", "FIRE " + parent.e.target);
 		isFinished = true;
 	}

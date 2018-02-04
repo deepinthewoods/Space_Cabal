@@ -17,9 +17,11 @@ public class Laser extends Entity {
 	private static final String TAG = "laser";
 	public int index;
 	public int time;
-	public GridPoint2 target = new GridPoint2();
-	
-	public Laser() {
+	//public GridPoint2 target = new GridPoint2();
+    public int weaponItemID;
+    private ALaser alaser;
+
+    public Laser() {
 		glyph = " ";
 		
 	}
@@ -27,7 +29,8 @@ public class Laser extends Entity {
 	public Entity setDefaultAI() {
 		resetAI();
 		ActionList playerAction = new ActionList();
-		playerAction.addToStart(Pools.obtain(ALaser.class));
+        alaser = Pools.obtain(ALaser.class);
+		playerAction.addToStart(alaser);
 		setAI(playerAction);
 		return this;
 	}
@@ -56,4 +59,8 @@ public class Laser extends Entity {
 		time = 0;
 		super.reset();
 	}
+
+    public void shoot() {
+        alaser.shoot();
+    }
 }

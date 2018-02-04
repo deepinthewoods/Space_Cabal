@@ -141,25 +141,36 @@ public class IntPixelMap{
 
 	}
 	public void damage(int x, int y, int dam, Ship ship) {
-		if (x >= width || y >= height || x < 0 || y < 0) return ;
-		//if (specialConstructor)Gdx.app.log(TAG, "set " + x + ", " + y);
-		int index = x  + y * Ship.CHUNKSIZE * chunksX;
-		int b = map[index];
-		int id = b & Ship.BLOCK_ID_MASK;
-		if (id == Ship.FLOOR) return;
-		int currentDam = (b & Ship.BLOCK_DAMAGE_MASK) >> Ship.BLOCK_DAMAGE_BITS;
-		currentDam += dam;
-		currentDam = Math.min(Ship.MAX_DAMAGE, currentDam);
-		map[index] = b & (Ship.BLOCK_AIR_MASK | Ship.BLOCK_DATA_MASK | Ship.BLOCK_FIRE_MASK | Ship.BLOCK_ID_MASK) | (currentDam << Ship.BLOCK_DAMAGE_BITS);
-		markDamagedIndex(x + y * width, id);
-		ShipEntity se = ship.getShipEntity();
-		if (se != null) se.health--;
-		//skip boost
-		needsBoost[id].remove(x + y * width, 0);
-		//Gdx.app.log(TAG, "damage " + (b == map[x + y * chunkSize * chunksX]));
-	}
-	
-	
+        if (x >= width || y >= height || x < 0 || y < 0) return ;
+        //if (specialConstructor)Gdx.app.log(TAG, "set " + x + ", " + y);
+        int index = x  + y * Ship.CHUNKSIZE * chunksX;
+        int b = map[index];
+        int id = b & Ship.BLOCK_ID_MASK;
+        if (id == Ship.FLOOR) return;
+        int currentDam = (b & Ship.BLOCK_DAMAGE_MASK) >> Ship.BLOCK_DAMAGE_BITS;
+        currentDam += dam;
+        currentDam = Math.min(Ship.MAX_DAMAGE, currentDam);
+        map[index] = b & (Ship.BLOCK_AIR_MASK | Ship.BLOCK_DATA_MASK | Ship.BLOCK_FIRE_MASK | Ship.BLOCK_ID_MASK) | (currentDam << Ship.BLOCK_DAMAGE_BITS);
+        markDamagedIndex(x + y * width, id);
+        ShipEntity se = ship.getShipEntity();
+        if (se != null) se.health--;
+        //skip boost
+        needsBoost[id].remove(x + y * width, 0);
+        //Gdx.app.log(TAG, "damage " + (b == map[x + y * chunkSize * chunksX]));
+    }
+
+    public int getDamage(int x, int y) {
+        if (x >= width || y >= height || x < 0 || y < 0) return 0;
+        //if (specialConstructor)Gdx.app.log(TAG, "set " + x + ", " + y);
+        int index = x  + y * Ship.CHUNKSIZE * chunksX;
+        int b = map[index];
+        //int id = b & Ship.BLOCK_ID_MASK;
+        //if (id == Ship.FLOOR) return;
+        int currentDam = (b & Ship.BLOCK_DAMAGE_MASK) >> Ship.BLOCK_DAMAGE_BITS;
+
+        return currentDam;
+    }
+
 	private void markDamagedIndex(int index, int id) {
 		damaged[id].put(index, 0);
 	}
@@ -184,6 +195,24 @@ public class IntPixelMap{
 			//needsBoost[id].put(x + y * width, 0);
 		//Gdx.app.log(TAG, "damage " + (b == map[x + y 
 	}
+
+    public void fix(int x, int y, int fix) {
+        if (x >= width || y >= height || x < 0 || y < 0) return ;
+        //if (specialConstructor)Gdx.app.log(TAG, "set " + x + ", " + y);
+        int index = x  + y * Ship.CHUNKSIZE * chunksX;
+        int b = map[index];
+        int id = b & Ship.BLOCK_ID_MASK;
+        if (id == Ship.FLOOR) return;
+        int currentDam = (b & Ship.BLOCK_DAMAGE_MASK) >> Ship.BLOCK_DAMAGE_BITS;
+        currentDam -= fix;
+        currentDam = Math.min(Ship.MAX_DAMAGE, currentDam);
+        currentDam = Math.max(0, currentDam);
+        map[index] = b & (Ship.BLOCK_AIR_MASK | Ship.BLOCK_DATA_MASK | Ship.BLOCK_FIRE_MASK | Ship.BLOCK_ID_MASK | Ship.BLOCK_BOOST_MASK) | (currentDam << Ship.BLOCK_DAMAGE_BITS);
+        if (currentDam == 0)unmarkDamaged(x + y * width, id);
+        //if ((b & Ship.BLOCK_DATA_MASK) == 0)
+        //needsBoost[id].put(x + y * width, 0);
+        //Gdx.app.log(TAG, "damage " + (b == map[x + y
+    }
 	public void fightFire(int x, int y) {
 		if (x >= width || y >= height || x < 0 || y < 0) return ;
 		//if (specialConstructor)Gdx.app.log(TAG, "set " + x + ", " + y);
@@ -391,6 +420,44 @@ public class IntPixelMap{
 			Pools.free(node);
 		}
 	}
+    /*
+    returns amount of damage done
+     */
+	public int processfloodFillMissileDamage(int nodeX, int nodeY, int damage, int stack, Ship ship, int seed){
+        if (nodeX >= width || nodeY >= height || nodeX < 0 || nodeY < 0) return 0;
+        //if (target == replacement) return;
+        int id = (get(nodeX, nodeY) & Ship.BLOCK_ID_MASK);
+        //int myid = (get(nodeX, nodeY));
+        if (id == Ship.VACCUUM) return 0;
+        int dam = getDamage(nodeX, nodeY);
+        //if (dam == Ship.MAX_DAMAGE)
+            //get(nodeX, nodeY) == replacement)
+        //return;
+        int pendingDam = Ship.MAX_DAMAGE - dam;
+        pendingDam = Math.min(damage, pendingDam);
+        damage(nodeX, nodeY, pendingDam, ship);
+        int nseed = seed & 3;;
+        nseed = MathUtils.random(3);
+        if (randomFillTotalElements < randomFillSizeLimit)
+            addNode(nodeX+DX[nseed%4], nodeY+DY[nseed%4]);
+        nseed++;
+
+
+        return pendingDam;
+    }
+
+    public void floodFillMissileDamage(int nodeX, int nodeY, int damage, Ship ship){
+        GridPoint2 pt = Pools.obtain(GridPoint2.class);
+        int seed = MathUtils.random(0, 100000);
+        pt.set(nodeX, nodeY);
+        floodOpen.add(pt);
+        while (floodOpen.size > 0 && damage > 0){
+            GridPoint2 node = floodOpen.pop();
+            damage -= processfloodFillMissileDamage(node.x, node.y, damage, 0, ship, seed*=31);
+            Pools.free(node);
+        }
+        while (floodOpen.size > 0) Pools.free(floodOpen.pop());
+    }
 	public static final int[] DX = {-1, 0, 1, 0}
 							, DY = {0, 1, 0, -1};
 	public int randomFillIterations, randomFillTriesLimit = 300, randomFillTotal
@@ -515,7 +582,7 @@ public class IntPixelMap{
 		if (damage >= ship.damageThreshold[id]){
 			
 			tmpC.set(CustomColors.mapDrawColors[id+48]);
-			
+			tmpC.a = 0f;
 			//tmpC.g = 1f - damage/2f;
 			//Gdx.app.log(TAG, "damage" + damage);
 		} else {
@@ -786,5 +853,5 @@ public class IntPixelMap{
 		airUpdateReplaceIndex++;
 		if (airUpdateReplaceIndex > 10) airUpdateReplaceIndex = 1;
 	}
-	
+
 }

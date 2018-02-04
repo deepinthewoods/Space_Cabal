@@ -33,8 +33,6 @@ import com.badlogic.gdx.utils.Pool;
 import com.badlogic.gdx.utils.Pools;
 import com.badlogic.gdx.utils.ScreenUtils;
 
-import java.util.Iterator;
-
 import ninja.trek.ui.ItemDisplay;
 import ninja.trek.ui.ItemDisplay.ItemButton;
 import ninja.trek.ui.UIActionButton;
@@ -104,8 +102,23 @@ public class Ship {
 			}
 	}
 
+    public void missileDamage(int x, int y, int damage) {
+        map.floodFillMissileDamage(x, y, damage, this);
 
-	public enum Alignment {CENTRE, TOP_RIGHT};
+    }
+
+    public void damageShield(int shieldDamage) {
+        ShipEntity s = getShipEntity();
+        s.shield = Math.max(0, s.shield - shieldDamage);
+    }
+
+    public void laserDamage(int x, int y, int damage) {
+        map.floodFillMissileDamage(x, y, damage, this);
+       // Gdx.app.log(TAG, "LASER DAMAGE");
+    }
+
+
+    public enum Alignment {CENTRE, TOP_RIGHT};
 	public Alignment alignment = Alignment.CENTRE;
 	public int[] systemButtonOrder = new int[systemNames.length];
 	public int[] maxDepletionBySystem = {63, 63, 63, 63, 63, 63, 63, 63, 63, 63, 63};
@@ -449,7 +462,8 @@ public class Ship {
 	public void draw(SpriteBatch batch, OrthographicCamera wcamera, World world, boolean paused, Texture indexColors, Mesh mesh, ShaderProgram cacheShader, boolean overrideHullFront){
 		//batch.getProjectionMatrix().set(camera.combined);
 		//Gdx.app.log(TAG, "draw map");
-		if (!paused)stateTime += Gdx.graphics.getDeltaTime();
+		//if (!paused)
+		    stateTime += Gdx.graphics.getDeltaTime();
 		
 		if (editMode && redrawFill) {
 			redrawFill = false;
@@ -473,9 +487,6 @@ public class Ship {
 					drawCachedChunk(x, y, chunkBuffer, map, mesh, cacheShader, cacheVerts);
 				}
 		}
-
-		
-		
 		batch.setProjectionMatrix(camera.combined);
 		if (!hullFront && showHull){
 			//batch.enableBlending();
@@ -541,7 +552,9 @@ public class Ship {
 			//Gdx.app.log(TAG, "fire" + x + ", " + y);
 		}
 
-		if (fireTime > .01f && fireBlockIndices.size > 0){
+        int maxSprites = Math.min(MAX_FIRE_SPRITES, map.onFire.size / 32);
+        maxSprites = Math.max(maxSprites, 8);
+		if (fireTime > 1f / maxSprites && fireBlockIndices.size > 0){
 			fireIterator = fireBlockIndices.entries();
 			int c = 0;
 
@@ -553,7 +566,7 @@ public class Ship {
 				fireIterator.next();
 
 			fireIterator.remove();
-			//fireTime = 0f;
+			fireTime = 0f;
 
 		}
 
@@ -568,7 +581,6 @@ public class Ship {
 			for (int i = 0; i < index; i++){
 				onFireIter.next();
 			}
-			int maxSprites = Math.min(MAX_FIRE_SPRITES, map.onFire.size / 32);
 			while (onFireIter.hasNext() && fireBlockIndices.size < maxSprites
 					){
 				int key = onFireIter.next().key;
@@ -595,6 +607,7 @@ public class Ship {
 		
 		//Gdx.gl.glEnable(GL20.GL_BLEND);
 		//Gdx.gl.glDisable(GL20.GL_BLEND);
+
 	}
 
 	private void drawChunk(int x, int y, SpriteBatch batch, boolean wire, boolean fill, Texture indexColors) {		
@@ -612,6 +625,7 @@ public class Ship {
 			s.setBounds((float)x * CHUNKSIZE, y * CHUNKSIZE, CHUNKSIZE, CHUNKSIZE);
 			s.setAlpha(.15f);
 			s.draw(batch);
+
 			
 		}
 		if (wire){
@@ -651,7 +665,7 @@ public class Ship {
 			Gdx.gl.glScissor(width, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		}
 	}
-	public void drawEntities(SpriteBatch batch, World world, boolean forceHullOver){
+	public void drawEntities(SpriteBatch batch, World world, boolean forceHullOver, boolean isPlayer){
 		fonts.setZoom(camera);
 		//camera.update();
 		//Gdx.app.log(TAG, "draw entities " + entities.size + "  "  + camera.position);
@@ -660,11 +674,12 @@ public class Ship {
 		if (forceHullOver){
 			return;
 		}
-		
-		
-		for (Entity e : entities){
-			fonts.draw(e, batch, camera);
-		}
+
+
+		if (isPlayer)
+            for (Entity e : entities){
+                fonts.draw(e, batch, camera);
+            }
 		
 		
 		//batch.enableBlending();
@@ -1413,9 +1428,16 @@ public class Ship {
 				deployedLasers[w.index].target.set(target);
 				deployedLasers[w.index].x = w.x;
 				deployedLasers[w.index].y = w.y;
+                deployedLasers[w.index].weaponItemID = w.equippedItemID;
+                //deployedLasers[w.index].target.set(target.x, target.y);
 				addEntity(deployedLasers[w.index]);
-			}
-			deployedLasers[w.index].time = 0;
+
+			} else {
+                deployedLasers[w.index].shoot();
+            }
+            deployedLasers[w.index].time = 0;
+
+
 			break;
 		case missile:
 			Missile miss = Pools.obtain(Missile.class);
@@ -1424,7 +1446,7 @@ public class Ship {
 			miss.position.set(w.x, w.y);;
 			miss.target.set(target.x, target.y);
 			miss.setDefaultAI();
-			miss.weeaponItemID = w.equippedItemID;
+			miss.weaponItemID = w.equippedItemID;
 			addEntity(miss);
 			break;
 		}
