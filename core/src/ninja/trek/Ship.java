@@ -1218,7 +1218,7 @@ public class Ship {
 				GridPoint2 tar = roomBlocks[k];
 				IntArray path = aStar.getPath(bl.x, bl.y, tar.x, tar.y);
 				if (path.size > 0 || i == k){
-					Gdx.app.log(TAG, "connectivity " + bl + i);
+					Gdx.app.log(TAG, "connected " + bl + i + k);
 					roomsConnected[i][k] = true;
 				}
 				Pools.free(path);
@@ -1585,6 +1585,7 @@ public class Ship {
 		e.font = raceIndex;
 		e.glyph = getNextAvailableGlyph();
 		e.pos(map.spawn);
+		e.setDefaultButtonOrder();
 		addEntity(e);
 	}
 	private String getNextAvailableGlyph() {

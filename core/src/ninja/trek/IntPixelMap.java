@@ -461,7 +461,7 @@ public class IntPixelMap{
 	public static final int[] DX = {-1, 0, 1, 0}
 							, DY = {0, 1, 0, -1};
 	public int randomFillIterations, randomFillTriesLimit = 300, randomFillTotal
-	, randomFillTotalElements, randomFillSizeLimit = 200;
+	, randomFillTotalElements, randomFillSizeLimit = 70;
 	private int airUpdateReplaceIndex = 1;
 	private boolean randomFillFire = false;
 	boolean cleared;
@@ -820,13 +820,13 @@ public class IntPixelMap{
 					, airUpdateReplaceIndex, MathUtils.random(20000, 100000), false, ship);
 			
 			}
-		for (int i = 0; i < 2; i++){
+		for (int i = 0; i < 5; i++){
 			int x = MathUtils.random(1, width-2);
 			int y = MathUtils.random(1, height-2);
 			int block = get(x, y);
 			int air = (block & Ship.BLOCK_AIR_MASK) >> Ship.BLOCK_AIR_BITS;
 			
-			fill.resetRandomFloodFill(150, 200);
+			fill.resetRandomFloodFill(80, 200);
 			
 			//block = MathUtils.random(1, 3);
 			fill.randomFloodFill(this, x, y
