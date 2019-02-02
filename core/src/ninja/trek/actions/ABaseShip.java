@@ -40,6 +40,7 @@ public class ABaseShip extends Action{
             shipE.shield = shipE.shieldTotal;
 
 		if (!ship.hasCategorizedBlocks) return;
+		if (!ship.hasCalculatedConnectivity) ship.calculateConnectivity(world);
 		int maxSystem = 0;
 		for (int i = 0; i < ship.systemButtonOrder.length; i++){
 			if (power == 0) break;

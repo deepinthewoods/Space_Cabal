@@ -1,4 +1,4 @@
-package ninja.trek.android;
+package ninja.trek.spacecabal.android;
 
 import android.os.Bundle;
 

@@ -1654,8 +1654,8 @@ public class UI {
 
 		FileHandle file;
 		if (internal) {
-			//file = Gdx.files.internal(Main.SHIP_SAVE_LOCATION);
-			file = Gdx.files.absolute("C:\\Users\\n\\_spacecabal\\android\\assets\\SpaceCabal\\ships");
+			file = Gdx.files.internal(MainSpaceCabal.SHIP_SAVE_LOCATION);
+			file = Gdx.files.absolute(file.file().getAbsolutePath());
 			//file.mkdirs();
 			
 			file = file.child( name + "." + MainSpaceCabal.MAP_FILE_EXTENSION);

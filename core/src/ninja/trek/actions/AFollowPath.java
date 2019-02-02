@@ -136,6 +136,7 @@ public class AFollowPath extends Action {
 	@Override
 	public void onEnd(World world, Ship map) {
 		//Gdx.app.log(TAG, "follow finished " + parent.e.x + "," + parent.e.y + " target " + parent.e.target + "  prog " + pathProgress);
+		//Gdx.app.log(TAG, "end");
 	}
 
 	@Override

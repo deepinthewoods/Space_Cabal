@@ -1,71 +1,24 @@
 [
 {
 	class: ninja.trek.Entity
-	x: 77
-	y: 219
+	x: 62
+	y: 168
 	glyph: a
-	font: 3
-	buttonOrder: [ 5, 1, 0, 6, 2, 7, 4, 10, 8, 9, 3 ]
-	fixOrder: [ 2, 3, 7, 1, 9, 6, 8 ]
-	delayAccumulator: 40
+	delayAccumulator: 70
 	path: {
-		items: [ 79, 219, 78, 219, 77, 219, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ]
-		size: 6
+		items: [ 63, 167, 62, 168, 61, 169, 60, 170, 59, 171, 58, 172, 0, 0, 0, 0 ]
+		size: 12
 	}
-	actionIndexForPath: 6
-}
-{
-	class: ninja.trek.Entity
-	x: 111
-	y: 148
-	glyph: b
-	font: 3
-	buttonOrder: [ 5, 1, 0, 4, 10, 7, 2, 6, 8, 9, 3 ]
-	fixOrder: [ 1, 9, 7, 3, 2, 6, 8 ]
-	delayAccumulator: 50
-	ret: [ 5, 4 ]
-	actionIndexForPath: 4
-}
-{
-	class: ninja.trek.Entity
-	x: 146
-	y: 124
-	glyph: c
-	font: 3
-	buttonOrder: [ 5, 1, 0, 2, 7, 4, 6, 10, 8, 9, 3 ]
-	fixOrder: [ 3, 7, 1, 2, 9, 6, 8 ]
-	delayAccumulator: 50
-	ret: [ 6, 5 ]
-	actionIndexForPath: 2
-}
-{
-	class: ninja.trek.Weapon
-	x: 82
-	y: 211
-	glyph: 0
-	equippedItemIndex: 0
-	equippedItemID: 0
-	totalCharge: 100
-	fireDelay: -24096
-}
-{
-	class: ninja.trek.Weapon
-	x: 159
-	y: 212
-	glyph: 1
-	index: 1
-	equippedItemIndex: 1
-	equippedItemID: 2
-	totalCharge: 20000
-	fireDelay: -24033
+	actionIndexForPath: 3
 }
 {
 	class: ninja.trek.ShipEntity
+	shield: 0
 }
 {
 	class: ninja.trek.Door
-	x: 85
-	y: 59
-	radius: 4
+	x: 61
+	y: 186
+	radius: 10
 }
 ]

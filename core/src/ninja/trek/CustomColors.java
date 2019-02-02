@@ -22,11 +22,12 @@ Color
 , SHIELD = new Color(0, .35f, 1, 1f)
 , TELEPORTER = new Color(1, .35f, 1, 1f)
 , SCIENCE = new Color(.25f, 1, .35f, 1f)
+		, DOOR = new Color(Color.DARK_GRAY)
 
 ;
 static HSL hc = new HSL();
 public static Color[] color, lerpToColor;
-public static String[] colorNames = {"vaccuum", "engine", "phaser", "shield", "wall", "floor", "oxygen", "drone", "teleporter", "science"};
+public static String[] colorNames = {"vaccuum", "engine", "phaser", "shield", "wall", "floor", "oxygen", "drone", "teleporter", "science", "door"};
 private static float[] colorFloatArray, lerpFloatArray, flashFloatArray;
 public static Color[] mapDrawColors = new Color[128]
 		, mapLerpColors = new Color[16]
@@ -70,6 +71,7 @@ public static void init(){
 	color[Ship.DRONE] = DRONE;
 	color[Ship.TELEPORTER] = TELEPORTER;
 	color[Ship.SCIENCE] = SCIENCE;
+	color[Ship.DOOR] = DOOR;
 	for (int i = 0; i < color.length; i++){
 		hc.fromRGB(color[i]);
 		//
@@ -92,8 +94,10 @@ public static void init(){
 	Colors.put("drone", color[Ship.DRONE]);
 	Colors.put("teleporter", color[Ship.TELEPORTER]);
 	Colors.put("science", color[Ship.SCIENCE]);
+	Colors.put("door", color[Ship.DOOR]);
 
 	
+
 	colorFloatArray = new float[512];
 	lerpFloatArray = new float[color.length * 4];
 	flashFloatArray = new float[color.length * 4];

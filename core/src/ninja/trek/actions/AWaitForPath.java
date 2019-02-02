@@ -73,7 +73,8 @@ public class AWaitForPath extends Action {
 							int room = map.room.get(x, y);
 							if (
 									 !parent.e.ship.isReserved(x, y)
-											//&& startRoom >= 0 && map.roomsConnected[startRoom][room]
+											//&& startRoom >= 0
+								&& map.roomsConnected[startRoom][room]
 									){
 								GridPoint2 newEnt = Pools.obtain(GridPoint2.class);
 								newEnt.set(x, y);
@@ -87,20 +88,22 @@ public class AWaitForPath extends Action {
 
 						if (candidates.size == 0) break;
 						boolean hasFoundCandidate = false;
-						int candidateI = 0;
-						while (!hasFoundCandidate && candidateI < candidates.size){
+						int candidateI = 0, pathCount = 0;
+						while (!hasFoundCandidate && candidateI < candidates.size ){
 							GridPoint2 target = candidates.get(candidateI);
 							if (target.x == parent.e.x && target.y == parent.e.y){
 								candidateI++;
 								//Gdx.app.log(TAG, "early skip candidate " + candidateI + "  " + candidates.size );
 								continue;
 							}
+							Gdx.app.log(TAG, "getting path ");
 							path = parent.e.ship.aStar.getPath(parent.e.x, parent.e.y, target.x, target.y);
+							pathCount++;
 							if (path.size != 0){
 								hasFoundCandidate = true;
 								//Gdx.app.log(TAG, "found candidate " + parent.e.x + ", " + parent.e.y + ", " + path.get(0) + ", " + path.get(1));
 							} else {
-								//Gdx.app.log(TAG, "0 found candidate " );
+								//Gdx.app.log(TAG, "0 path found candidate " );
 							}
 							candidateI++;
 						}
@@ -124,7 +127,7 @@ public class AWaitForPath extends Action {
 							parent.e.ship.reserve(parent.e.target.x, parent.e.target.y);
 						}
 						return;
-					}
+					} //else Gdx.app.log(TAG, "EMPTY LIST");
 					break;
 				case EntityAI.ENGINE:
 				case EntityAI.OXYGEN:
@@ -150,14 +153,33 @@ public class AWaitForPath extends Action {
 							int dist = getDistanceTo(x, y, map);
 							int block = m.get(x, y);
 							int room = map.room.get(x, y);
+							if (room == -1) {
+								Gdx.app.log(TAG, "target room invalid " + Ship.systemNames[(block & Ship.BLOCK_ID_MASK)]);
+								//return;
+								//throw new GdxRuntimeException("target room invalid " + x + "," + y);
+							}
+							if (startRoom == -1) {
+								Gdx.app.log(TAG, "start room invalid " +x+"," +y);
+
+								//return;
+								//throw new GdxRuntimeException("current room invalid");
+							}
+							if (!map.roomsConnected[startRoom][room]){
+								Gdx.app.log(TAG, "rooms not connected " + startRoom + " , " + room);
+							}
 							if (
 									( block & Ship.BLOCK_DATA_MASK ) == 0 && !parent.e.ship.isReserved(x, y)
-									//&& startRoom >= 0 && map.roomsConnected[startRoom][room]
+									//&& startRoom >= 0
+											&& startRoom >= 0 && room >= 0
+											&& (
+													map.roomsConnected[startRoom][room]
+
+												)
 									){
 								GridPoint2 newEnt = Pools.obtain(GridPoint2.class);
 								newEnt.set(x, y);
 								candidates.add(newEnt);
-								//Gdx.app.log(TAG, "lookb " + x + ", " + y + "  " + ent.key);
+								Gdx.app.log(TAG, "add candidate " + x + ", " + y + "  " + ent.key);
 							}
 						}
 						posIndexComparator.set(parent.e.x, parent.e.y);
@@ -165,25 +187,27 @@ public class AWaitForPath extends Action {
 						
 						if (candidates.size == 0) break;
 						boolean hasFoundCandidate = false;
-						int candidateI = 0;
-						while (!hasFoundCandidate && candidateI < candidates.size){
+						int candidateI = 0, pathCount = 0;
+						while (!hasFoundCandidate && candidateI < candidates.size && pathCount < 5){
 							GridPoint2 target = candidates.get(candidateI);
 							if (target.x == parent.e.x && target.y == parent.e.y){
 								candidateI++;
 								//Gdx.app.log(TAG, "early skip candidate " + candidateI + "  " + candidates.size );
 								continue;
 							}
+							Gdx.app.log(TAG, "getting path");
 							path = parent.e.ship.aStar.getPath(parent.e.x, parent.e.y, target.x, target.y);
+							pathCount++;
 							if (path.size != 0){
 								hasFoundCandidate = true;
-								//Gdx.app.log(TAG, "found candidate " + parent.e.x + ", " + parent.e.y + ", " + path.get(0) + ", " + path.get(1));
+								Gdx.app.log(TAG, "found candidate " + parent.e.x + ", " + parent.e.y + ", " + path.get(0) + ", " + path.get(1));
 							} else {
-								//Gdx.app.log(TAG, "0 found candidate " );
+								Gdx.app.log(TAG, "0  candidate " + candidateI );
 							}
 							candidateI++;
 						}
 						if (!hasFoundCandidate){
-							//Gdx.app.log(TAG, "found NO candidate " + parent.e.glyph + candidates.size +  " c " + candidateI);
+							Gdx.app.log(TAG, "found NO candidate " + parent.e.glyph + candidates.size +  " c " + candidateI);
 							break;
 						}
 						parent.e.path = path;
@@ -372,6 +396,7 @@ public class AWaitForPath extends Action {
 	@Override
 	public void onStart(World world, Ship map) {
 		hasStartedPath = false;
+		//Gdx.app.log(TAG, "start");
 	}
 	
 	private static class PosIndexComparator implements Comparator<GridPoint2>{

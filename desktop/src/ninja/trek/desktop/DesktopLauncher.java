@@ -108,8 +108,8 @@ public class DesktopLauncher {
     	
         LwjglApplicationConfiguration configuration = new LwjglApplicationConfiguration();
         configuration.title = "SpaceCabal";
-        configuration.width = 1024;
-        configuration.height = 768;
+        configuration.width = 900;
+        configuration.height = 600;
         for (int size : new int[] { 128, 64, 32, 16 }) {
             //configuration.addIcon("assets/Squid.png", FileType.Internal);
         }

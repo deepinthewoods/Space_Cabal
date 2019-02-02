@@ -57,7 +57,8 @@ public class Ship {
 	private int maxSysRoomID;
 	private float fireTime;
 	private IntIntMap fireBlockIndices = new IntIntMap();
-	private boolean hasCalculatedConnectivity;
+	public boolean hasCalculatedConnectivity;
+	private int maxRoomID;
 
 	public void openDoor(Door door) {
 		int s = door.radius, h = s/2;
@@ -79,6 +80,8 @@ public class Ship {
 				map.set(bx, by, block);
 			}
 		}
+		hasCalculatedConnectivity = false;//TODO maybe precompute
+		Gdx.app.log(TAG, "open door " +x+"," +y);
 	}
 
 	public void closeDoor(Door door) {
@@ -96,10 +99,12 @@ public class Ship {
 					//block &= ~BLOCK_ID_MASK;
 					//block |= id;
 					block &= ~BLOCK_BOOST_MASK;
+					block &= ~BLOCK_EXTRA_MASK;
 
 					map.set(bx, by, block);
 				}
 			}
+		hasCalculatedConnectivity = false;
 	}
 
     public void missileDamage(int x, int y, int damage) {
@@ -130,7 +135,7 @@ public class Ship {
 	private Array<GridPoint2> chunksInRandomOrder = new Array<GridPoint2>();
 	private Array<GridPoint2> chunksInRandomOrderForCaching = new Array<GridPoint2>();
 	public int tick;
-	public static String[] systemNames = {"Vac", "Engine", "Weapon", "Shield", "Wall", "Floor", "Oxygen", "Drone", "Teleporter", "Science"};
+	public static String[] systemNames = {"Vac", "Engine", "Weapon", "Shield", "Wall", "Floor", "Oxygen", "Drone", "Teleporter", "Science", "Door"};
 	public static final int VACCUUM = 0; 
 	public static final int ENGINE = 1;
 	public static final int WEAPON = 2;
@@ -1175,8 +1180,8 @@ public class Ship {
 				BlockDef def = IntPixelMap.defs[id];
 				if (id == WALL){
 					id = DOOR;
-					//block &= ~BLOCK_ID_MASK;
-					//block |= id;
+					block &= ~BLOCK_ID_MASK;
+					block |= id;
 					block &= ~BLOCK_BOOST_MASK;
 					block |= 1 << BLOCK_EXTRA_BITS;
 
@@ -1208,12 +1213,12 @@ public class Ship {
 		//Gdx.app.log(TAG, "connectivity ");
 		for (int i = 0; i < maxSysRoomID; i++){
 			GridPoint2 bl = roomBlocks[i];
-			for (int k = 0; k < maxSysRoomID; k++){
+			for (int k = 0; k < maxRoomID; k++){
 				roomsConnected[i][k] = false;
 				GridPoint2 tar = roomBlocks[k];
 				IntArray path = aStar.getPath(bl.x, bl.y, tar.x, tar.y);
-				if (path.size > 0){
-					//Gdx.app.log(TAG, "connectivity " + bl);
+				if (path.size > 0 || i == k){
+					Gdx.app.log(TAG, "connectivity " + bl + i);
 					roomsConnected[i][k] = true;
 				}
 				Pools.free(path);
@@ -1249,26 +1254,40 @@ public class Ship {
 		
 		//Gdx.app.log(TAG, "fill ");
 		
-		int roomID = 0, sysRoomID = 0;
+		int roomID = 1, sysRoomID = 0;
 		room.clear(-1);
 		systemRooms.clear(-1);
 		for (int i = 0; i < roomsBySystem.length; i++){
 			roomsBySystem[i].clear();;
 		}
 		//map.setAllBoosted();
+
 		for (int x = 1; x < mapWidth - 1; x++)
 			for (int y =1; y < mapHeight-1; y++){
 				int id = map.get(x,  y) &BLOCK_ID_MASK;
-				if (id !=WALL && id !=VACCUUM && id !=FLOOR)
+				if (id !=WALL && id !=VACCUUM && id !=FLOOR && id != DOOR)
 					map.needsBoost[id].put(x + y * mapWidth, 0);
 				
-				int fillB = room.get(x, y) & BLOCK_ID_MASK;
-				if (fillB == -1 && id !=WALL && id !=VACCUUM && id != DOOR){
-					//Gdx.app.log(TAG, "fill " + x);
-					room.floodFillWalkable(map, x, y, roomID++);
+				int fillB = room.get(x, y) ;
+				if (fillB == -1){
+
+					if (id == DOOR){
+						room.set(x, y, 0);
+					}
+					else if (id ==WALL || id ==VACCUUM){
+						//Gdx.app.log(TAG, "fill " + x);
+						room.set(x, y, -2);
+					} else {
+						room.floodFillWalkable(map, x, y, roomID++);
+						//room.set(x, y, -2);
+						//Gdx.app.log(TAG, "set -2 : " + systemNames[id]);
+					}
+
 				}
+
+
 				int sysRoomB = systemRooms.get(x,  y);
-				if (sysRoomB == -1 && id !=WALL && id !=VACCUUM && id != DOOR){
+				if (sysRoomB == -1 && id !=WALL && id !=VACCUUM ){
 					//Gdx.app.log(TAG, "sysFill " + id);
 					systemRooms.floodFillSystem(map, x, y, id, sysRoomID);
 					roomsBySystem[id].add(sysRoomID);
@@ -1279,6 +1298,7 @@ public class Ship {
 				}
 			}
 		maxSysRoomID = sysRoomID;
+		maxRoomID = roomID;
 		//GridPoint2 average = Pools.obtain(GridPoint2.class);
 		for (int i = 0; i < average.length; i++){
 			if (average[i] == null){

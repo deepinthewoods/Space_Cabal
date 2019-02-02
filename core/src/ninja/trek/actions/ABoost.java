@@ -9,8 +9,10 @@ import ninja.trek.World;
 import ninja.trek.action.Action;
 
 public class ABoost extends Action {
-	
-	
+
+
+	private static final String TAG = "boost";
+
 	public ABoost() {
 		lanes = LANE_ACTING;
 		isBlocking = true;
@@ -41,12 +43,12 @@ public class ABoost extends Action {
 	@Override
 	public void onEnd(World world, Ship map) {
 		parent.e.ship.unReserve(parent.e.target.x, parent.e.target.y);
+		//Gdx.app.log(TAG, "end");
 	}
 
 	@Override
 	public void onStart(World world, Ship map) {
-		// TODO Auto-generated method stub
-
+		//Gdx.app.log(TAG, "start");
 	}
 
 }

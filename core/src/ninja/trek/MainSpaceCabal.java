@@ -45,7 +45,7 @@ public class MainSpaceCabal extends ApplicationAdapter {
 	public static final String MAP_BLOCKS_FILE_EXTENSION = "blk";
 	public static final int THREADS = 1;
 	public static final String MAP_INVENTORY_FILE_EXTENSION = "inv";
-	private static final boolean PACK_QUESTS = true;
+	private static final boolean PACK_QUESTS = false;
 	
 	SpriteBatch batch;
 	TextureAtlas atlas;
@@ -121,6 +121,7 @@ public class MainSpaceCabal extends ApplicationAdapter {
 				} else if (keycode == Keys.C){
                     world.getPlayerShip().categorizeSystems();
                     world.getPlayerShip().calculateConnectivity(world);
+					Gdx.app.log(TAG, "recalc connectivity and systems");
                 }
 					
 				
