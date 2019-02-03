@@ -395,7 +395,7 @@ public class IntPixelMap{
 			processFloodFillW(m, node.x, node.y, replacement, 0);
 			Pools.free(node);
 		}
-		Gdx.app.log(TAG, "floodfill walkable " + replacement);
+		//Gdx.app.log(TAG, "floodfill walkable " + replacement);
 	}
 	public void processFloodFillS(IntPixelMap m, int nodeX, int nodeY, int target, int replacement, int stack){
 		if (nodeX >= width || nodeY >= height || nodeX < 0 || nodeY < 0) return;

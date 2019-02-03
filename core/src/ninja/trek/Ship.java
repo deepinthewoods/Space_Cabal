@@ -1253,7 +1253,7 @@ public class Ship {
 				roomsConnected[i][k] = false;
 
 				if (i == k || i==0 || k==0){
-					Gdx.app.log(TAG, "preempt connected " + bl + i + k);
+					//Gdx.app.log(TAG, "preempt connected " + bl + i + k);
 					roomsConnected[i][k] = true;
 				} else {
 
@@ -1266,7 +1266,7 @@ public class Ship {
 
 					IntArray path = aStar.getPath(bl.x, bl.y, tar.x, tar.y);
 					if (path.size > 0  ){
-						Gdx.app.log(TAG, "connected " + bl + i + k);
+						//Gdx.app.log(TAG, "connected " + bl + i + k);
 						roomsConnected[i][k] = true;
 					}
 					Pools.free(path);
@@ -1333,7 +1333,7 @@ public class Ship {
 							roomBlocks[roomID] = new GridPoint2();
 						roomBlocks[roomID].set(x, y);
 						int gid = map.get(x, y) & BLOCK_ID_MASK;
-						Gdx.app.log(TAG, "new room " + systemNames[gid] + roomID);
+						//Gdx.app.log(TAG, "new room " + systemNames[gid] + roomID);
 						room.floodFillWalkable(map, x, y, roomID++);
 						//room.set(x, y, -2);
 					}

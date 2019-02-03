@@ -60,7 +60,7 @@ public class PlanetRenderer implements RenderableProvider{
 
 	private static final int VERTEX_TOTAL_FLOATS = MAKE_TEXTURE?9:7;
 
-	private static final String TAG = "planet";
+	private static final String TAG = "planet renderer ";
 
 	private static final float ROTATION_SPEED = 8;
 
@@ -578,7 +578,7 @@ public class PlanetRenderer implements RenderableProvider{
     		if (buffered) {
 				
 
-				Gdx.app.log(TAG, "bufferred " + renderPlanet);
+				//Gdx.app.log(TAG, "bufferred " + renderPlanet);
     		}
     	}
     	screenBatch.getProjectionMatrix().setToOrtho2D(0, 0, w/h, 1);
