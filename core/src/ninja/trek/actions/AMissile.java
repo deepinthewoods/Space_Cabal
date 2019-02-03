@@ -6,7 +6,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.ui.UI;
 
 import ninja.trek.Items;
-import ninja.trek.Missile;
+import ninja.trek.entity.Missile;
 import ninja.trek.Ship;
 import ninja.trek.World;
 import ninja.trek.action.Action;

@@ -35,7 +35,7 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.util.zip.GZIPOutputStream;
 
-import ninja.trek.Entity;
+import ninja.trek.entity.Entity;
 import ninja.trek.EntityAI;
 import ninja.trek.FontManager;
 import ninja.trek.GameInfo;
@@ -48,10 +48,10 @@ import ninja.trek.Quest;
 import ninja.trek.QuestOption;
 import ninja.trek.Ship;
 import ninja.trek.Ship.EntityArray;
-import ninja.trek.ShipEntity;
+import ninja.trek.entity.ShipEntity;
 import ninja.trek.SolarSystemGraph;
 import ninja.trek.SystemPath;
-import ninja.trek.Weapon;
+import ninja.trek.entity.Weapon;
 import ninja.trek.World;
 import ninja.trek.ui.DragListenerSwap;
 import ninja.trek.ui.ItemDisplay;
@@ -129,6 +129,7 @@ public class UI {
 	private Actor mapButtonSpacer;
 	public final String SPACER;
 	public UI(final Stage stage, final World world,  FontManager fontManager) {
+
 		this.world = world;
 		if (Gdx.app.getType() == ApplicationType.Android) {
 			SPACER = "\n\n";
@@ -198,6 +199,7 @@ public class UI {
 		for (int i = 0; i < entityOtherActionButtons.length; i++){
 			UIOtherActionButton btn = new UIOtherActionButton(i, skin, entityActionTable, Entity.ButtonType.values()[i]);
 			entityOtherActionButtons[i] = btn;
+			Gdx.app.log(TAG, "CREATE UI OTHER ACTION " + i + " " + btn.type + " " );
 			if (btn.type.ordinal() != i) throw new GdxRuntimeException("" + btn.type + btn.type.ordinal());
 			//entityOtherActionTable.add(btn).left();
 			btn.addListener(new ClickListener(){
@@ -353,11 +355,8 @@ public class UI {
 			public void changed(ChangeEvent event, Actor actor) {
 				destroyButton.setChecked(false);
 				Ship ship = world.getPlayerShip();
+                ship.resetPlace();
 				ship.placeWeapon = true;
-				ship.deleteWeapon = false;
-				ship.placeSpawn = false;
-				ship.placeDoor = false;
-				ship.deleteDoor = false;
 			}
 		});
 		
@@ -374,11 +373,8 @@ public class UI {
 			public void clicked(InputEvent event, float x, float y) {
 				weaponButton.setChecked(false);
 				Ship ship = world.getPlayerShip();
+                ship.resetPlace();
 				ship.placeWeapon = true;
-				ship.deleteWeapon = false;
-				ship.placeSpawn = false;
-				ship.placeDoor = false;
-				ship.deleteDoor = false;
 				super.clicked(event, x, y);
 			}
 		});
@@ -389,11 +385,8 @@ public class UI {
 			public void clicked(InputEvent event, float x, float y) {
 				weaponDeleteButton.setChecked(false);
 				Ship ship = world.getPlayerShip();
+                ship.resetPlace();
 				ship.deleteWeapon = true;
-				ship.placeWeapon = false;
-				ship.placeSpawn = false;
-				ship.placeDoor = false;
-				ship.deleteDoor = false;
 				super.clicked(event, x, y);
 			}
 		});
@@ -405,11 +398,9 @@ public class UI {
 			public void clicked(InputEvent event, float x, float y) {
 				entitySpawnButton.setChecked(false);
 				Ship ship = world.getPlayerShip();
-				ship.deleteWeapon = false;
-				ship.placeWeapon = false;
+                ship.resetPlace();
 				ship.placeSpawn = true;
-				ship.placeDoor = false;
-				ship.deleteDoor = false;
+
 				super.clicked(event, x, y);
 			}
 		});
@@ -888,11 +879,8 @@ public class UI {
 			public void clicked(InputEvent event, float x, float y) {
 				//ll
 				Ship ship = world.getPlayerShip();
-				ship.placeWeapon = false;
-				ship.deleteWeapon = false;
-				ship.placeSpawn = false;
+				ship.resetPlace();
 				ship.placeDoor = true;
-				ship.deleteDoor = false;
 			}
 		});
 
@@ -902,10 +890,7 @@ public class UI {
 			public void clicked(InputEvent event, float x, float y) {
 				//ll
 				Ship ship = world.getPlayerShip();
-				ship.placeWeapon = false;
-				ship.deleteWeapon = false;
-				ship.placeSpawn = false;
-				ship.placeDoor = false;
+				ship.resetPlace();
 				ship.deleteDoor = true;
 			}
 		});
@@ -1459,7 +1444,7 @@ public class UI {
 		if (ship != null){
 			
 			for (int i = 0; i < ship.systemButtonOrder.length; i++){
-				if (ship.editMode || (ship.systemButtonOrder[i] != Ship.VACCUUM && ship.systemButtonOrder[i] != Ship.FLOOR && ship.systemButtonOrder[i] != Ship.WALL)){
+				if (ship.editMode || (ship.systemButtonOrder[i] != Ship.VACCUUM && ship.systemButtonOrder[i] != Ship.FLOOR && ship.systemButtonOrder[i] != Ship.WALL )){
 					shipSystemTable.add(shipSystemottomButtons[ship.systemButtonOrder[i]]);
 					shipSystemottomButtons[i].getLabel().setFontScale(fontScale);
 				}
@@ -1537,8 +1522,9 @@ public class UI {
 
 
 			if (e.otherButtons != null){
-				for (int i = 0; i < otherButtons.length; i++){
+				for (int i = 0; i < e.otherButtons.length; i++){
 					//buttons2[i].getLabel().setFontScale(fontScale);
+					//Gdx.app.log(TAG, "other btn " + otherButtons.length + " " + e.otherButtons.length);
 					otherActionTable.add(otherButtons[e.otherButtons[i].ordinal()]);
 				}
 			}

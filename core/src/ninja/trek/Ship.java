@@ -33,6 +33,14 @@ import com.badlogic.gdx.utils.Pool;
 import com.badlogic.gdx.utils.Pools;
 import com.badlogic.gdx.utils.ScreenUtils;
 
+import ninja.trek.entity.Door;
+import ninja.trek.entity.Engine;
+import ninja.trek.entity.Entity;
+import ninja.trek.entity.Laser;
+import ninja.trek.entity.Missile;
+import ninja.trek.entity.ShipEntity;
+import ninja.trek.entity.SystemControlEntity;
+import ninja.trek.entity.Weapon;
 import ninja.trek.ui.ItemDisplay;
 import ninja.trek.ui.ItemDisplay.ItemButton;
 import ninja.trek.ui.UIActionButton;
@@ -53,7 +61,9 @@ public class Ship {
 	private final Sprite[] chunkSprites;
 	public boolean placeDoor;
 	public boolean deleteDoor;
-	private GridPoint2[] roomBlocks = new GridPoint2[1000];
+	public GridPoint2[] systemRoomBlocks = new GridPoint2[1000];
+	public GridPoint2[] roomBlocks = new GridPoint2[256];
+
 	private int maxSysRoomID;
 	private float fireTime;
 	private IntIntMap fireBlockIndices = new IntIntMap();
@@ -122,8 +132,16 @@ public class Ship {
        // Gdx.app.log(TAG, "LASER DAMAGE");
     }
 
+	public void resetPlace() {
+		placeWeapon = false;
+		deleteWeapon = false;
+		placeSpawn = false;
+		placeDoor = false;
+		deleteDoor = false;
+	}
 
-    public enum Alignment {CENTRE, TOP_RIGHT};
+
+	public enum Alignment {CENTRE, TOP_RIGHT};
 	public Alignment alignment = Alignment.CENTRE;
 	public int[] systemButtonOrder = new int[systemNames.length];
 	public int[] maxDepletionBySystem = {63, 63, 63, 63, 63, 63, 63, 63, 63, 63, 63};
@@ -160,7 +178,7 @@ public class Ship {
 	private static final int MAX_WIDTH = 512;
 	private static final int MAX_HEIGHT = 512;
 	private static final float ZOOM_SPEED = 5f;
-	public static final int MAX_ENTITIES = 10;
+	public static final int MAX_ENTITIES = 64;
 	private transient FrameBuffer[] chunkBuffer, fillBuffer, wireBuffer;
 	private transient Texture[] chunkTextures, fillTextures, wireTextures;;
 
@@ -194,7 +212,7 @@ public class Ship {
 	
 	public IntArray inventory = new IntArray(true, 8);
 	public IntPixelMap systemRooms;
-	private IntArray[] roomsBySystem;
+	public IntArray[] roomsBySystem;
 
 	public boolean[] disabledButton = new boolean[systemNames.length];
 	public boolean hullFront;
@@ -482,7 +500,7 @@ public class Ship {
 		}
 		
 		if (redrawMap) {
-			Gdx.app.log(TAG, "redraw map");
+			//Gdx.app.log(TAG, "redraw map");
 			redrawMap = false;
 			int x0, x1, y0, y1;
 			x0 = 0; y0 = 0;x1 = chunksX-1;y1 = chunksY-1;
@@ -1000,6 +1018,7 @@ public class Ship {
 	public EntityArray getEntities() {
 		return entities;
 	}
+
 	public void savePreview(FileHandle file, Ship ship) {
 		Pixmap pixmap = new Pixmap(mapWidth, mapHeight, Format.RGB888);
 		int x0, x1, y0, y1;
@@ -1125,24 +1144,41 @@ public class Ship {
 		chunksInRandomOrderForCaching.addAll(chunksInRandomOrder);
 		
 	}
-	
-	public void addWeapon(int x, int y) {
+	public void addWeapon(int x, int y){
+		int id = map.get(x, y) & BLOCK_ID_MASK;
+		switch (id){
+			case WEAPON:addGun(x, y);break;
+			case ENGINE:addEngine(x, y);break;
+		}
+	}
+	public void addGun(int x, int y) {
 		Weapon weapon = Pools.obtain(Weapon.class);
 		weapon.clear();
-		int currentWeaponCount = 0;
 		weapon.x = x;
 		weapon.y = y;
 		weapon.setDefaultAI();
 		addEntity(weapon);
+		int currentWeaponCount = 0;
 		for (Entity e : entities) if (e instanceof Weapon) ((Weapon)e).setIndex(currentWeaponCount++);
 		Gdx.app.log(TAG, "ADD WEAPON");
+	}
+	public void addEngine(int x, int y) {
+		Engine entity = Pools.obtain(Engine.class);
+		entity.clear();
+		entity.x = x;
+		entity.y = y;
+		entity.setDefaultAI();
+		addEntity(entity);
+		//int currentWeaponCount = 0;
+		//for (Entity e : entities) if (e instanceof Weapon) ((Weapon)e).setIndex(currentWeaponCount++);
+		Gdx.app.log(TAG, "ADD ENGINE CONTROL");
 	}
 	private static Vector2 vec2 = new Vector2();
 	public void deleteWeapon(int x, int y) {
 		Weapon w = null;
 		float dst = 100000000;
 		vec2.set(x, y);
-		for (Entity e : entities) if (e instanceof Weapon){
+		for (Entity e : entities) if (e instanceof SystemControlEntity){
 			Weapon weap = ((Weapon)e);
 			float d = vec2.dst2(e.x, e.y);
 			if (d < dst){
@@ -1211,17 +1247,31 @@ public class Ship {
 	public boolean[][] roomsConnected = new boolean[100][100];
 	public void calculateConnectivity(World world){
 		//Gdx.app.log(TAG, "connectivity ");
-		for (int i = 0; i < maxSysRoomID; i++){
+		for (int i = 0; i <= maxRoomID; i++){
 			GridPoint2 bl = roomBlocks[i];
-			for (int k = 0; k < maxRoomID; k++){
+			for (int k = 0; k <= maxRoomID; k++){
 				roomsConnected[i][k] = false;
-				GridPoint2 tar = roomBlocks[k];
-				IntArray path = aStar.getPath(bl.x, bl.y, tar.x, tar.y);
-				if (path.size > 0 || i == k){
-					Gdx.app.log(TAG, "connected " + bl + i + k);
+
+				if (i == k || i==0 || k==0){
+					Gdx.app.log(TAG, "preempt connected " + bl + i + k);
 					roomsConnected[i][k] = true;
+				} else {
+
+					GridPoint2 tar = roomBlocks[k];
+					int block = map.get(tar.x, tar.y);
+					int id = block & Ship.BLOCK_ID_MASK;
+					if (id != FLOOR)
+						throw new GdxRuntimeException("invalid point " + id);
+					//Gdx.app.log(TAG, "connected " + tar);
+
+					IntArray path = aStar.getPath(bl.x, bl.y, tar.x, tar.y);
+					if (path.size > 0  ){
+						Gdx.app.log(TAG, "connected " + bl + i + k);
+						roomsConnected[i][k] = true;
+					}
+					Pools.free(path);
 				}
-				Pools.free(path);
+
 			}
 
 		}
@@ -1229,7 +1279,7 @@ public class Ship {
 	}
 	
 	public void categorizeSystems() {
-		roomBlocks = new GridPoint2[1000];
+		systemRoomBlocks = new GridPoint2[1000];
 
 		for (int i = 0; i <systemNames.length; i++){
 			if (systemBlocks[i] == null) systemBlocks[i] = new Array<GridPoint2>();
@@ -1273,14 +1323,19 @@ public class Ship {
 
 					if (id == DOOR){
 						room.set(x, y, 0);
+						//room.floodFillSystem(map, x, y, Ship.DOOR, roomID++);
 					}
 					else if (id ==WALL || id ==VACCUUM){
 						//Gdx.app.log(TAG, "fill " + x);
 						room.set(x, y, -2);
 					} else {
+						if (roomBlocks[roomID] == null)
+							roomBlocks[roomID] = new GridPoint2();
+						roomBlocks[roomID].set(x, y);
+						int gid = map.get(x, y) & BLOCK_ID_MASK;
+						Gdx.app.log(TAG, "new room " + systemNames[gid] + roomID);
 						room.floodFillWalkable(map, x, y, roomID++);
 						//room.set(x, y, -2);
-						//Gdx.app.log(TAG, "set -2 : " + systemNames[id]);
 					}
 
 				}
@@ -1291,14 +1346,14 @@ public class Ship {
 					//Gdx.app.log(TAG, "sysFill " + id);
 					systemRooms.floodFillSystem(map, x, y, id, sysRoomID);
 					roomsBySystem[id].add(sysRoomID);
-					if (roomBlocks[sysRoomID] == null)
-						roomBlocks[sysRoomID] = new GridPoint2();
-					roomBlocks[sysRoomID].set(x, y);
+					if (systemRoomBlocks[sysRoomID] == null)
+						systemRoomBlocks[sysRoomID] = new GridPoint2();
+					systemRoomBlocks[sysRoomID].set(x, y);
 					sysRoomID++;
 				}
 			}
-		maxSysRoomID = sysRoomID;
-		maxRoomID = roomID;
+		maxSysRoomID = sysRoomID-1;
+		maxRoomID = roomID-1;
 		//GridPoint2 average = Pools.obtain(GridPoint2.class);
 		for (int i = 0; i < average.length; i++){
 			if (average[i] == null){
@@ -1312,8 +1367,6 @@ public class Ship {
 				int id = map.get(x,  y) & BLOCK_ID_MASK;
 				average[id].add(x, y);					
 				averageTotals[id]++;
-				
-				
 			}
 		for (int i = 0; i < average.length; i++){
 			if (averageTotals[i] == 0){//no blocks
@@ -1406,7 +1459,7 @@ public class Ship {
 		}
 	}
 
-	private Weapon getWeapon(int index) {
+	public Weapon getWeapon(int index) {
 		for (Entity e : entities) {
 			if (e instanceof Weapon){
 				Weapon w = (Weapon) e;
@@ -1416,6 +1469,20 @@ public class Ship {
 		}
 		//Gdx.app.log(TAG, "get w " + index + "  " + inventory.size);
 		return null;
+	}
+
+	Array<Entity> returnEArr = new Array<Entity>();
+	public Array<Entity> getEntitiesByClass(Class<? extends Entity> T) {
+		returnEArr.clear();
+		for (Entity e : entities) {
+			if (e instanceof Weapon){
+				Weapon w = (Weapon) e;
+				//Gdx.app.log(TAG, "look w " + w.index);
+				if (T.isAssignableFrom(w.getClass())) returnEArr.add(w);
+			}
+		}
+		//Gdx.app.log(TAG, "get w " + index + "  " + inventory.size);
+		return returnEArr;
 	}
 
 	public void equipWeapon(int index, ItemButton item) {

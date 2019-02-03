@@ -1,4 +1,4 @@
-package ninja.trek;
+package ninja.trek.entity;
 
 import com.badlogic.gdx.math.GridPoint2;
 import com.badlogic.gdx.utils.Pools;
@@ -8,7 +8,7 @@ import ninja.trek.actions.AWeaponCharge;
 import ninja.trek.actions.AWeaponShoot;
 import ninja.trek.ui.ItemDisplay.ItemButton;
 
-public class Weapon extends Entity {
+public class Weapon extends SystemControlEntity {
 	public int index;
 	public GridPoint2 target = new GridPoint2();
 	public boolean hasTarget = false;

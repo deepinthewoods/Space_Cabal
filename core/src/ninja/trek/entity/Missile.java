@@ -1,4 +1,4 @@
-package ninja.trek;
+package ninja.trek.entity;
 
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.Sprite;
@@ -7,6 +7,10 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Pools;
 
+import ninja.trek.Items;
+import ninja.trek.Sprites;
+import ninja.trek.WeaponItem;
+import ninja.trek.World;
 import ninja.trek.action.ActionList;
 import ninja.trek.actions.AMissile;
 

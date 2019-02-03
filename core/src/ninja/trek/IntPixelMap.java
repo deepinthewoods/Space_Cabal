@@ -4,9 +4,13 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.GridPoint2;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.IntArray;
 import com.badlogic.gdx.utils.IntIntMap;
 import com.badlogic.gdx.utils.Pools;
+
+import ninja.trek.entity.ShipEntity;
 
 public class IntPixelMap{
 	private static final String TAG = "int pixel map";
@@ -28,6 +32,8 @@ public class IntPixelMap{
 	public transient IntIntMap onFire = new IntIntMap();
 	//public Bits onFire = new Bits();
 	public transient IntIntMap[] needsBoost = new IntIntMap[Ship.systemNames.length];
+	public static final transient RayCaster ray = new RayCaster();
+	public static Vector2 vec = new Vector2();
 	static {
 		Array<GridPoint2> upd = new Array<GridPoint2>();
 		for (int i = 0; i < 64; i++){
@@ -64,6 +70,36 @@ public class IntPixelMap{
 				depletion += actualDepletion;
 				air += actualDepletion * 4;
 				//if (maxAddedDepletion != 0)Gdx.app.log(TAG, "depl " + maxAddedDepletion);
+				int boost = (block & Ship.BLOCK_BOOST_MASK) >> Ship.BLOCK_BOOST_BITS;
+				if (boost == 1){
+					block = block & ~Ship.BLOCK_BOOST_MASK;
+					block &= ~Ship.BLOCK_DATA_MASK;
+					block |= (ship.maxDepletionBySystem[block & Ship.BLOCK_ID_MASK]) << Ship.BLOCK_DATA_BITS;
+					map.set(x, y, block);
+					//BOOST LINES
+					IntArray rooms = ship.roomsBySystem[Ship.OXYGEN];
+					//if (rooms.size == 0) break;
+					int roomID = rooms.get(MathUtils.random(0, rooms.size-1));//TODO
+					GridPoint2 roomBlock = ship.systemRoomBlocks[roomID];
+					int destX=roomBlock.x, destY=roomBlock.y;
+					vec.set(destX, destY).sub(x, y).rotate(90 + MathUtils.random(-90, 90));
+
+					ray.trace(x, y, vec);
+					boolean tracing = true;
+					while (tracing){
+						ray.next();
+						int lineBlock = map.get(ray.x, ray.y);
+						int lineID = lineBlock & Ship.BLOCK_ID_MASK;
+						if (lineID == Ship.WALL || lineID == Ship.DOOR){
+							tracing = false;
+							continue;
+						}
+						lineBlock &= ~Ship.BLOCK_AIR_MASK;//air to 0
+						lineBlock |= (127) << Ship.BLOCK_AIR_BITS;
+						map.set(ray.x, ray.y, lineBlock);
+					}
+					return;
+				}
 				block = block & (Ship.BLOCK_DAMAGE_MASK | Ship.BLOCK_FIRE_MASK | Ship.BLOCK_ID_MASK | Ship.BLOCK_BOOST_MASK);
 				block |= depletion << Ship.BLOCK_DATA_BITS;
 				//ship.map.set(x, y, block);
@@ -359,6 +395,7 @@ public class IntPixelMap{
 			processFloodFillW(m, node.x, node.y, replacement, 0);
 			Pools.free(node);
 		}
+		Gdx.app.log(TAG, "floodfill walkable " + replacement);
 	}
 	public void processFloodFillS(IntPixelMap m, int nodeX, int nodeY, int target, int replacement, int stack){
 		if (nodeX >= width || nodeY >= height || nodeX < 0 || nodeY < 0) return;
@@ -463,7 +500,7 @@ public class IntPixelMap{
 	public int randomFillIterations, randomFillTriesLimit = 300, randomFillTotal
 	, randomFillTotalElements, randomFillSizeLimit = 70;
 	private int airUpdateReplaceIndex = 1;
-	private boolean randomFillFire = false;
+	private boolean randomFillFire = false, randomFillVacc;
 	boolean cleared;
 	public void resetRandomFloodFill(int sizeLimit, int triesLimit) {
 		randomFillIterations = 0;
@@ -472,6 +509,7 @@ public class IntPixelMap{
 		randomFillTotalElements = 0;
 		randomFillSizeLimit = sizeLimit;
 		randomFillFire = false;
+		randomFillVacc = false;
 	}
 	public void randomFloodFill(IntPixelMap map2, int x, int y, int replacement, int seed, boolean propagateFire, Ship ship) {
 		if (x >= width || y >= height || x < 0 || y < 0) return;
@@ -479,7 +517,7 @@ public class IntPixelMap{
 		int id = (block & Ship.BLOCK_ID_MASK);
 		int myid = (get(x, y));
 		if (myid == replacement)return;
-		if (id == Ship.VACCUUM || id == Ship.WALL) {
+		if (id == Ship.WALL || (id == Ship.DOOR && (block & Ship.BLOCK_EXTRA_MASK) == 0)) {
 			//randomFillIterations++;
 			return;
 		}
@@ -489,6 +527,7 @@ public class IntPixelMap{
 		air >>= Ship.BLOCK_AIR_BITS;
 		int fire = (block & Ship.BLOCK_FIRE_MASK) >> Ship.BLOCK_FIRE_BITS;
 		if (fire == 1) randomFillFire = propagateFire;
+		if (id == Ship.VACCUUM) randomFillVacc = true;
 		randomFillTotal += air;
 		randomFillTotalElements++;
 		
@@ -521,7 +560,13 @@ public class IntPixelMap{
 		set(x, y, replacement);
 		int nBlock = block & ~Ship.BLOCK_AIR_MASK;
 		nBlock &= ~Ship.BLOCK_FIRE_MASK;
-		if (randomFillFire) {
+		if (randomFillVacc){
+			nair = 0;
+			nBlock |= (nair << Ship.BLOCK_AIR_BITS);
+			map2.set(x, y, nBlock);
+			return;
+		}
+		else if (randomFillFire) {
 			nair = Math.max(0,  nair/3);
 			if (nair > MIN_AIR_FOR_FIRE){
 				nBlock |= (1 << Ship.BLOCK_FIRE_BITS);
@@ -543,6 +588,9 @@ public class IntPixelMap{
 			map2.onFire.remove(x + y * map2.width, 0);
 			nBlock &= ~((1 << Ship.BLOCK_FIRE_BITS));
 		}
+
+
+
 		nBlock |= (nair << Ship.BLOCK_AIR_BITS);
 		map2.set(x, y, nBlock);
 	}
@@ -811,15 +859,41 @@ public class IntPixelMap{
 			int y = MathUtils.random(1, height-2);
 			int block = get(x, y);
 			int air = (block & Ship.BLOCK_AIR_MASK) >> Ship.BLOCK_AIR_BITS;
-			if (air > 10)
-				fill.resetRandomFloodFill(200, 250);
-			else 
-				fill.resetRandomFloodFill(600, 850);
+
+				fill.resetRandomFloodFill(400, 1550);
 			//block = MathUtils.random(1, 3);
 			fill.randomFloodFill(this, x, y
 					, airUpdateReplaceIndex, MathUtils.random(20000, 100000), false, ship);
 			
 			}
+		for (int i = 0; i < 1; i++) {//door
+
+			IntArray rooms = ship.roomsBySystem[Ship.DOOR];
+			if (rooms.size == 0) break;
+			int roomID = rooms.get(MathUtils.random(0, rooms.size-1));//TODO
+			GridPoint2 roomBlock = ship.systemRoomBlocks[roomID];
+			int x=roomBlock.x, y=roomBlock.y, block = 0;
+
+			/*int count = 0;
+			boolean foundDoor = false;
+			while (count++ < 100 && !foundDoor){
+				x = MathUtils.random(1, width-2);
+				y = MathUtils.random(1, height-2);
+				block = get(x, y);
+				if ((block & Ship.BLOCK_ID_MASK) == Ship.DOOR)
+					foundDoor = true;
+
+			}*/
+			//if (!foundDoor) Gdx.app.log(TAG, "didnt find door");
+
+			int air = (block & Ship.BLOCK_AIR_MASK) >> Ship.BLOCK_AIR_BITS;
+
+			fill.resetRandomFloodFill(1400, 1550);
+			//block = MathUtils.random(1, 3);
+			fill.randomFloodFill(this, x, y
+					, airUpdateReplaceIndex, MathUtils.random(20000, 100000), false, ship);
+
+		}
 		for (int i = 0; i < 5; i++){
 			int x = MathUtils.random(1, width-2);
 			int y = MathUtils.random(1, height-2);

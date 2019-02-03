@@ -1,12 +1,11 @@
 package ninja.trek.actions;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.scenes.scene2d.ui.UI;
 import com.badlogic.gdx.scenes.scene2d.ui.UI.WeaponButton;
 
 import ninja.trek.Items;
 import ninja.trek.Ship;
-import ninja.trek.Weapon;
+import ninja.trek.entity.Weapon;
 import ninja.trek.WeaponItem;
 import ninja.trek.World;
 import ninja.trek.action.Action;

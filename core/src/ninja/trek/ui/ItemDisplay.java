@@ -19,11 +19,11 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.GdxRuntimeException;
 
-import ninja.trek.Entity;
+import ninja.trek.entity.Entity;
 import ninja.trek.Item;
 import ninja.trek.Items;
 import ninja.trek.Ship;
-import ninja.trek.Weapon;
+import ninja.trek.entity.Weapon;
 import ninja.trek.WeaponItem;
 
 public class ItemDisplay extends Table {

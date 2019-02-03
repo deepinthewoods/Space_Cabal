@@ -1,6 +1,6 @@
 package com.badlogic.gdx.scenes.scene2d.ui;
 
-import ninja.trek.Entity;
+import ninja.trek.entity.Entity;
 import ninja.trek.ui.UIActionButton;
 
 /**

@@ -1,10 +1,10 @@
-package ninja.trek;
+package ninja.trek.entity;
 
 import com.badlogic.gdx.utils.Pools;
 
 import ninja.trek.action.ActionList;
 import ninja.trek.actions.ABaseShip;
-import ninja.trek.actions.AWeaponCharge;
+import ninja.trek.entity.Entity;
 
 public class ShipEntity extends Entity {
 	public int health = 90;

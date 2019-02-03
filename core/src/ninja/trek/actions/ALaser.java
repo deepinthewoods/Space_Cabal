@@ -1,16 +1,13 @@
 package ninja.trek.actions;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.scenes.scene2d.ui.UI;
 
 import ninja.trek.Items;
-import ninja.trek.Laser;
+import ninja.trek.entity.Laser;
 import ninja.trek.Ship;
-import ninja.trek.WeaponItem;
 import ninja.trek.World;
 import ninja.trek.action.Action;
 import ninja.trek.items.LaserItem;
-import ninja.trek.items.MissileItem;
 
 public class ALaser extends Action{
 

@@ -35,6 +35,9 @@ import com.badlogic.gdx.utils.Pools;
 
 import ninja.trek.Ship.Alignment;
 import ninja.trek.Ship.EntityArray;
+import ninja.trek.entity.Entity;
+import ninja.trek.entity.Missile;
+import ninja.trek.entity.ShipEntity;
 
 public class World {
 	private static final String TAG = "world";
@@ -270,7 +273,8 @@ public class World {
 		}
 		batch.getProjectionMatrix().setToOrtho2D(0, 0, 10, 10);
         batch.begin();
-        //batch.draw(colorIndexBuffer.getColorBufferTexture(), 0, 0, 10, 10);
+
+       // batch.draw(colorIndexBuffer.getColorBufferTexture(), 0, 0, 10, 10);//TODO
         batch.end();
 	}
 	

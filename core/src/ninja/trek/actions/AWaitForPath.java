@@ -147,7 +147,7 @@ public class AWaitForPath extends Action {
 		IntPixelMap m = parent.e.ship.map;
 		if (list.size != 0){
 			candidates.clear();
-			int startRoom = map.systemRooms.get(parent.e.x, parent.e.y);
+			int startRoom = map.room.get(parent.e.x, parent.e.y);
 			//Gdx.app.log(TAG, "STARTRTARTSDGTDFSFD " + startRoom );
 			Iterator<Entry> iter = list.iterator();
 			while (iter.hasNext()){
@@ -158,16 +158,19 @@ public class AWaitForPath extends Action {
 				int dist = getDistanceTo(x, y, map);
 				int block = m.get(x, y);
 				int room = map.room.get(x, y);
-				if (room == -1) {
+				if (room < 0) {
 					Gdx.app.log(TAG, "target room invalid " + Ship.systemNames[(block & Ship.BLOCK_ID_MASK)]);
 				}
-				if (startRoom == -1) {
+				if (startRoom < 0) {
 					Gdx.app.log(TAG, "start room invalid " +x+"," +y);
 				}
 				if (!map.roomsConnected[startRoom][room]){
 					//Gdx.app.log(TAG, "rooms not connected " + startRoom + " , " + room);
 				}
 				boolean boostValid =  true;
+				if (!map.roomsConnected[startRoom][room]){
+					//Gdx.app.log(TAG, "rooms not connected " +room+"," +startRoom);
+				}
 				if (requireBoost) boostValid = ((block & Ship.BLOCK_DATA_MASK)  == 0);
 
 				if (
@@ -236,6 +239,7 @@ public class AWaitForPath extends Action {
 				parent.e.target.set(path.get(0), path.get(1));
 				parent.e.ship.reserve(parent.e.target.x, parent.e.target.y);
 			}
+
 			return true;
 		}
 		return false;
@@ -278,6 +282,9 @@ public class AWaitForPath extends Action {
 	public void onEnd(World world, Ship map) {
 		//Gdx.app.log(TAG, "finished " + EntityAI.names[parent.e.buttonOrder[parent.e.actionIndexForPath]] );
 		if (parent.e.path == null) throw new GdxRuntimeException("null path " + parent.e.actionIndexForPath);
+
+		int currentRoom = parent.e.ship.room.get(parent.e.x, parent.e.y);
+		//Gdx.app.log(TAG, "found path " + currentRoom + "  " + parent.e.target);
 	}
 
 	

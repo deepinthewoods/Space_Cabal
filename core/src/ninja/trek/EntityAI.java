@@ -3,6 +3,8 @@ package ninja.trek;
 import com.badlogic.gdx.scenes.scene2d.ui.UI;
 import com.badlogic.gdx.utils.Pool.Poolable;
 
+import ninja.trek.entity.Entity;
+
 public abstract class EntityAI implements Poolable {
 	protected Entity parent;
 	public static String[] names = {"Shoot", "Fix", "[shield]Shield", "Wander", "[engine]Engine", "Fire", "[phaser]Weapon", "[drone]Drone", "[oxygen]Oxygen", "[teleporter]Teleport", "[science]Science"};

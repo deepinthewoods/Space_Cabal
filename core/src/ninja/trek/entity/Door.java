@@ -1,12 +1,12 @@
-package ninja.trek;
+package ninja.trek.entity;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.utils.Pool;
 import com.badlogic.gdx.utils.Pools;
 
+import ninja.trek.ADoor;
 import ninja.trek.action.ActionList;
-import ninja.trek.actions.AWeaponCharge;
-import ninja.trek.actions.AWeaponShoot;
+import ninja.trek.entity.Entity;
 
 /**
  * Created by n on 22/11/2017.

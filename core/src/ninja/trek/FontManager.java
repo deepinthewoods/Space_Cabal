@@ -12,12 +12,12 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.GridPoint2;
 import com.badlogic.gdx.utils.Array;
 
-import squidpony.squidgrid.gui.gdx.DefaultResources;
+import ninja.trek.entity.Entity;
 
 public class FontManager {
 
 	private static final String TAG = "font manager";
-	private BitmapFont[] fonts = new BitmapFont[4];
+	private BitmapFont[] fonts = new BitmapFont[5];
 	private CharSequence spawnGlyph = "+";
 	public static final String[] fontNames = {"kenpixel_high", "kenpixel_future_square", "kenpixel_mini", "kenpixel_blocks"};
 	public static final int[] fontSizes = {32, 8, 8, 8};
@@ -34,6 +34,7 @@ public class FontManager {
 		fonts[1] = makeFont(atlas, 1);
 		fonts[2] = makeFont(atlas, 2);
 		fonts[3] = makeFont(atlas, 3);
+		fonts[4] = makeFont(atlas, 0);
 		//fonts[0] = new BitmapFont(data, regb, false);
 		/*String fontName0= "kenpixel_high";
 		String fontName1= "kenpixel_high";

@@ -1,4 +1,4 @@
-package ninja.trek;
+package ninja.trek.entity;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.OrthographicCamera;
@@ -9,12 +9,16 @@ import com.badlogic.gdx.utils.IntArray;
 import com.badlogic.gdx.utils.Pools;
 import com.badlogic.gdx.utils.Pool.Poolable;
 
+import ninja.trek.EntityAI;
+import ninja.trek.Ship;
+import ninja.trek.World;
 import ninja.trek.action.ActionList;
 import ninja.trek.actions.ABase;
 
 public class Entity implements Poolable {
 	private static final String TAG = "entity";
-	public static String[] raceNames = {"Human", "Reptiod", "Sloth", "Mechanoid"};
+	public static String[] raceNames = {"Human", "Reptiod", "Sloth", "Mechanoid", "System"};
+	public static int RACE_HUMAN = 0, RACE_REPTOID = 1, RACE_SLOTH = 2, RACE_MECHANOID = 3, RACE_SYSTEM = 4;
 	public int x, y;
 	public String glyph = "A";
 	public int font = 0;
@@ -27,7 +31,7 @@ public class Entity implements Poolable {
 
 	}
 
-	public enum ButtonType {DOOR_OPEN, DOOR_CLOSE};
+	public enum ButtonType {DOOR_OPEN, DOOR_CLOSE, SHIELD_UP, SHIELD_DOWN };
 	public ButtonType[] otherButtons = null;
 	public int[] fixOrder = new int[FIX_ACTIONS_LENGTH];//block ids
 	public static final int FIX_ACTIONS_LENGTH = 7;
@@ -134,7 +138,7 @@ public class Entity implements Poolable {
 		return this;
 	}
 
-	protected void setDefaultButtonOrder() {
+	public void setDefaultButtonOrder() {
 		buttonOrder[0] = EntityAI.FIRE;
 		buttonOrder[1] = EntityAI.FIX;
 		buttonOrder[2] = EntityAI.SHOOT;

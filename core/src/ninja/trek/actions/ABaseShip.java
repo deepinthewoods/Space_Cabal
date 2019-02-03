@@ -8,7 +8,7 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Pools;
 
 import ninja.trek.Ship;
-import ninja.trek.ShipEntity;
+import ninja.trek.entity.ShipEntity;
 import ninja.trek.World;
 import ninja.trek.action.Action;
 
@@ -46,6 +46,7 @@ public class ABaseShip extends Action{
 			if (power == 0) break;
 			maxSystem = ship.systemButtonOrder[i];
 			int system = ship.systemButtonOrder[i];
+			if (ship.disabledButton[system]) continue;
 			Array<GridPoint2> blocks = ship.systemBlocks[system];
 			int offset = MathUtils.random(blocks.size);
 			for (int r = 0; r < blocks.size; r++){
