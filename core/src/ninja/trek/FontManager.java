@@ -5,12 +5,14 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.BitmapFont.BitmapFontData;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.GridPoint2;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.Pools;
 
 import ninja.trek.entity.Entity;
 
@@ -73,8 +75,18 @@ public class FontManager {
 	public void draw(Entity e, SpriteBatch batch, OrthographicCamera cam) {
 		BitmapFont font = fonts[e.font];
 		float w2 = font.getData().getGlyph(e.glyph.charAt(0)).width * cam.zoom;
-		font.draw(batch, e.glyph, e.x-w2, e.y + font.getCapHeight()/2);
-		//Gdx.app.log(TAG, "draw " + e.glyph);
+		//e.glyphLayout =
+		e.glyphLayout.setText(font, e.glyph);
+		font.draw(batch, e.glyphLayout, e.x-e.glyphLayout.width/2, e.y + e.glyphLayout.height/2 );
+
+
+		//GlyphLayout gly = Pools.obtain(GlyphLayout.class);
+
+		//e.glyphLayout = gly;
+
+
+		//Pools.free(gly);//TODO
+		//Gdx.app.log(TAG, "draw " + e.glyphLayout.width + " " + e.glyph);
 		
 		
 		

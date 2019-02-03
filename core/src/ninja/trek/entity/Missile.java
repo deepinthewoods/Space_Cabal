@@ -8,6 +8,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Pools;
 
 import ninja.trek.Items;
+import ninja.trek.Ship;
 import ninja.trek.Sprites;
 import ninja.trek.WeaponItem;
 import ninja.trek.World;
@@ -16,12 +17,12 @@ import ninja.trek.actions.AMissile;
 
 public class Missile extends Entity {
 	public Vector2 direction = new Vector2(), position = new Vector2();
+	public Ship targetShip;
 	public float time;
-	public Vector2 target = new Vector2();
 	public int weaponItemID;
 
 
-    public Missile() {
+	public Missile() {
 		glyph = " ";
 	}
 

@@ -199,7 +199,7 @@ public class UI {
 		for (int i = 0; i < entityOtherActionButtons.length; i++){
 			UIOtherActionButton btn = new UIOtherActionButton(i, skin, entityActionTable, Entity.ButtonType.values()[i]);
 			entityOtherActionButtons[i] = btn;
-			Gdx.app.log(TAG, "CREATE UI OTHER ACTION " + i + " " + btn.type + " " );
+			//Gdx.app.log(TAG, "CREATE UI OTHER ACTION " + i + " " + btn.type + " " );
 			if (btn.type.ordinal() != i) throw new GdxRuntimeException("" + btn.type + btn.type.ordinal());
 			//entityOtherActionTable.add(btn).left();
 			btn.addListener(new ClickListener(){
@@ -1570,7 +1570,7 @@ public class UI {
 					cell.width(maxW).pad(0).space(0);
 
 				} else {
-					Gdx.app.log(TAG, "no cell " + i + "  ");
+					//Gdx.app.log(TAG, "no cell " + i + "  ");
 				}
 
 				//buttons[i].getCell(buttons[i].getLabel()).fill();

@@ -31,7 +31,7 @@ public class AEnemyShip extends ABaseShip {
             Weapon weapon = (Weapon) weapons.get(i);
             Ship tShip = world.getPlayerShip();
             target.set(tShip.mapWidth/2, tShip.mapHeight/2);
-            ship.setWeaponTarget(weapon.index, target.x, target.y);
+           // ship.setWeaponTarget(weapon.index, missileTarget.x, missileTarget.y, targetShip);
             //Gdx.app.log(TAG, "set weapon targets");
         }
         //this.delay(2f);

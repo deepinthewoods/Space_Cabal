@@ -219,12 +219,12 @@ public class OuterHull {
 	
 	public void processFloodFill(int[] m, int[] res, int nodeX, int nodeY, int target, int replacement, int stack, int width, int height){
 		if (nodeX >= width || nodeY >= height || nodeX < 0 || nodeY < 0) return;
-		//if (target == replacement) return;
+		//if (missileTarget == replacement) return;
 		int b = m[nodeX + nodeY * width];
 		if (isClearPixel(b)) return;
 		if (res[nodeX + nodeY * width] == replacement) return;
 		
-		//if ((get(nodeX, nodeY) & Ship.BLOCK_ID_MASK) != target) return;
+		//if ((get(nodeX, nodeY) & Ship.BLOCK_ID_MASK) != missileTarget) return;
 		//if (stack > 4000) return;
 		//			3. Set the color of node to replacement-color.
 		//set(nodeX, nodeY, replacement);

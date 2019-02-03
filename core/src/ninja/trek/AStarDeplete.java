@@ -26,7 +26,7 @@ public class AStarDeplete {
 		this.ship = ship;
 	}
 
-	/** Returns x,y pairs that are the path from the target to the start. */
+	/** Returns x,y pairs that are the path from the missileTarget to the start. */
 	public int getPath (int startX, int startY, int target, int damage) {
 		damagePending = damage;
 		path.clear();

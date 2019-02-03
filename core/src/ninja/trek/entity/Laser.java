@@ -14,16 +14,17 @@ import ninja.trek.World;
 import ninja.trek.action.ActionList;
 import ninja.trek.actions.ALaser;
 
-public class Laser extends Entity {
+public class Laser extends Missile {
 	
 	private static final String TAG = "laser";
 	public int index;
 	public int time;
-	//public GridPoint2 target = new GridPoint2();
+	//public GridPoint2 missileTarget = new GridPoint2();
     public int weaponItemID;
     private ALaser alaser;
 
     public Laser() {
+    	super();
 		glyph = " ";
 		
 	}
@@ -42,13 +43,13 @@ public class Laser extends Entity {
 	public void draw(SpriteBatch batch, OrthographicCamera camera, World world) {
 		float scale = camera.zoom;
 		//Gdx.app.log(TAG, "djskljfl");
-		Ship enemy = world.getEnemy(ship);
-		if (enemy == null) return;
+
+		if (targetShip == null) return;
 		Sprite spr = Sprites.laser;
 		v.set(target.x, target.y, 0);
-		enemy.camera.project(v);
+		targetShip.camera.project(v);
 		v.y = Gdx.graphics.getHeight()-1-v.y;
-		//Gdx.app.log(TAG, "to " + v + target);
+		//Gdx.app.log(TAG, "to " + v + missileTarget);
 		camera.unproject(v);
 		float w = mid.set(x, y).dst(v.x, v.y);
 		spr.setPosition(x, y);

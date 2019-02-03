@@ -18,10 +18,10 @@ public class AFix extends Action {
 
 	@Override
 	public void update(float dt, World world, Ship map, UI ui) {
-		//map.map.fix(parent.e.target.x, parent.e.target.y);
+		//map.map.fix(parent.e.missileTarget.x, parent.e.missileTarget.y);
 		map.map.fix(parent.e.target.x, parent.e.target.y, 3);
 
-		//Gdx.app.log("fix action", "FIX " + parent.e.target);
+		//Gdx.app.log("fix action", "FIX " + parent.e.missileTarget);
 		isFinished = true;
 	}
 

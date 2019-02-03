@@ -97,7 +97,7 @@ public class AFollowPath extends Action {
 			isFinished = true;
 			//Gdx.app.log(TAG, "stop move" + parent.e.x + ", " + parent.e.y + " for " + EntityAI.names[parent.e.buttonOrder[parent.e.actionIndexForPath]]);
 
-				//aBoost.target.set(parent.e.path.get(0), parent.e.path.get(1));
+				//aBoost.missileTarget.set(parent.e.path.get(0), parent.e.path.get(1));
 			
 		} else {
 			/*if (!isStillValid(parent.e.path.get(0), parent.e.path.get(1), parent.e.actionIndexForPath)){
@@ -135,7 +135,7 @@ public class AFollowPath extends Action {
 	}
 	@Override
 	public void onEnd(World world, Ship map) {
-		//Gdx.app.log(TAG, "follow finished " + parent.e.x + "," + parent.e.y + " target " + parent.e.target + "  prog " + pathProgress);
+		//Gdx.app.log(TAG, "follow finished " + parent.e.x + "," + parent.e.y + " missileTarget " + parent.e.missileTarget + "  prog " + pathProgress);
 		//Gdx.app.log(TAG, "end");
 	}
 

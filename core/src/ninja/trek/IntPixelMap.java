@@ -332,7 +332,7 @@ public class IntPixelMap{
 		if (nodeX >= width || nodeY >= height || nodeX < 0 || nodeY < 0) return;
 		if (target == replacement) return;
 		if ((m.get(nodeX, nodeY) & Ship.BLOCK_ID_MASK) != target) return;
-		//if ((get(nodeX, nodeY) & Ship.BLOCK_ID_MASK) != target) return;
+		//if ((get(nodeX, nodeY) & Ship.BLOCK_ID_MASK) != missileTarget) return;
 		if (stack > 4000) return;
 		//			3. Set the color of node to replacement-color.
 		set(nodeX, nodeY, replacement);
@@ -365,12 +365,12 @@ public class IntPixelMap{
 	
 	public void processFloodFillW(IntPixelMap m, int nodeX, int nodeY, int replacement, int stack){
 		if (nodeX >= width || nodeY >= height || nodeX < 0 || nodeY < 0) return;
-		//if (target == replacement) return;
+		//if (missileTarget == replacement) return;
 
 		int id = (m.get(nodeX, nodeY) & Ship.BLOCK_ID_MASK);
 		if (id == Ship.WALL || id == Ship.VACCUUM || id == Ship.DOOR) return;
 		if (get(nodeX, nodeY) != -1) return;
-		//f ((get(nodeX, nodeY) & Ship.BLOCK_ID_MASK) != target) return;
+		//f ((get(nodeX, nodeY) & Ship.BLOCK_ID_MASK) != missileTarget) return;
 		//if (stack > 4000) return;
 		//			3. Set the color of node to replacement-color.
 		set(nodeX, nodeY, replacement);
@@ -399,7 +399,7 @@ public class IntPixelMap{
 	}
 	public void processFloodFillS(IntPixelMap m, int nodeX, int nodeY, int target, int replacement, int stack){
 		if (nodeX >= width || nodeY >= height || nodeX < 0 || nodeY < 0) return;
-		//if (target == replacement) return;
+		//if (missileTarget == replacement) return;
 		int id = (m.get(nodeX, nodeY) & Ship.BLOCK_ID_MASK);
 		int myid = (get(nodeX, nodeY));
 		if (id != target) return;
@@ -410,7 +410,7 @@ public class IntPixelMap{
 		//if (id == Ship.WALL || id == Ship.VACCUUM) return;
 		
 		//if (get(nodeX, nodeY) != 0) return;
-		//f ((get(nodeX, nodeY) & Ship.BLOCK_ID_MASK) != target) return;
+		//f ((get(nodeX, nodeY) & Ship.BLOCK_ID_MASK) != missileTarget) return;
 		if (stack > 4000) return;
 		//			3. Set the color of node to replacement-color.
 		set(nodeX, nodeY, replacement);
@@ -435,7 +435,7 @@ public class IntPixelMap{
 	
 	public void processFloodFillNoVac(IntPixelMap m, int nodeX, int nodeY, int replacement, int stack){
 		if (nodeX >= width || nodeY >= height || nodeX < 0 || nodeY < 0) return;
-		//if (target == replacement) return;
+		//if (missileTarget == replacement) return;
 		int id = (m.get(nodeX, nodeY) & Ship.BLOCK_ID_MASK);
 		//int myid = (get(nodeX, nodeY));
 		if (id == Ship.VACCUUM) return;
@@ -462,7 +462,7 @@ public class IntPixelMap{
      */
 	public int processfloodFillMissileDamage(int nodeX, int nodeY, int damage, int stack, Ship ship, int seed){
         if (nodeX >= width || nodeY >= height || nodeX < 0 || nodeY < 0) return 0;
-        //if (target == replacement) return;
+        //if (missileTarget == replacement) return;
         int id = (get(nodeX, nodeY) & Ship.BLOCK_ID_MASK);
         //int myid = (get(nodeX, nodeY));
         if (id == Ship.VACCUUM) return 0;

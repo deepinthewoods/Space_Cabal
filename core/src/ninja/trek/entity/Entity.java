@@ -2,6 +2,7 @@ package ninja.trek.entity;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.GridPoint2;
 import com.badlogic.gdx.scenes.scene2d.ui.UI;
@@ -26,6 +27,8 @@ public class Entity implements Poolable {
 	public transient Ship ship;
 	public int[] buttonOrder = new int[EntityAI.names.length];
 	public boolean[] disabledButton = new boolean[EntityAI.names.length];
+	public GlyphLayout glyphLayout = new GlyphLayout()
+			;
 
 	public void handleOtherButton(ButtonType type) {
 

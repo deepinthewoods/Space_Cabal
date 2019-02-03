@@ -59,7 +59,9 @@ public class AMissile extends Action {
 			if (miss.time > TIMEOUT){
 				miss.time = 0;
 				parent.e.isHostile = true;
-				world.switchToEnemyShip(miss);
+				//world.switchToEnemyShip(miss);
+				world.switchToShip(miss, miss.targetShip);
+
 				//Gdx.app.log(TAG, "SWITCH SHIPS");
 				parent.e.isHostile = true;
 				parent.e.x = (int) miss.target.x;

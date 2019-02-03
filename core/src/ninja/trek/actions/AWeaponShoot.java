@@ -31,7 +31,7 @@ public class AWeaponShoot extends Action {
 	}
 	private void shoot(Weapon w, WeaponItem weI) {
 		
-		parent.e.ship.shoot(weI, w.target, parent.e.ship, w);
+		parent.e.ship.shoot(weI, w.target, w.targetShip, w);
 		w.fireDelay = (int)(weI.fireWindDownTime / World.timeStep);
 		
 		

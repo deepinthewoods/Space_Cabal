@@ -165,8 +165,8 @@ public class MainSpaceCabal extends ApplicationAdapter {
 						return true;
 					}
 					//TODO unproject and check for vacuum
-					
-					ship.setWeaponTarget(world.targettingIndex, (int)v.x, (int)v.y);
+					if (eShip == null) throw new GdxRuntimeException("null ship");
+					ship.setWeaponTarget(world.targettingIndex, (int)v.x, (int)v.y, eShip);
 					eShip.zoomOutForTarget();
 					world.targettingIndex = -1;
 					return true;

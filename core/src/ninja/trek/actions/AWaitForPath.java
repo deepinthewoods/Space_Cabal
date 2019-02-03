@@ -119,7 +119,7 @@ public class AWaitForPath extends Action {
 							addBeforeMe(follow);
 							isFinished = true;
 							parent.e.target.set(parent.e.path.get(0), parent.e.path.get(1));
-							//parent.e.ship.reserve(parent.e.target.x, parent.e.target.y);
+							//parent.e.ship.reserve(parent.e.missileTarget.x, parent.e.missileTarget.y);
 						}
 					}
 					return;
@@ -131,12 +131,12 @@ public class AWaitForPath extends Action {
 			isFinished = true;
 			
 			if (path.size == 0){
-				parent.e.target.set(parent.e.x, parent.e.y);
-				parent.e.ship.reserve(parent.e.target.x, parent.e.target.y);
+				parent.e.missileTarget.set(parent.e.x, parent.e.y);
+				parent.e.ship.reserve(parent.e.missileTarget.x, parent.e.missileTarget.y);
 			} else {
-				parent.e.target.set(parent.e.path.get(0), parent.e.path.get(1));
+				parent.e.missileTarget.set(parent.e.path.get(0), parent.e.path.get(1));
 				
-				parent.e.ship.reserve(parent.e.target.x, parent.e.target.y);
+				parent.e.ship.reserve(parent.e.missileTarget.x, parent.e.missileTarget.y);
 			}*/
 		}
 	}
@@ -159,7 +159,7 @@ public class AWaitForPath extends Action {
 				int block = m.get(x, y);
 				int room = map.room.get(x, y);
 				if (room < 0) {
-					Gdx.app.log(TAG, "target room invalid " + Ship.systemNames[(block & Ship.BLOCK_ID_MASK)]);
+					Gdx.app.log(TAG, "missileTarget room invalid " + Ship.systemNames[(block & Ship.BLOCK_ID_MASK)]);
 				}
 				if (startRoom < 0) {
 					Gdx.app.log(TAG, "start room invalid " +x+"," +y);
@@ -234,7 +234,7 @@ public class AWaitForPath extends Action {
 				//Gdx.app.log(TAG, "0 PATH");
 				parent.e.ship.reserve(parent.e.target.x, parent.e.target.y);
 				throw new GdxRuntimeException("fdjk2)");
-				//parent.e.target.set(targetX, targetY);
+				//parent.e.missileTarget.set(targetX, targetY);
 			} else {
 				parent.e.target.set(path.get(0), path.get(1));
 				parent.e.ship.reserve(parent.e.target.x, parent.e.target.y);
@@ -284,7 +284,7 @@ public class AWaitForPath extends Action {
 		if (parent.e.path == null) throw new GdxRuntimeException("null path " + parent.e.actionIndexForPath);
 
 		int currentRoom = parent.e.ship.room.get(parent.e.x, parent.e.y);
-		//Gdx.app.log(TAG, "found path " + currentRoom + "  " + parent.e.target);
+		//Gdx.app.log(TAG, "found path " + currentRoom + "  " + parent.e.missileTarget);
 	}
 
 	

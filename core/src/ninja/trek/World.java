@@ -471,13 +471,7 @@ public class World {
 	public Ship getEnemyShip() {
 		return maps.get(1);
 	}
-	public Ship getEnemy(Ship map) {
-		//Gdx.app.log(TAG, "get enemy " + maps.size);
-		for (Ship ship : maps){
-			if (ship != map) return ship;
-		}
-		return null;
-	}
+
 	public void cancelTarget() {
 		getPlayerShip().cancelWeaponTarget(targettingIndex);
 		getEnemyShip().zoomOutForTarget();
@@ -485,10 +479,11 @@ public class World {
 	}
 	public static String[] letters = {"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"};
 
-	public void switchToEnemyShip(Missile miss) {
-		Ship enemyShip = getEnemy(miss.ship);
+
+	public void switchToShip(Entity miss, Ship to) {
+		//Ship enemyShip = getEnemy(miss.ship);
 		miss.ship.removeEntityNoPool(miss);
-		enemyShip.addEntity(miss);
+		to.addEntity(miss);
 	}
 	public void dispose() {
 		for (int i = 0; i < maps.size; i++)

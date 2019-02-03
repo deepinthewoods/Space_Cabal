@@ -1,6 +1,7 @@
 package ninja.trek.actions;
 
 import com.badlogic.gdx.scenes.scene2d.ui.UI;
+import com.badlogic.gdx.utils.GdxRuntimeException;
 
 import ninja.trek.Items;
 import ninja.trek.entity.Laser;
@@ -39,8 +40,8 @@ public class ALaser extends Action{
     public void shoot() {
         Laser las = (Laser) parent.e;
         LaserItem weI = (LaserItem) Items.getDef(las.weaponItemID);
-        Ship target = world.getEnemy(map);
-
+        Ship target = las.targetShip;
+        if (target == null) throw new GdxRuntimeException("null target");
         if (target.getShipEntity().shield <= weI.shieldPiercing)
             target.laserDamage(las.target.x, las.target.y, weI.damage);
     }

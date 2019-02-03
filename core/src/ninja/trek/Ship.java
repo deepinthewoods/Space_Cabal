@@ -11,6 +11,7 @@ import com.badlogic.gdx.graphics.Pixmap.Format;
 import com.badlogic.gdx.graphics.PixmapIO;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.Texture.TextureFilter;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
@@ -692,6 +693,7 @@ public class Ship {
 		}
 	}
 	public void drawEntities(SpriteBatch batch, World world, boolean forceHullOver, boolean isPlayer){
+		//if (true) return;
 		fonts.setZoom(camera);
 		//camera.update();
 		//Gdx.app.log(TAG, "draw entities " + entities.size + "  "  + camera.position);
@@ -802,12 +804,22 @@ public class Ship {
 			
 			//shape.line(0,0,0, 1000);
 		}
-		
+		Gdx.gl.glLineWidth(3f);
 		if (selectedEntity != null){
 			Entity e = selectedEntity;
 			float w = 20 * camera.zoom, h = w;
-			shape.rect(e.x-w , e.y-h , w*2, h*2);
-			//Gdx.app.log(TAG, "SELECTED");
+			//shape.rect(e.x-w , e.y-h , w*2, h*2);
+
+			w = e.glyphLayout.width/2;
+			h = e.glyphLayout.height/2;
+
+			//w *= camera.zoom;
+			//h *= camera.zoom;
+
+			BitmapFont font = fonts.getFont(e.font);
+
+			shape.rect(e.x-w -6 * camera.zoom, e.y-h - 6 * camera.zoom , w*2 + 4*camera.zoom, h*2 + 4 * camera.zoom );
+			//Gdx.app.log(TAG, "SELECTED " + camera.zoom);
 		}
 		shape.end();
 		Gdx.gl.glEnable(GL20.GL_BLEND);
@@ -1109,7 +1121,7 @@ public class Ship {
 			Entity e = entities.get(i);
 			//Gdx.app.log(TAG, "ent " + i + " : " + e + " / " + entities.size);
 			if (e instanceof ShipEntity){
-				Gdx.app.log(TAG, "remove AI " + e.getClass() + e.glyph);
+				//Gdx.app.log(TAG, "remove AI " + e.getClass() + e.glyph);
 				removeEntity(e);
 			}
 		}
@@ -1444,14 +1456,15 @@ public class Ship {
 		//Gdx.app.log(TAG, "select e");
 	}
 
-	public void setWeaponTarget(int index, int x, int y) {
+	public void setWeaponTarget(int index, int x, int y, Ship targetShip) {
 		Weapon w = getWeapon(index);
 		if (w != null){
 			w.target.set(x, y);
+			w.targetShip = targetShip;
 			w.hasTarget = true;
 		}
 		
-		//Gdx.app.log(TAG, "zoom out for target");
+		//Gdx.app.log(TAG, "zoom out for missileTarget");
 	}
 	
 	
@@ -1507,7 +1520,7 @@ public class Ship {
 	}
 	public Laser[] deployedLasers = new Laser[ItemDisplay.MAX_WEAPONS];
 	
-	public void shoot(WeaponItem weI, GridPoint2 target, Ship map, Weapon w) {
+	public void shoot(WeaponItem weI, GridPoint2 target, Ship targetShip, Weapon w) {
 		switch (weI.weaponType){
 		case laser:
 			//Gdx.app.log(TAG, "shoot");
@@ -1516,10 +1529,12 @@ public class Ship {
 				deployedLasers[w.index].index = w.index;
 				deployedLasers[w.index].setDefaultAI();
 				deployedLasers[w.index].target.set(target);
+				deployedLasers[w.index].targetShip = targetShip;
+
 				deployedLasers[w.index].x = w.x;
 				deployedLasers[w.index].y = w.y;
                 deployedLasers[w.index].weaponItemID = w.equippedItemID;
-                //deployedLasers[w.index].target.set(target.x, target.y);
+                //deployedLasers[w.index].missileTarget.set(missileTarget.x, missileTarget.y);
 				addEntity(deployedLasers[w.index]);
 
 			} else {
@@ -1535,6 +1550,8 @@ public class Ship {
 			miss.y = w.y;
 			miss.position.set(w.x, w.y);;
 			miss.target.set(target.x, target.y);
+			miss.targetShip = targetShip;
+			if (targetShip == null) throw new GdxRuntimeException("ex");
 			miss.setDefaultAI();
 			miss.weaponItemID = w.equippedItemID;
 			addEntity(miss);
@@ -1671,11 +1688,12 @@ public class Ship {
 		} else if (cmd.substring(0, 5).contains("spawn")) {
 			String shipName = cmd.split(" ")[1];
 			Gdx.app.log(TAG, "SPAWN " + shipName);
-			Ship enemy = world.getEnemy(this);
+			Ship enemy = world.getEnemyShip();//world.getEnemy(this);
 			world.loadShip(shipName, enemy);
 		} else if (cmd.equals("hostile")) {
 			Gdx.app.log(TAG, "HOSTILE");
-			Ship enemy = world.getEnemy(this);
+			//Ship enemy = world.getEnemy(this);
+			Ship enemy = world.getEnemyShip();
 			//enemy.removeEntity(enemy.getShipEntity());
 			//ShipEntity shipE = Pools.obtain(ShipEntity.class);
 			//shipE.setDefaultAI();

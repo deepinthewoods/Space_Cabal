@@ -27,7 +27,7 @@ public class AStar {
 		this.ship = ship;
 	}
 
-	/** Returns x,y pairs that are the path from the target to the start. */
+	/** Returns x,y pairs that are the path from the missileTarget to the start. */
 	public IntArray getPath (int startX, int startY, int[] goals, int[] fixOrder) {
 		path = Pools.obtain(IntArray.class);
 		path.clear();

@@ -43,7 +43,7 @@ public class AWeaponCharge extends Action {
 		float value = w.totalCharge / (float)(weI.cost - 1);
 		//Gdx.app.log(TAG, "charged to " + w.totalCharge + " / " + weI.cost + "  dam " + damage + " pend" + pending);
 		//parent.e.map.fill.clear();
-		//parent.e.map.fill.floodFillDeplete(parent.e.map.map, parent.e.x, parent.e.y, target, replacement, damage);
+		//parent.e.map.fill.floodFillDeplete(parent.e.map.map, parent.e.x, parent.e.y, missileTarget, replacement, damage);
 		//wait.to.set(tx, ty);
 		//addBeforeMe(wait);
 		//AFollowPath follow = Pools.obtain(AFollowPath.class);
