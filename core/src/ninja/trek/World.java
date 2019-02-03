@@ -315,28 +315,7 @@ public class World {
 		return maps.get(0);
 	}
 	public void startTestBattle() {
-		loadShip("test", maps.get(1));
-		
-		//Gdx.app.log(TAG, "IT " + maps.size);
-		for (int i = 0; i < maps.size; i++){
-			Ship m = maps.get(i);
-			m.categorizeSystems();
-			m.calculateConnectivity(this);
-			if (!m.hasShipEntity()){
-				ShipEntity shipE = Pools.obtain(ShipEntity.class);
-				shipE.setDefaultAI();
-				maps.get(i).addEntity(shipE );
-			}
-			Gdx.app.log(TAG, "size " + i + "  " + maps.get(i).getEntities().size);
-		}
-		for (int i = 0; i < 1; i++){
-			Entity e = Pools.obtain(Entity.class);
-			e.glyph = letters[i % letters.length];
-			e.pos(maps.get(0).map.spawn);
-			e.setDefaultAI();
-			maps.get(0).addEntity(e);
-			
-		}
+
 		
 	}
 	
@@ -493,6 +472,7 @@ public class World {
 		return maps.get(1);
 	}
 	public Ship getEnemy(Ship map) {
+		//Gdx.app.log(TAG, "get enemy " + maps.size);
 		for (Ship ship : maps){
 			if (ship != map) return ship;
 		}

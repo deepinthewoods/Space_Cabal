@@ -18,18 +18,23 @@ public class AEnemyShip extends ABaseShip {
     public static GridPoint2 target = new GridPoint2();
     @Override
     public void update(float dt, World world, Ship map, UI ui) {
+        if (!parent.e.ship.isHostile || world.getPlayerShip() == parent.e.ship){
+            super.update(dt, world, map, ui);
+            return;
+        }
+        ///Gdx.app.log(TAG, "UPDATE ENEMY SHIP" + parent.e.ship);
 
         Ship ship = parent.e.ship;
         ShipEntity shipE = ship.getShipEntity();
-        Array<Entity> weapons = ship.getEntitiesByClass(Engine.class);
+        Array<Entity> weapons = ship.getEntitiesByClass(Weapon.class);
         for (int i = 0; i < weapons.size; i++){
             Weapon weapon = (Weapon) weapons.get(i);
             Ship tShip = world.getPlayerShip();
             target.set(tShip.mapWidth/2, tShip.mapHeight/2);
             ship.setWeaponTarget(weapon.index, target.x, target.y);
-            Gdx.app.log(TAG, "set weapon targets");
+            //Gdx.app.log(TAG, "set weapon targets");
         }
-        this.delay(2f);
+        //this.delay(2f);
 
         super.update(dt, world, map, ui);
 

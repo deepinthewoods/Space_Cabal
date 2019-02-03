@@ -119,7 +119,8 @@ public class Ship {
 
     public void missileDamage(int x, int y, int damage) {
         map.floodFillMissileDamage(x, y, damage, this);
-
+		getShipEntity().health -= damage;
+		Gdx.app.log(TAG, "Damage" + damage);
     }
 
     public void damageShield(int shieldDamage) {
@@ -129,6 +130,8 @@ public class Ship {
 
     public void laserDamage(int x, int y, int damage) {
         map.floodFillMissileDamage(x, y, damage, this);
+		getShipEntity().health -= damage ;
+		Gdx.app.log(TAG, "laser Damage" + damage + " = " + getShipEntity().health);
        // Gdx.app.log(TAG, "LASER DAMAGE");
     }
 
@@ -1089,7 +1092,7 @@ public class Ship {
 		Gdx.app.log(TAG, "size " + entities.size);
 		for (int i = 0; i < entities.size; i++){
 			Entity e = entities.get(i);
-			Gdx.app.log(TAG, "ent " + i + " : " + e + " / " + entities.size);
+			//Gdx.app.log(TAG, "ent " + i + " : " + e + " / " + entities.size);
 			//if (e instanceof ShipEntity){
 				//Gdx.app.log(TAG, "remove AI " + e.getClass() + e.glyph);
 			//	removeEntity(e);
@@ -1104,7 +1107,7 @@ public class Ship {
 		}
 		for (int i = entities.size-1; i >= 0; i--) {
 			Entity e = entities.get(i);
-			Gdx.app.log(TAG, "ent " + i + " : " + e + " / " + entities.size);
+			//Gdx.app.log(TAG, "ent " + i + " : " + e + " / " + entities.size);
 			if (e instanceof ShipEntity){
 				Gdx.app.log(TAG, "remove AI " + e.getClass() + e.glyph);
 				removeEntity(e);
@@ -1550,7 +1553,7 @@ public class Ship {
 	public boolean showHull = true;
 	private float zoomPause;
 	private int nextGlyphIndex;
-	private boolean isHostile;
+	public boolean isHostile;
 	public void unReserve(int x, int y) {
 		//Gdx.app.log(TAG, "unresrv " + x + "," + y);
 		//if (!reserved.get(x + y * mapWidth)) Gdx.app.log(TAG, "dfka");
@@ -1673,6 +1676,10 @@ public class Ship {
 		} else if (cmd.equals("hostile")) {
 			Gdx.app.log(TAG, "HOSTILE");
 			Ship enemy = world.getEnemy(this);
+			//enemy.removeEntity(enemy.getShipEntity());
+			//ShipEntity shipE = Pools.obtain(ShipEntity.class);
+			//shipE.setDefaultAI();
+			//enemy.addEntity(shipE);
 			if (enemy != null) {
 				enemy.setHostile(true);
 				setHostile(true);
@@ -1686,6 +1693,7 @@ public class Ship {
 	
 	private void setHostile(boolean b) {
 		isHostile = b;
+
 	}
 	public void setForNewGamePreview() {
 		map.unBoostAll();

@@ -106,7 +106,7 @@ public class ActionList extends EntityAI implements Poolable{//, KryoSerializabl
 
     public float currentTime;
 
-    public transient BinaryHeap<Action> delayedActions;
+    public transient BinaryHeap<Action> delayedActions = new BinaryHeap<Action>();
 	
 	
     public void inserted(Entity e) {

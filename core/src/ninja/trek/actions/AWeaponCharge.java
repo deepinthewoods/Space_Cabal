@@ -52,7 +52,7 @@ public class AWeaponCharge extends Action {
 		WeaponButton butt = ui.weaponButtons[w.index];
 	
 		//value = 1.3f;
-		butt.slider.setValue(value);
+		if (world.getPlayerShip() == parent.e.ship) butt.slider.setValue(value);
 		//Gdx.app.log(TAG, "slider " + value);
 	}
 

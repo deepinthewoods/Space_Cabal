@@ -57,7 +57,7 @@ public class ABaseShip extends Action{
 				if (depletion == 0) continue;
 				int toRestore = Math.min(depletion, power);
 				power -= toRestore;
-				//if (toRestore != 0) Gdx.app.log(TAG, "restore " + toRestore);
+				//if (toRestore != 0) Gdx.app.log(TAG, "restore " + toRestore + "  " + parent.e.ship);
 				//else if (system == Ship.OXYGEN) Gdx.app.log(TAG, "oxy restore " + pt);
 				depletion -= toRestore;
 				block = block & (Ship.BLOCK_AIR_MASK | Ship.BLOCK_DAMAGE_MASK | Ship.BLOCK_FIRE_MASK | Ship.BLOCK_ID_MASK | Ship.BLOCK_BOOST_MASK);

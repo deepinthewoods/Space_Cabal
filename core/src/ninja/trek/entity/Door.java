@@ -53,7 +53,7 @@ public class Door extends Entity implements Pool.Poolable {
         ActionList playerAction = new ActionList();
         playerAction.addToStart(Pools.obtain(ADoor.class));
         setAI(playerAction);
-        Gdx.app.log(TAG, "DEFAULT AI");
+       // Gdx.app.log(TAG, "DEFAULT AI");
         return this;
     }
 }

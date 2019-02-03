@@ -56,12 +56,11 @@ public class GameInfo {
 			all.addAll(arr);
 			Gdx.app.log(TAG, "packing " + f.nameWithoutExtension());
 		}
-		
+
 		FileHandle outFile = Gdx.files.absolute(
-				"C:\\Users\\n\\_spacecabal\\android\\assets\\SpaceCabal\\quests\\" 
-				+ "allquests.json"
+				Gdx.files.internal(MainSpaceCabal.QUEST_SAVE_LOCATION + "allquests.json").file().getAbsolutePath()
 				);
-		String string = json.toJson(all);
+		String string = json.prettyPrint(all);
 		outFile.writeString(string, false);
 		Gdx.app.log(TAG, "packing all");
 
