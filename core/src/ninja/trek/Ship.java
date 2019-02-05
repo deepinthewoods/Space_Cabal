@@ -522,7 +522,7 @@ public class Ship implements Pool.Poolable {
 					drawCachedChunk(x, y, chunkBuffer, map, mesh, cacheShader, cacheVerts);
 				}
 		}
-		batch.getProjectionMatrix().set(camera.combined).translate(offsetWorld.x, offsetWorld.y, 0f);
+		batch.getProjectionMatrix().set(camera.combined);//.translate(offsetWorld.x, offsetWorld.y, 0f);
 		//Gdx.app.log(TAG, "draw map " + shipIndex + " " + camera.zoom + "  " + camera.position);
 		if (!hullFront && showHull){
 			//batch.enableBlending();

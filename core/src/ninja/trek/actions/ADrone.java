@@ -14,7 +14,7 @@ public class ADrone extends Action {
     @Override
     public void update(float dt, World world, Ship map, UI ui) {
         Drone drone = (Drone) parent.e.ship;
-        drone.offsetWorld.rotate(0.25f  );
+        drone.offsetWorld.rotate(0.925f  );
         //Gdx.app.log(TAG, "update drone" + drone.offsetWorld);
     }
 
@@ -28,7 +28,7 @@ public class ADrone extends Action {
     @Override
     public void onStart(World world, Ship map) {
         Drone drone = (Drone) parent.e.ship;
-        drone.offsetWorld.set(drone.parent.mapWidth/2, 0);
-        drone.offsetWorld.set(0,0);
+        drone.offsetWorld.set(drone.mapWidth, 0);
+        //drone.offsetWorld.set(0,0);
     }
 }
