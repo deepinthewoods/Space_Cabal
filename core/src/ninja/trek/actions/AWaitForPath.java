@@ -19,8 +19,8 @@ import ninja.trek.IntPixelMap;
 import ninja.trek.Ship;
 import ninja.trek.World;
 import ninja.trek.action.Action;
+import ninja.trek.entity.Entity;
 
-import static ninja.trek.EntityAI.FIRE;
 
 public class AWaitForPath extends Action {
 
@@ -60,21 +60,21 @@ public class AWaitForPath extends Action {
 				int[] fixOrder;
 				switch (action){
 				
-				case FIRE://Gdx.app.log(TAG, "look fire " + list.size);
+				case Entity.FIRE://Gdx.app.log(TAG, "look fire " + list.size);
 					if (process(list, map, action, false)) return;
 					break;
-				case EntityAI.ENGINE:
-				case EntityAI.OXYGEN:
-				case EntityAI.DRONE:
-				case EntityAI.WEAPON:
-				case EntityAI.SHIELDS:
-				case EntityAI.TELEPORTER:
-				case EntityAI.SCIENCE:
+				case Entity.ENGINE:
+				case Entity.OXYGEN:
+				case Entity.DRONE:
+				case Entity.WEAPON:
+				case Entity.SHIELDS:
+				case Entity.TELEPORTER:
+				case Entity.SCIENCE:
 					
 					//found.clear();
 					if (process(list, map, action, true)) return;
 					break;
-				case EntityAI.FIX:
+				case Entity.FIX:
 					fixOrder = parent.e.fixOrder;
 					for (int h = 0; h < fixOrder.length; h++)
 					{
@@ -87,7 +87,7 @@ public class AWaitForPath extends Action {
 					}
 					
 					break;
-				case EntityAI.WANDER:
+				case Entity.WANDER:
 					int targetX = parent.e.x, targetY = parent.e.y;
 					int tX = 0, tY = 0; 
 					int biggestAir = -1;;
@@ -189,7 +189,7 @@ public class AWaitForPath extends Action {
 				}
 			}
 			Comparator comparator = null;
-			if (action == FIRE){
+			if (action == Entity.FIRE){
 				fireComparator.set(parent.e.x, parent.e.y, parent.e.ship);
 				comparator = fireComparator;
 			} else {
@@ -248,15 +248,15 @@ public class AWaitForPath extends Action {
 	private IntIntMap getList(int action, int blockID, IntPixelMap m) {
 		switch (action){
 		
-		case FIRE:
+		case Entity.FIRE:
 			return m.onFire;
-		case EntityAI.ENGINE:
-		case EntityAI.OXYGEN:
-		case EntityAI.DRONE:
-		case EntityAI.WEAPON:
-		case EntityAI.SHIELDS:
-		case EntityAI.TELEPORTER:
-		case EntityAI.SCIENCE:return m.needsBoost[blockID];
+		case Entity.ENGINE:
+		case Entity.OXYGEN:
+		case Entity.DRONE:
+		case Entity.WEAPON:
+		case Entity.SHIELDS:
+		case Entity.TELEPORTER:
+		case Entity.SCIENCE:return m.needsBoost[blockID];
 		}
 		return null;
 		
@@ -264,13 +264,13 @@ public class AWaitForPath extends Action {
 	private int getBlockID(int action) {
 		int blockID = 0;
 		switch (action){
-		case EntityAI.SHIELDS:blockID = Ship.SHIELD; break;
-		case EntityAI.ENGINE:blockID = Ship.ENGINE; break;
-		case EntityAI.OXYGEN:blockID = Ship.OXYGEN; break;
-		case EntityAI.DRONE:blockID = Ship.DRONE; break;
-		case EntityAI.WEAPON:blockID = Ship.WEAPON; break;
-		case EntityAI.TELEPORTER:blockID = Ship.TELEPORTER; break;
-		case EntityAI.SCIENCE:blockID = Ship.SCIENCE; break;
+		case Entity.SHIELDS:blockID = Ship.SHIELD; break;
+		case Entity.ENGINE:blockID = Ship.ENGINE; break;
+		case Entity.OXYGEN:blockID = Ship.OXYGEN; break;
+		case Entity.DRONE:blockID = Ship.DRONE; break;
+		case Entity.WEAPON:blockID = Ship.WEAPON; break;
+		case Entity.TELEPORTER:blockID = Ship.TELEPORTER; break;
+		case Entity.SCIENCE:blockID = Ship.SCIENCE; break;
 		}
 		return blockID;
 	}

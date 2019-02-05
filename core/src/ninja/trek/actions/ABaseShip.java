@@ -29,7 +29,7 @@ public class ABaseShip extends Action{
         ShipEntity shipE = ship.getShipEntity();
         if (shipE.shield < shipE.shieldTotal){
             shieldTimer += dt;
-            Gdx.app.log(TAG, "update " + shieldTimer + "  " + dt);
+           // Gdx.app.log(TAG, "update " + shieldTimer + "  " + dt);
             float shieldTimeout = 5f;
             if (shieldTimer > shieldTimeout){
                 shieldTimer = 0f;

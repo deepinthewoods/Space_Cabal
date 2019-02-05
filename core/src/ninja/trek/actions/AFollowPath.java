@@ -9,6 +9,7 @@ import ninja.trek.EntityAI;
 import ninja.trek.Ship;
 import ninja.trek.World;
 import ninja.trek.action.Action;
+import ninja.trek.entity.Entity;
 
 public class AFollowPath extends Action {
 	private static final String TAG = "follow path a";
@@ -50,7 +51,7 @@ public class AFollowPath extends Action {
 		addBeforeMe(delay);
 		if (pathProgress < 0 ){
 			switch (parent.e.actionIndexForPath){
-			case EntityAI.FIX:
+			case Entity.FIX:
 				AFix aFix = Pools.obtain(AFix.class);
 				if (parent.e.path.size == 0){
 					parent.e.target.set(parent.e.x, parent.e.y);
@@ -60,7 +61,7 @@ public class AFollowPath extends Action {
 				}
 				addBeforeMe(aFix);
 				break;
-			case EntityAI.FIRE:
+			case Entity.FIRE:
 				AFightFire aFire = Pools.obtain(AFightFire.class);
 				if (parent.e.path.size == 0){
 					parent.e.target.set(parent.e.x, parent.e.y);
@@ -70,13 +71,13 @@ public class AFollowPath extends Action {
 				}
 				addBeforeMe(aFire);
 				break;
-			case EntityAI.ENGINE:
-			case EntityAI.SHIELDS:
-			case EntityAI.OXYGEN:
-			case EntityAI.DRONE:
-			case EntityAI.WEAPON:
-			case EntityAI.TELEPORTER:
-			case EntityAI.SCIENCE:
+			case Entity.ENGINE:
+			case Entity.SHIELDS:
+			case Entity.OXYGEN:
+			case Entity.DRONE:
+			case Entity.WEAPON:
+			case Entity.TELEPORTER:
+			case Entity.SCIENCE:
 				ABoost aBoost = Pools.obtain(ABoost.class);
 				if (parent.e.path.size == 0){
 					parent.e.target.set(parent.e.x, parent.e.y);
@@ -87,9 +88,9 @@ public class AFollowPath extends Action {
 				addBeforeMe(aBoost);
 				//Gdx.app.log(TAG, "boost unreserve " + parent.e.x + "," + parent.e.y);
 				break;
-			case EntityAI.SHOOT:
+			case Entity.SHOOT:
 				break;
-			case EntityAI.WANDER:
+			case Entity.WANDER:
 				break;
 			}
 			//Pools.free(parent.e.path);
@@ -119,13 +120,13 @@ public class AFollowPath extends Action {
 	private boolean isStillValid(int x, int y, int actionIndexForPath) {
 		int block = parent.e.ship.map.get(x,  y);
 		switch (parent.e.buttonOrder[actionIndexForPath]){
-		case EntityAI.ENGINE:
-		case EntityAI.OXYGEN:
-		case EntityAI.DRONE:
-		case EntityAI.SHIELDS:
-		case EntityAI.WEAPON:
-		case EntityAI.TELEPORTER:
-		case EntityAI.SCIENCE:
+		case Entity.ENGINE:
+		case Entity.OXYGEN:
+		case Entity.DRONE:
+		case Entity.SHIELDS:
+		case Entity.WEAPON:
+		case Entity.TELEPORTER:
+		case Entity.SCIENCE:
 			int currentDep = (block & Ship.BLOCK_DATA_MASK) >> Ship.BLOCK_DATA_BITS;
 			int currentBoost = (block & Ship.BLOCK_BOOST_MASK) >> Ship.BLOCK_BOOST_BITS;
 			if (currentDep == 0 && currentBoost == 0) return true;
@@ -141,7 +142,7 @@ public class AFollowPath extends Action {
 
 	@Override
 	public void onStart(World world, Ship map) {
-		if (parent.e.path == null) throw new GdxRuntimeException("null path " + EntityAI.names[parent.e.buttonOrder[parent.e.actionIndexForPath]]);
+		if (parent.e.path == null) throw new GdxRuntimeException("null path " + Entity.jobNames[parent.e.buttonOrder[parent.e.actionIndexForPath]]);
 
 		pathProgress = parent.e.path.size/2-1;
 		//Gdx.app.log(TAG, "follow start " );

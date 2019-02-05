@@ -17,7 +17,7 @@ import ninja.trek.actions.AMissile;
 
 public class Missile extends Entity {
 	public Vector2 direction = new Vector2(), position = new Vector2();
-	public Ship targetShip;
+	public transient Ship targetShip;
 	public float time;
 	public int weaponItemID;
 

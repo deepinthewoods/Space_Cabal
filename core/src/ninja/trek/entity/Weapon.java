@@ -11,14 +11,14 @@ import ninja.trek.ui.ItemDisplay.ItemButton;
 
 public class Weapon extends SystemControlEntity {
 	public int index;
-	public GridPoint2 target = new GridPoint2();
+	//public GridPoint2 target = new GridPoint2();
 
 	public boolean hasTarget = false;
 	public int equippedItemIndex = -1;
 	public int equippedItemID;
 	public int totalCharge;
 	public int fireDelay;
-	public Ship targetShip;
+	public transient Ship targetShip;
 
 	public void clear() {
 	}

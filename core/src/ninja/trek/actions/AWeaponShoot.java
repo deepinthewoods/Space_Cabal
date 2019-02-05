@@ -33,8 +33,6 @@ public class AWeaponShoot extends Action {
 		
 		parent.e.ship.shoot(weI, w.target, w.targetShip, w);
 		w.fireDelay = (int)(weI.fireWindDownTime / World.timeStep);
-		
-		
 	}
 
 	@Override

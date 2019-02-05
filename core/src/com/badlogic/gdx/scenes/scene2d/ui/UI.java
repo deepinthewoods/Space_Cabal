@@ -67,7 +67,7 @@ public class UI {
 	private final World world;
 	private final Table entityOtherActionTable;
 	private DragAndDrop dnd;
-	public UIActionButton[] entityActionButtons = new UIActionButton[EntityAI.names.length];
+	public UIActionButton[] entityActionButtons = new UIActionButton[Entity.jobNames.length];
 	public UIActionButton[] entityOtherActionButtons = new UIActionButton[Entity.ButtonType.values().length];
 	public UISystemButton[] shipSystemottomButtons = new UISystemButton[Ship.systemNames.length];
 	private Table entityActionTable;
@@ -179,7 +179,7 @@ public class UI {
 		topDragL.setTapSquareSize(0f);
 		entityActionTable.addListener(topDragL);
 		entityActionTable.setTouchable(Touchable.enabled);
-		for (int i = 0; i < EntityAI.names.length; i++){
+		for (int i = 0; i < Entity.jobNames.length; i++){
 			UIActionButton btn = new UIActionButton(i, skin, entityActionTable);
 			entityActionButtons[i] = btn;
 			entityActionTable.add(btn).left();
@@ -726,41 +726,65 @@ public class UI {
 		
 		final Window newShipWindow = new Window("Select Settings for New Ship", skin);
 		newShipWindow.setPosition(Gdx.graphics.getWidth()/2, Gdx.graphics.getHeight()/2, Align.center);
-		final Slider xSlider = new Slider(1, 8, 1, false, skin);
-		final Label xSliderLabel = new Label("x " + Ship.CHUNKSIZE , skin);
-		final Slider ySlider = new Slider(1, 8, 1, false, skin);
-		final Label ySliderLabel = new Label("y " + Ship.CHUNKSIZE, skin);
-		xSlider.addListener(new ChangeListener(){
-			@Override
-			public void changed(ChangeEvent event, Actor actor) {
-				xSliderLabel.setText("x " + ((int)xSlider.getValue() * Ship.CHUNKSIZE));
-			}
-		});
-		ySlider.addListener(new ChangeListener(){
-			@Override
-			public void changed(ChangeEvent event, Actor actor) {
-				ySliderLabel.setText("y " + ((int)ySlider.getValue() * Ship.CHUNKSIZE));
-			}
-		});
-		newShipWindow.add(xSliderLabel);
-		newShipWindow.add(xSlider);
-		newShipWindow.row();
-		newShipWindow.add(ySliderLabel);
-		newShipWindow.add(ySlider);
-		final TextButton createShipButtonInWindow = new TextButton("Create", skin);
+
+
+		/*final TextButton createShipButtonInWindow = new TextButton("Create", skin);
 		createShipButtonInWindow.addListener(new ClickListener(){
 			@Override
 			public void clicked(InputEvent event, float x, float y) {
 				createShipButtonInWindow.setChecked(false);
 				newShipWindow.remove();
-				int w = (int)xSlider.getValue() * Ship.CHUNKSIZE;
-				int h = (int)ySlider.getValue() * Ship.CHUNKSIZE;
+
 				
-				EntityArray entities = Pools.obtain(EntityArray.class);
-				world.getPlayerShip().load(new IntPixelMap(w, h), entities, null, null);
+				world.newPlayerShip();
 				super.clicked(event, x, y);
 			}
-		});
+		});*/
+        final TextButton createShipButtonInWindow2 = new TextButton("Create drone", skin);
+        createShipButtonInWindow2.addListener(new ClickListener(){
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                createShipButtonInWindow2.setChecked(false);
+                newShipWindow.remove();
+
+				EntityArray entities = Pools.obtain(EntityArray.class);
+				Ship sh = world.getPlayerShip();
+				sh.load(new IntPixelMap(64, 64), entities, sh.hull.getTexture(), sh.inventory);
+				sh.categorizeSystems();
+               // world.newPlayerShip();
+                super.clicked(event, x, y);
+            }
+        });
+        final TextButton createShipButtonInWindow3 = new TextButton("Create 256", skin);
+        createShipButtonInWindow3.addListener(new ClickListener(){
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                createShipButtonInWindow3.setChecked(false);
+                newShipWindow.remove();
+
+				EntityArray entities = Pools.obtain(EntityArray.class);
+				Ship sh = world.getPlayerShip();
+				sh.load(new IntPixelMap(256, 256), entities, sh.hull.getTexture(), sh.inventory);
+				sh.categorizeSystems();
+                //world.newPlayerShip();
+                super.clicked(event, x, y);
+            }
+        });
+        final TextButton createShipButtonInWindow4 = new TextButton("Create 512", skin);
+        createShipButtonInWindow4.addListener(new ClickListener(){
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                createShipButtonInWindow4.setChecked(false);
+                newShipWindow.remove();
+
+                EntityArray entities = Pools.obtain(EntityArray.class);
+				Ship sh = world.getPlayerShip();
+                sh.load(new IntPixelMap(512, 512), entities, sh.hull.getTexture(), sh.inventory);
+                sh.categorizeSystems();
+               // world.newPlayerShip();
+                super.clicked(event, x, y);
+            }
+        });
 		final TextButton cancelCreateShipButtonInWindow = new TextButton("cancel", skin);
 		cancelCreateShipButtonInWindow.addListener(new ClickListener(){
 			@Override
@@ -772,8 +796,11 @@ public class UI {
 		});
 		newShipWindow.row();
 		newShipWindow.row();
-		newShipWindow.add(createShipButtonInWindow);
-		newShipWindow.add(cancelCreateShipButtonInWindow);
+		//newShipWindow.add(createShipButtonInWindow1);
+		newShipWindow.add(createShipButtonInWindow2).row();
+		newShipWindow.add(createShipButtonInWindow3).row();
+		newShipWindow.add(createShipButtonInWindow4).row();
+		newShipWindow.add(cancelCreateShipButtonInWindow).row();
 		newShipWindow.pack();
 		
 		TextButton newShipButton = new TextButton("New", skin);
@@ -1050,17 +1077,30 @@ public class UI {
 					v.set(0, 0);
 					shipControlButton.localToStageCoordinates(v);
 					//shipControlWindow.setHeight(Gdx.graphics.getHeight()/2);
-					shipControlWindow.getCell(editPane).maxHeight(Gdx.graphics.getHeight()/2);
+					shipControlWindow.getCell(editPane).maxHeight(Gdx.graphics.getHeight()/3 * 2);
 					shipControlWindow.pack();
+
+
+
+
+
+
+
+
+
+
 
 					shipControlWindow.setPosition(v.x, v.y, Align.topLeft);
 					stage.setScrollFocus(editPane);
-					Gdx.app.log(TAG, "control CHECKED");
+					//Gdx.app.log(TAG, "control CHECKED");
 				} else {
-					Gdx.app.log(TAG, "control NOT CHECKED");
+					//Gdx.app.log(TAG, "control NOT CHECKED");
 					
 					shipControlWindow.remove();
 				}
+
+
+
 				
 				
 			
@@ -1250,10 +1290,14 @@ public class UI {
 				super.clicked(event, x, y);
 			}
 		});
+
+		ScrollPane entitiesPane = new ScrollPane(entitiesTable);
+		//entitiesPane.setHeight(Gdx.graphics.getHeight() * .7f);
+
 		entitiesWindow.add(entityAddButton);
 		entitiesWindow.add(entityWindowCloseButton);
 		entitiesWindow.row();
-		entitiesWindow.add(entitiesTable);
+		entitiesWindow.add(entitiesPane);
 		entityInfoButtons = new EntityInfoButton[Ship.MAX_ENTITIES];
 		for (int i = 0; i < Ship.MAX_ENTITIES; i++) {
 			entityInfoButtons[i] = new EntityInfoButton(i, skin);
@@ -1271,6 +1315,11 @@ public class UI {
 			entitiesTable.row();
 		}
 		entitiesWindow.pack();
+		float maxH = Gdx.graphics.getHeight() * .7f;
+		if (entitiesWindow.getHeight() > maxH)
+			entitiesWindow.setHeight(maxH);
+
+
 		entitiesWindow.setPosition(Gdx.graphics.getWidth()/2, Gdx.graphics.getHeight()/2, Align.center);
 
 	}
@@ -1670,6 +1719,7 @@ public class UI {
 		}
 		
 		Gdx.app.log(TAG, "writing entities ");
+
 		String entities = json.prettyPrint(ship.getEntities());
 		entityFile.writeString(entities, false);
 		String invS = json.prettyPrint(ship.inventory);

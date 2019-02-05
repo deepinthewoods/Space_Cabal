@@ -35,6 +35,7 @@ import com.badlogic.gdx.utils.Pools;
 
 import ninja.trek.Ship.Alignment;
 import ninja.trek.Ship.EntityArray;
+import ninja.trek.actions.ADrone;
 import ninja.trek.entity.Entity;
 import ninja.trek.entity.Missile;
 import ninja.trek.entity.ShipEntity;
@@ -42,6 +43,7 @@ import ninja.trek.entity.ShipEntity;
 public class World {
 	private static final String TAG = "world";
 	public final SolarSystemGraph solarSystemGraph;
+	private final ShipFcatory shipFactory;
 	private Array<Ship> maps = new Array<Ship>(true, 4);
 	private FontManager fonts;
 	private float accum = 0f;
@@ -63,13 +65,13 @@ public class World {
 	public final static float timeStep = 1f/60f;
 	public IndexedAStarPathFinder<PlanetNode> universePath;
 	
-	public World(FontManager fontManager, ShaderProgram shader, Sprite pixelSprite, PlanetRenderer planet, ModelBatch modelBatch) {
+	public World(FontManager fontManager, ShaderProgram shader, Sprite pixelSprite, PlanetRenderer planet, ModelBatch modelBatch, ShipFcatory shipFactory) {
 		this.modelBatch = modelBatch;
 		this.planet = planet;
 		this.shader = shader;
 		this.pixelSprite = pixelSprite;
 		fonts = fontManager;
-
+		this.shipFactory = shipFactory;
 		solarSystemGraph = new SolarSystemGraph();
 		universePath = new IndexedAStarPathFinder<PlanetNode>(solarSystemGraph
 		);
@@ -97,16 +99,16 @@ public class World {
 		mesh.setIndices(indicesForChunkMesh);
 		cacheShader = createDefaultShader();
 
-		threads = new PauseableThread[2];
-		runnable = new Runnable[2];
-		runnable[0] = new MapCacheRunnable(0, this);
-		runnable[1] = new MapCacheRunnable(1, this);
-		threads[0] = new PauseableThread(runnable[0]);
-		threads[1] = new PauseableThread(runnable[1]);
-		if (Gdx.app.getType() == ApplicationType.Android) {
-			threads[0].start();
-			threads[1].start();
+		runnable = new Runnable[3];
+		threads = new PauseableThread[runnable.length];
+		for (int i = 0; i < runnable.length; i++){
+			runnable[i] = new MapCacheRunnable(i, this);
+			threads[i] = new PauseableThread(runnable[i]);
+			if (Gdx.app.getType() == ApplicationType.Android) {
+				threads[i].start();
+			}
 		}
+
 		
 		colorIndexBuffer = new FrameBuffer(Format.RGBA8888, 128, 32, false);
 		
@@ -152,8 +154,9 @@ public class World {
 	}
 	public void update(SpriteBatch batch, Camera camera, World world, UI ui, BackgroundRenderer background, PlanetRenderer planet, Stage stage	){
 		if (Gdx.app.getType() == ApplicationType.Desktop) {
-			runnable[0].run();
-			runnable[1].run();
+			for (int i = 0; i < runnable.length; i++){
+				runnable[i].run();
+			}
 		}
 		accum += Gdx.graphics.getDeltaTime();
 		if (warpingToSolarSystemMap){
@@ -246,11 +249,11 @@ public class World {
 		))
 		for (int i = 0; i < maps.size; i++){
 			Ship map = maps.get(i);
-			map.updateCamera(camera, this);
+			map.updateCamera(camera, this, i);
 			map.enableScissor(this);
 			batch.disableBlending();
 			
-			map.draw(batch, camera, this, paused, colorIndexBuffer.getColorBufferTexture(), mesh, cacheShader, warpingToPlanet || warpingToSolarSystemMap);
+			map.draw(batch, camera, this, paused, colorIndexBuffer.getColorBufferTexture(), mesh, cacheShader, warpingToPlanet || warpingToSolarSystemMap, i);
 			batch.setProjectionMatrix(map.camera.combined);
 			batch.enableBlending();
 			batch.setShader(null);
@@ -280,6 +283,21 @@ public class World {
 	
 	public void addMap(Ship map){
 		maps.add(map);
+		Gdx.app.log(TAG, "addMap " + maps.size);
+	}
+	public void clearDrones(){
+		while (maps.size > 2)Pools.free(maps.removeIndex(maps.size-1));
+	}
+	public void addDrone(String name, Ship parentShip){
+		Drone droneShip = Pools.obtain(Drone.class);
+		loadShip(name, droneShip);
+		droneShip.alignment = parentShip.alignment;
+		droneShip.parent = parentShip;
+		droneShip.setRedrawFill();
+		//droneShip.removeEntity(droneShip.getShipEntity());
+		ADrone aDrone = Pools.obtain(ADrone.class);
+		droneShip.getShipEntity().getAI().addToEnd(aDrone);
+		addMap(droneShip);
 	}
 	public Ship getMapForScreenPosition(int x, int y) {
 		int closestDist = 1000070;
@@ -320,8 +338,7 @@ public class World {
 	}
 	
 	String[] playerShipNames = {"test", "abasic"};
-	Array<Ship> playerShips;
-	Array<String> queuedPlayerShips = new Array<String>();
+
 	private boolean isNewGameMenu = false;
 	private Ship oldShip;
 	private int currentNewGameShipIndex;
@@ -329,26 +346,7 @@ public class World {
 	private boolean warpingToSolarSystemMap, warpingToPlanet, warpingBetweenPlanets;
 	
 	public void startNewGameMenu() {
-		/*if (playerShips == null){
-			playerShips = new Array<Ship>();
-			for (String name : playerShipNames){
-				Ship ship = new Ship(new IntPixelMap(16, 16), 1, pixelSprite, fonts, shader);
-				loadShip(name, ship);	
-				playerShips.add(ship);
-			}
-		} else {
-			for (String name : queuedPlayerShips){
-				Ship ship = new Ship(new IntPixelMap(16, 16), 1, pixelSprite, fonts, shader);
-				loadShip(name, ship);	
-				playerShips.add(ship);
-			}
-			
-		}
-		
-		Ship plShip = playerShips.get(0);
-		isNewGameMenu  = true;
-		oldShip = maps.get(0);
-		maps.set(0, plShip);;*/
+
 		currentNewGameShipIndex = 0;
 		loadShipForNew(playerShipNames[currentNewGameShipIndex], getPlayerShip());
 		getPlayerShip().removeEntity(getPlayerShip().getShipEntity());
@@ -465,7 +463,7 @@ public class World {
 			shipE.setDefaultAI();
 			ship.addEntity(shipE );
 		}
-		//Gdx.app.log(TAG, "size " + i + "  " + maps.get(i).getEntities().size);
+		Gdx.app.log(TAG, "LOAD " + ship.mapWidth + "  " + ship.getEntities().size);
 	
 	}
 	public Ship getEnemyShip() {
@@ -502,4 +500,9 @@ public class World {
 		if (maps.size <= index) return null;
 		return maps.get(index);
 	}
+
+
+
+
+
 }

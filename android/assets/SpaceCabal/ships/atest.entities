@@ -1,0 +1,71 @@
+[
+{
+	class: ninja.trek.entity.Entity
+	x: 68
+	y: 120
+	glyph: a
+	actionIndexForPath: 6
+	buttonOrder: [ 5, 1, 0, 6, 2, 7, 4, 10, 8, 9, 3 ]
+	fixOrder: [ 2, 3, 7, 1, 9, 6, 8 ]
+	target: {
+		x: 68
+		y: 120
+	}
+	delayAccumulator: 20
+}
+{
+	class: ninja.trek.entity.Engine
+	x: 167
+	y: 140
+	totalCharge: 100
+}
+{
+	class: ninja.trek.entity.Weapon
+	x: 77
+	y: 145
+	glyph: 0
+	equippedItemIndex: 0
+	equippedItemID: 0
+	totalCharge: 100
+	fireDelay: -11823
+}
+{
+	class: ninja.trek.entity.Weapon
+	x: 87
+	y: 130
+	glyph: 1
+	index: 1
+	equippedItemIndex: 1
+	equippedItemID: 3
+	totalCharge: 100000
+	fireDelay: -11771
+}
+{
+	class: ninja.trek.entity.Door
+	x: 107
+	y: 123
+	radius: 10
+}
+{
+	class: ninja.trek.entity.Door
+	x: 149
+	y: 91
+	radius: 10
+}
+{
+	class: ninja.trek.entity.Door
+	x: 111
+	y: 89
+	radius: 10
+}
+{
+	class: ninja.trek.entity.Door
+	x: 148
+	y: 117
+	radius: 10
+}
+{
+	class: ninja.trek.entity.ShipEntity
+	shield: 0
+}
+]

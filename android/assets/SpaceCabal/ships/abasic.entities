@@ -1,12 +1,17 @@
 [
 {
 	class: ninja.trek.entity.Entity
-	x: 59
-	y: 175
+	x: 76
+	y: 135
 	glyph: a
+	actionIndexForPath: 6
 	buttonOrder: [ 5, 1, 0, 6, 2, 7, 4, 10, 8, 9, 3 ]
 	fixOrder: [ 2, 3, 7, 1, 9, 6, 8 ]
-	actionIndexForPath: 8
+	target: {
+		x: 76
+		y: 135
+	}
+	delayAccumulator: 60
 }
 {
 	class: ninja.trek.entity.Engine
@@ -19,14 +24,10 @@
 	x: 77
 	y: 145
 	glyph: 0
-	target: {
-		x: 172
-		y: 132
-	}
 	equippedItemIndex: 0
 	equippedItemID: 0
 	totalCharge: 100
-	fireDelay: -8572
+	fireDelay: -8450
 }
 {
 	class: ninja.trek.entity.Weapon
@@ -34,14 +35,10 @@
 	y: 130
 	glyph: 1
 	index: 1
-	target: {
-		x: 181
-		y: 60
-	}
 	equippedItemIndex: 1
 	equippedItemID: 3
 	totalCharge: 100000
-	fireDelay: -6670
+	fireDelay: -8398
 }
 {
 	class: ninja.trek.entity.Door

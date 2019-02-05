@@ -6,6 +6,8 @@ import com.badlogic.gdx.utils.BinaryHeap.Node;
 import com.badlogic.gdx.utils.IntArray;
 import com.badlogic.gdx.utils.Pools;
 
+import ninja.trek.entity.Entity;
+
 /** @author Nathan Sweet */
 public class AStar {
 	private static final String TAG = "astar";
@@ -106,13 +108,13 @@ public class AStar {
 		boolean found = false;
 		for (int i = 0; i < goals.length; i++){
 			switch (goals[i]){
-			case EntityAI.FIX:
+			case Entity.FIX:
 				int damage = (block & Ship.BLOCK_DAMAGE_MASK) >> Ship.BLOCK_DAMAGE_BITS;
 				if (damage > 0)
 					found = true;
 				
 				break;
-			case EntityAI.SHIELDS:
+			case Entity.SHIELDS:
 				if ((block & Ship.BLOCK_ID_MASK) == Ship.SHIELD){
 					int currentBoost = (block & Ship.BLOCK_BOOST_MASK) >> Ship.BLOCK_BOOST_BITS;
 					int currentFire = (block & Ship.BLOCK_FIRE_MASK) >> Ship.BLOCK_FIRE_BITS;
@@ -122,7 +124,7 @@ public class AStar {
 						found = true;
 				}
 				break;
-			case EntityAI.OXYGEN:
+			case Entity.OXYGEN:
 				if ((block & Ship.BLOCK_ID_MASK) == Ship.OXYGEN){
 					int currentBoost = (block & Ship.BLOCK_BOOST_MASK) >> Ship.BLOCK_BOOST_BITS;
 					int currentFire = (block & Ship.BLOCK_FIRE_MASK) >> Ship.BLOCK_FIRE_BITS;
@@ -132,7 +134,7 @@ public class AStar {
 						found = true;
 				}
 				break;
-			case EntityAI.DRONE:
+			case Entity.DRONE:
 				if ((block & Ship.BLOCK_ID_MASK) == Ship.DRONE){
 					int currentBoost = (block & Ship.BLOCK_BOOST_MASK) >> Ship.BLOCK_BOOST_BITS;
 					int currentFire = (block & Ship.BLOCK_FIRE_MASK) >> Ship.BLOCK_FIRE_BITS;
@@ -142,7 +144,7 @@ public class AStar {
 						found = true;
 				}
 				break;
-			case EntityAI.WEAPON:
+			case Entity.WEAPON:
 				if ((block & Ship.BLOCK_ID_MASK) == Ship.WEAPON){
 					int currentBoost = (block & Ship.BLOCK_BOOST_MASK) >> Ship.BLOCK_BOOST_BITS;
 					int currentFire = (block & Ship.BLOCK_FIRE_MASK) >> Ship.BLOCK_FIRE_BITS;
@@ -152,7 +154,7 @@ public class AStar {
 						found = true;
 				}
 				break;
-			case EntityAI.ENGINE:
+			case Entity.ENGINE:
 				if ((block & Ship.BLOCK_ID_MASK) == Ship.ENGINE){
 					int currentBoost = (block & Ship.BLOCK_BOOST_MASK) >> Ship.BLOCK_BOOST_BITS;
 					int currentFire = (block & Ship.BLOCK_FIRE_MASK) >> Ship.BLOCK_FIRE_BITS;
@@ -162,7 +164,7 @@ public class AStar {
 						found = true;
 				}
 				break;
-			case EntityAI.FIRE:
+			case Entity.FIRE:
 				if (((block & Ship.BLOCK_FIRE_MASK) >> Ship.BLOCK_FIRE_BITS)== 1)
 				
 				{
@@ -172,8 +174,8 @@ public class AStar {
 				}
 				break;
 			
-			case EntityAI.SHOOT: break;
-			case EntityAI.WANDER: break;
+			case Entity.SHOOT: break;
+			case Entity.WANDER: break;
 			
 			}
 			if (found){
@@ -182,11 +184,11 @@ public class AStar {
 				if (i < goalIndex){
 					goalIndex = i;
 					goalNode = node;
-					if (goals[goalIndex] == EntityAI.FIX)
+					if (goals[goalIndex] == Entity.FIX)
 						goalFixIndex = getFixIndex(fixOrder, block);;
 				}  
 				 else if (i == goalIndex){
-					 if (goals[goalIndex] == EntityAI.FIX){
+					 if (goals[goalIndex] == Entity.FIX){
 							int fixIndex = getFixIndex(fixOrder, block);
 							if (fixIndex < goalFixIndex){
 								goalFixIndex = fixIndex;

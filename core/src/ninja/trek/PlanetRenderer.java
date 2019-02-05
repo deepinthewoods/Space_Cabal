@@ -9,6 +9,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Mesh;
+import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Pixmap.Format;
@@ -453,7 +454,8 @@ public class PlanetRenderer implements RenderableProvider{
 	private int renderPlanet;
 
 	private float sunRotation;
-	public void draw(SpriteBatch screenBatch, ShapeRenderer shape, boolean paused, Sprite pixelSprite){
+	OrthographicCamera camera = new OrthographicCamera();
+	public void draw(SpriteBatch screenBatch, ShapeRenderer shape, boolean paused, Sprite pixelSprite, float backgroundRotation){
 		//cam.position.rotate(10, 0, 0, 1);
 		//if (info == null) return;
 		
@@ -581,7 +583,13 @@ public class PlanetRenderer implements RenderableProvider{
 				//Gdx.app.log(TAG, "bufferred " + renderPlanet);
     		}
     	}
-    	screenBatch.getProjectionMatrix().setToOrtho2D(0, 0, w/h, 1);
+    	float wh = w/h;
+    	//screenBatch.getProjectionMatrix().setToOrtho2D(0f, 0f, wh, 1).translate(-wh*.5f, -.5f, 0).rotate(0,0,1, -backgroundRotation).translate(wh*.5f, .5f, 0f);
+
+    	camera.setToOrtho(false, wh, 1f);
+    	camera.rotate(-backgroundRotation);
+    	camera.update();
+    	screenBatch.setProjectionMatrix(camera.combined);
     	screenBatch.enableBlending();
     	screenBatch.begin();
     	//Gdx.app.log(TAG, "s " + s + "  alpha " + alpha);

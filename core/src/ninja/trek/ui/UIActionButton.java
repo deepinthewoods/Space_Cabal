@@ -7,6 +7,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 
 import ninja.trek.EntityAI;
+import ninja.trek.entity.Entity;
 
 public class UIActionButton extends TextButton{
 	public int index;
@@ -14,7 +15,7 @@ public class UIActionButton extends TextButton{
 	public float newXScale = 1;
 	public UIActionButton(int index, Skin skin, Table parent) {
 		//super(""+index, skin);
-		this(index, EntityAI.names[index],  skin, parent);
+		this(index, Entity.jobNames[index],  skin, parent);
 		setStyle(skin.get("nonclickable", TextButtonStyle.class));
 		
 	}
@@ -36,7 +37,7 @@ public class UIActionButton extends TextButton{
 	}
 
 	public void dragStop(float x, float y) {
-		setText(EntityAI.names[index]);	
+		setText(Entity.jobNames[index]);
 	}
 
 	

@@ -9,7 +9,6 @@ import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
@@ -68,6 +67,8 @@ public class MainSpaceCabal extends ApplicationAdapter {
 	private ModelBatch modelBatch;
 	private Sprite pixelSprite;
 	public static boolean paused;
+	private ShipFcatory shipFactory;
+
 	@Override
 	public void create () {
 		String[] args = {""};
@@ -117,12 +118,15 @@ public class MainSpaceCabal extends ApplicationAdapter {
 					paused = !paused;
 				}
 				else if (keycode == Keys.R) {
-					background.rotate((MathUtils.random(0, 1) * 2 -1 ) * MathUtils.random(20, 120));
+					//background.rotate( MathUtils.random(90, 300));
+					background.rotate((MathUtils.random(0, 1) * 2 -1 ) * MathUtils.random(60, 120));
 				} else if (keycode == Keys.C){
                     world.getPlayerShip().categorizeSystems();
                     world.getPlayerShip().calculateConnectivity(world);
 					Gdx.app.log(TAG, "recalc connectivity and systems");
-                }
+                } else if (keycode == Keys.D){
+					world.addDrone("dronebasic", world.getPlayerShip());
+				}
 					
 				
 				return false;
@@ -428,7 +432,7 @@ public class MainSpaceCabal extends ApplicationAdapter {
 					//Gdx.app.log(TAG, "unprojected  " + v);
 					map.camera.zoom *= amount<0? 0.9f : 1f/0.9f;
 					if (map.alignment == Alignment.CENTRE){
-						map.updateCamera(camera, world);
+						map.updateCamera(camera, world, 0);
 						map.camera.project(v);
 						//Gdx.app.log(TAG, "projected" + v);
 						v2.set(Gdx.input.getX(), Gdx.graphics.getHeight() -1 - Gdx.input.getY(), 0);
@@ -442,20 +446,24 @@ public class MainSpaceCabal extends ApplicationAdapter {
 				return true;
 			}
 		});
-		
+
 		Gdx.input.setInputProcessor(mux);
 		
 		//uiAtlas = new TextureAtlas(Gdx.files.internal("ui/ui.atlas"));
 		TextureAtlas fontAtlas = new TextureAtlas("ui/ui.atlas");
 		fontManager = new FontManager(fontAtlas);
-		
 		pixelSprite = new Sprite(new Texture("pixel.png"));
-		world = new World(fontManager, shader, pixelSprite, planet, modelBatch);
+
+		shader = new ShaderProgram(Gdx.files.internal("lighting.vert"), Gdx.files.internal("lighting.frag"));
+		if (!shader.isCompiled()) throw new GdxRuntimeException("shader \n"  + shader.getLog());
+
+		shipFactory = new ShipFcatory(pixelSprite, fontManager, shader);
+
+
+		world = new World(fontManager, shader, pixelSprite, planet, modelBatch, shipFactory);
 		
 		if (!Gdx.files.internal("lighting.vert").exists()) throw new GdxRuntimeException("kdls");
-		shader = new ShaderProgram(Gdx.files.internal("lighting.vert"), Gdx.files.internal("lighting.frag"));
-		//shader = batch.getShader();
-		if (!shader.isCompiled()) throw new GdxRuntimeException("shader \n"  + shader.getLog());
+
 		
 		float[] colorArray = CustomColors.getFloatColorArray();
 		world.colorIndexShader.begin();
@@ -465,12 +473,12 @@ public class MainSpaceCabal extends ApplicationAdapter {
 		world.colorIndexShader.end();
 		
 		batch.setShader(shader);
-		Ship amap = new Ship(new IntPixelMap(256, 256),  pixelSprite, fontManager, shader);
+		Ship amap = shipFactory.createShip();
 		world.addMap(amap);
 		amap.inventory.add(Items.laser1);
 		amap.inventory.add(Items.rocket2);
 		
-		Ship amap2 = new Ship(new IntPixelMap(256, 256),  pixelSprite, fontManager, shader);
+		Ship amap2 = shipFactory.createShip();
 		world.addMap(amap2);
 		
 //		Entity player = new Entity().pos(0, 0).setAI(playerAction );
@@ -500,7 +508,7 @@ public class MainSpaceCabal extends ApplicationAdapter {
 		//batch.begin();
 		//batch.draw(img, 0, 0);
 		background.draw(world, paused);
-		planet.draw(batch, shape, paused, pixelSprite);
+		planet.draw(batch, shape, paused, pixelSprite, background.rotation);
 		world.draw(batch, camera, shape, ui, paused);
 		//batch.end();
 		//stage.getBatch().disableBlending();

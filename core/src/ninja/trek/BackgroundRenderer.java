@@ -28,7 +28,6 @@ public class BackgroundRenderer {
 
 	private OrthographicCamera cam;
 
-	
 	public BackgroundRenderer(TextureAtlas atlas) {
 		resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		
@@ -46,7 +45,10 @@ public class BackgroundRenderer {
 	public void setAlpha(float alpha){
 		this.alpha = Math.max(Math.min(alpha, 1f), 0f);
 	}
-	private float widthMod = 1f, maxWidth = 1000f, alpha = 0f, rotateAlpha = 1f, rotation = 0f, rotationQueue = 0f, oldRotation;
+	private float widthMod = 1f, maxWidth = 1000f, alpha = 0f, rotateAlpha = 1f,
+
+			rotationQueue = 0f, oldRotation;
+	public float rotation = 0f;
 	public void draw(World world, boolean paused) {
 		widthMod = MathUtils.lerp(1f, maxWidth, alpha);
 		//if (true)return;
@@ -98,7 +100,7 @@ public class BackgroundRenderer {
 		}
 		if (rotateAlpha < 1f) {
 			rotateAlpha += Gdx.graphics.getDeltaTime();
-			Gdx.app.log(TAG, "rotate " + rotateAlpha + "  " + rotation);
+			//Gdx.app.log(TAG, "rotate " + rotateAlpha + "  " + rotation);
 			rotation = Interpolation.pow2.apply(oldRotation, oldRotation + rotationQueue, Math.min(1f,  rotateAlpha));
 			
 		}
