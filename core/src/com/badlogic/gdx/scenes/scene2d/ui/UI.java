@@ -14,6 +14,7 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.EventListener;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
@@ -25,6 +26,7 @@ import com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop;
 import com.badlogic.gdx.scenes.scene2d.utils.DragListener;
 import com.badlogic.gdx.scenes.scene2d.utils.NinePatchDrawable;
 import com.badlogic.gdx.utils.Align;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.Pool;
@@ -948,6 +950,27 @@ public class UI {
 		
 		final ScrollPane editPane = new ScrollPane(emptyEditTable);
 		editPane.setOverscroll(false, true);
+		Array<EventListener> listeners = editPane.getListeners();
+		editPane.removeListener(listeners.get(listeners.size - 1));
+
+		editPane.addListener(new InputListener() {
+			public boolean scrolled (InputEvent event, float x, float y, int amount) {
+				editPane.resetFade();
+				v.set(x, y);
+				//localToStageCoordinates(v);
+				//Gdx.app.log(TAG, "fdskjl " + getWidth() + "  " + v);
+				if (v.x < 0 || v.y < 0 || v.x > editPane.getWidth() || v.y > editPane.getHeight()) return false;
+
+				if (editPane.scrollY)
+					editPane.setScrollY(editPane.amountY + editPane.getMouseWheelY() * amount);
+				else if (editPane.scrollX) //
+					editPane.setScrollX(editPane.amountX + editPane.getMouseWheelX() * amount);
+				else
+					return false;
+				return true;
+			}
+		});
+
 		
 		//leftTable.add(infoLabel).left();
 		//leftTable.add(new Label("", skin)).expandX();
