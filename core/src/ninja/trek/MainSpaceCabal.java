@@ -432,7 +432,7 @@ public class MainSpaceCabal extends ApplicationAdapter {
 					//Gdx.app.log(TAG, "unprojected  " + v);
 					map.camera.zoom *= amount<0? 0.9f : 1f/0.9f;
 					if (map.alignment == Alignment.CENTRE){
-						map.updateCamera(camera, world, 0);
+						map.updateCamera(camera, world, 0, false);
 						map.camera.project(v);
 						//Gdx.app.log(TAG, "projected" + v);
 						v2.set(Gdx.input.getX(), Gdx.graphics.getHeight() -1 - Gdx.input.getY(), 0);
@@ -503,7 +503,7 @@ public class MainSpaceCabal extends ApplicationAdapter {
 		Gdx.gl.glClearColor(0, 0, 0, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 		if (!paused)
-			world.update(batch, camera, world, ui, background, planet, stage);
+			world.update(batch, camera, ui, background, planet, stage);
 		
 		//batch.begin();
 		//batch.draw(img, 0, 0);

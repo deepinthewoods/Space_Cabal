@@ -946,7 +946,7 @@ public class UI {
 		editTable.add(openHullButton).left();
 		editTable.row();
 		
-		final ScrollPaneN editPane = new ScrollPaneN(emptyEditTable);
+		final ScrollPane editPane = new ScrollPane(emptyEditTable);
 		editPane.setOverscroll(false, true);
 		
 		//leftTable.add(infoLabel).left();

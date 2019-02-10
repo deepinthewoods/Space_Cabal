@@ -1,6 +1,5 @@
 package ninja.trek;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
@@ -9,14 +8,14 @@ public class Drone extends Ship {
 
     private static final String TAG = "drone";
     public transient Ship parent;
-    private float zoom = .5f;
+    private float zoom = 1f;
     public Drone(IntPixelMap map, Sprite pixelSprite, FontManager fonts, ShaderProgram shader) {
         super(map, pixelSprite, fonts, shader);
     }
 
     @Override
-    public void updateCamera(OrthographicCamera wcamera, World world, int index) {
-        super.updateCamera(wcamera, world, index);
+    public void updateCamera(OrthographicCamera wcamera, World world, int index, boolean skip) {
+        super.updateCamera(wcamera, world, index, skip);
         camera.zoom = parent.camera.zoom *zoom;
         camera.position.set(parent.camera.position)
                 .add(-parent.mapWidth*.5f , -parent.mapHeight*.5f , 0)

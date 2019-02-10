@@ -22,6 +22,7 @@ import com.badlogic.gdx.graphics.g3d.ModelBatch;
 import com.badlogic.gdx.graphics.glutils.FrameBuffer;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Stage;
@@ -64,7 +65,8 @@ public class World {
 	ShaderProgram colorIndexShader;
 	public final static float timeStep = 1f/60f;
 	public IndexedAStarPathFinder<PlanetNode> universePath;
-	
+	private float warpShipZoom;
+
 	public World(FontManager fontManager, ShaderProgram shader, Sprite pixelSprite, PlanetRenderer planet, ModelBatch modelBatch, ShipFcatory shipFactory) {
 		this.modelBatch = modelBatch;
 		this.planet = planet;
@@ -152,7 +154,7 @@ public class World {
 		if (shader.isCompiled() == false) throw new IllegalArgumentException("Error compiling shader: " + shader.getLog());
 		return shader;
 	}
-	public void update(SpriteBatch batch, Camera camera, World world, UI ui, BackgroundRenderer background, PlanetRenderer planet, Stage stage	){
+	public void update(SpriteBatch batch, Camera camera, UI ui, BackgroundRenderer background, PlanetRenderer planet, Stage stage){
 		if (Gdx.app.getType() == ApplicationType.Desktop) {
 			for (int i = 0; i < runnable.length; i++){
 				runnable[i].run();
@@ -162,6 +164,7 @@ public class World {
 		if (warpingToSolarSystemMap){
 			warpAlpha += Gdx.graphics.getDeltaTime();
 			planet.setAlpha(warpAlpha);
+			setAlpha(warpAlpha);
 			if (warpAlpha > 1f){
 				warpingToSolarSystemMap = false;
 				planetSelectOn = true;
@@ -211,7 +214,7 @@ public class World {
 				map.updateBlocks();
 			//for (Ship map : maps)
 			for (int i = 0; i < maps.size; i++)	
-				maps.get(i).updateEntities(world, ui);
+				maps.get(i).updateEntities(this, ui);
 			
 		}
 		
@@ -219,7 +222,14 @@ public class World {
 			map.updateDraw(mesh, cacheShader);
 		
 	}
-	
+
+	private void setAlpha(float a) {
+		float zoom = Interpolation.circle.apply( warpShipZoom, 15f,  a);
+
+		getPlayerShip().camera.zoom = zoom;
+		getPlayerShip().camera.update();
+	}
+
 	private void showQuestScreen(UI ui, Stage stage) {
 		ui.showQuestScreen(info, stage, getPlayerShip(), this);
 		planet.sunFromSide = false;
@@ -249,7 +259,7 @@ public class World {
 		))
 		for (int i = 0; i < maps.size; i++){
 			Ship map = maps.get(i);
-			map.updateCamera(camera, this, i);
+			map.updateCamera(camera, this, i, warpingToSolarSystemMap | warpingToPlanet);
 			map.enableScissor(this);
 			batch.disableBlending();
 			
@@ -406,6 +416,7 @@ public class World {
 		ui.setEntity(null);
 		warpAlpha = 0f;
 		warpingToSolarSystemMap = true;
+		warpShipZoom = getPlayerShip().camera.zoom;
 		//MainSpaceCabal.paused = true;
 	}
 	

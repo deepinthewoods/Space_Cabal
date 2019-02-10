@@ -28,7 +28,7 @@ public class ADrone extends Action {
     @Override
     public void onStart(World world, Ship map) {
         Drone drone = (Drone) parent.e.ship;
-        drone.offsetWorld.set(drone.mapWidth, 0);
+        drone.offsetWorld.set(drone.parent.mapWidth, 0);
         //drone.offsetWorld.set(0,0);
     }
 }

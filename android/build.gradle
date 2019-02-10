@@ -14,6 +14,9 @@ android {
 
         instrumentTest.setRoot('tests')
     }
+    dexOptions {
+        javaMaxHeapSize "4g" //specify the heap size for the dex process
+    }
 }
 
 

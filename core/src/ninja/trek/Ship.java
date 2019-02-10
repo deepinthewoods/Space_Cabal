@@ -305,7 +305,7 @@ public class Ship implements Pool.Poolable {
 		zoomedOutEnemyZoom = 5 * (float)mapHeight / (float)Gdx.graphics.getHeight();
 		zoomInTarget = maxZoomForCentering * 1.5f;
 		zoomAlpha = 0f;
-		maxZoomForCentering *= 2f;
+		maxZoomForCentering *= 3f;
 		bloom = new BloomN();
 		bloom.setTreshold(.8f);
 		
@@ -713,7 +713,6 @@ public class Ship implements Pool.Poolable {
 			return;
 		}
 
-
 		if (isPlayer)
             for (Entity e : entities){
                 fonts.draw(e, batch, camera);
@@ -915,9 +914,10 @@ public class Ship implements Pool.Poolable {
 		shape.end();
 	}
 
-	public void updateCamera(OrthographicCamera wcamera, World world, int index) {
+	public void updateCamera(OrthographicCamera wcamera, World world, int index, boolean skip) {
 		//camera.zoom = mapHeight / camera.viewportHeight;
 		//Gdx.app.log(TAG, "otherwidth  " + otherWidth);
+		if (skip) return;
 		int otherWidth = 0;
 		if (alignment == Alignment.CENTRE){
 			//Gdx.gl.glEnable(GL20.GL_SCISSOR_TEST);
@@ -1290,8 +1290,8 @@ public class Ship implements Pool.Poolable {
 					GridPoint2 tar = roomBlocks[k];
 					int block = map.get(tar.x, tar.y);
 					int id = block & Ship.BLOCK_ID_MASK;
-					if (id != FLOOR)
-						throw new GdxRuntimeException("invalid point " + id);
+					//if (id != FLOOR)
+						//throw new GdxRuntimeException("invalid point " + id);
 					//Gdx.app.log(TAG, "connected " + tar);
 
 					IntArray path = aStar.getPath(bl.x, bl.y, tar.x, tar.y);
