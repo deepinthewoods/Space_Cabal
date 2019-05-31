@@ -1384,6 +1384,7 @@ public class UI {
 		player.getShipEntity().credits -= def.cost;
 		toggleShop(player, shop);
 		toggleShop(player, shop);
+		set(ship);
 	}
 
 	public void sell(ItemDisplay.ItemButton it, Ship player, Ship shop) {
@@ -1396,6 +1397,7 @@ public class UI {
 		player.getShipEntity().credits -= def.cost/SELL_COST_FACTOR;
 		toggleShop(player, shop);
 		toggleShop(player, shop);
+		set(ship);
 	}
 
 	private static class EntityInfoButton extends TextButton{
@@ -1561,7 +1563,8 @@ public class UI {
 	}
 
 	private void makeShopWindow(Skin skin) {
-		shopWindow = new Window("Inventory", skin);
+		shopWindow = new Window("Shop", skin);
+		shopWindow.getTitleTable().getCell(shopWindow.getTitleLabel()).center().colspan(3).expand().fill();
 		shopItemDisplay = new ItemDisplay(skin, shopWindow, this);
 		shopWindow.add(shopItemDisplay);
         shopItemDisplay.setShop();

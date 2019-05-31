@@ -1528,6 +1528,17 @@ public class Ship implements Pool.Poolable {
 		
 	}
 
+	public void unequipWeaponByID(int itemId) {
+		for (Entity e : entities) {
+			if (e instanceof Weapon){
+				Weapon w = (Weapon) e;
+				if (w.equippedItemID == itemId){
+					w.unequip();
+				}
+			}
+		}
+	}
+
 	public void unequipWeapon(int itemIndex) {
 		for (Entity e : entities) {
 			if (e instanceof Weapon){
