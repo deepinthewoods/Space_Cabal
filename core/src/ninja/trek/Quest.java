@@ -1,10 +1,9 @@
-package ninja.trek;
+package ninja.trek.gen;
 
 import com.badlogic.gdx.utils.Array;
 
-import ninja.trek.Planet.Type;
-import ninja.trek.QuestOption.QuestRequirement;
-import ninja.trek.QuestOption.QuestSpawnRequirement;
+import ninja.trek.gen.Planet.Type;
+import ninja.trek.gen.QuestOption.QuestSpawnRequirement;
 
 public class Quest {
 	public String name;
@@ -35,6 +34,15 @@ public class Quest {
 			case SUN:
 				if (planet.planetType == Type.STAR) valid = true;
 				break;
+				case GAS_GIANT:
+					if (planet.planetType == Type.GAS_GIANT) valid = true;
+					break;
+				case METEOR:
+					if (planet.planetType == Type.METEOR) valid = true;
+					break;
+				case INNER_PLANET:
+					if (planet.planetType == Type.INNER) valid = true;
+					break;
 			}
 		}
 		

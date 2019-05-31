@@ -1,4 +1,4 @@
-package ninja.trek;
+package ninja.trek.gen;
 
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Pool.Poolable;
