@@ -1,4 +1,4 @@
-package ninja.trek.gen;
+package ninja.trek;
 
 import com.badlogic.gdx.utils.Array;
 

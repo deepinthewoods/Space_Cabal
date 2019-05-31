@@ -1,4 +1,4 @@
-package ninja.trek;
+package ninja.trek.gen;
 
 import java.util.Iterator;
 
@@ -9,7 +9,9 @@ import com.badlogic.gdx.utils.IntMap;
 import com.badlogic.gdx.utils.IntMap.Entry;
 import com.badlogic.gdx.utils.Pools;
 
-import ninja.trek.Planet.Type;
+import ninja.trek.Quest;
+import ninja.trek.QuestArray;
+import ninja.trek.gen.Planet.Type;
 
 public class SolarSystem {
 

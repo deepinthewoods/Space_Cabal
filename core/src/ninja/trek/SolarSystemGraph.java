@@ -6,6 +6,9 @@ import com.badlogic.gdx.ai.pfa.Heuristic;
 import com.badlogic.gdx.ai.pfa.indexed.IndexedGraph;
 import com.badlogic.gdx.utils.Array;
 
+import ninja.trek.gen.GameInfo;
+import ninja.trek.gen.SolarSystem;
+
 /**
  * Created by n on 18/11/2017.
  */

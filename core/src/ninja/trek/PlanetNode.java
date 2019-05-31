@@ -3,6 +3,8 @@ package ninja.trek;
 import com.badlogic.gdx.ai.pfa.Connection;
 import com.badlogic.gdx.utils.Array;
 
+import ninja.trek.gen.Planet;
+
 /**
  * Created by n on 18/11/2017.
  */

@@ -1,4 +1,4 @@
-package ninja.trek;
+package ninja.trek.gen;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.Sprite;
@@ -8,13 +8,17 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.IntArray;
 
+import ninja.trek.PlanetRenderer;
+import ninja.trek.SimplexNoise;
+import ninja.trek.items.LaserA;
+import ninja.trek.items.RocketA;
 import squidpony.squidgrid.gui.gdx.SColor;
 
 public class Planet {
 
 	private static final String TAG = "planet";
-	int seed;
-	int index;
+	public int seed;
+	public int index;
 	public int parent = -1;
 	public int parentOrder = -1;
 	public int colorIndex;
@@ -30,6 +34,9 @@ public class Planet {
 	public int mountainTopColor = 0;
 	public boolean exponentialHeightScaling = true;
 	public boolean hasMountains = false;
+
+
+
 	public enum Type {INNER, EARTH_LIKE, MARS_LIKE, GAS_GIANT, METEOR, MOON, STAR};
 	public Type planetType;
 	public IntArray quests = new IntArray();

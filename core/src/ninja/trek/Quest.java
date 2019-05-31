@@ -1,9 +1,10 @@
-package ninja.trek.gen;
+package ninja.trek;
 
 import com.badlogic.gdx.utils.Array;
 
+import ninja.trek.gen.Planet;
 import ninja.trek.gen.Planet.Type;
-import ninja.trek.gen.QuestOption.QuestSpawnRequirement;
+import ninja.trek.QuestOption.QuestSpawnRequirement;
 
 public class Quest {
 	public String name;

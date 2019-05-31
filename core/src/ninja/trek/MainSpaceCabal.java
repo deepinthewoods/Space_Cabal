@@ -27,6 +27,7 @@ import com.badlogic.gdx.utils.Pools;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
 import ninja.trek.Ship.Alignment;
+import ninja.trek.gen.GameInfo;
 import ninja.trek.ui.UISystemButton;
 
 public class MainSpaceCabal extends ApplicationAdapter {
@@ -44,7 +45,7 @@ public class MainSpaceCabal extends ApplicationAdapter {
 	public static final String MAP_BLOCKS_FILE_EXTENSION = "blk";
 	public static final int THREADS = 1;
 	public static final String MAP_INVENTORY_FILE_EXTENSION = "inv";
-	private static final boolean PACK_QUESTS = false;
+	private static final boolean PACK_QUESTS = !false;
 	
 	SpriteBatch batch;
 	TextureAtlas atlas;

@@ -12,7 +12,9 @@ public class ShipEntity extends Entity {
 	public int totalHealth = 19000;
 	public int shield = 4;
 	public int shieldTotal;
-	public ShipEntity() {
+	public int credits = 100;
+
+    public ShipEntity() {
 		glyph = " ";
 	}
 	@Override

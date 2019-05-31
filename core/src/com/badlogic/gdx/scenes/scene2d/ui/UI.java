@@ -37,14 +37,14 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.util.zip.GZIPOutputStream;
 
+import ninja.trek.Item;
 import ninja.trek.entity.Entity;
-import ninja.trek.EntityAI;
 import ninja.trek.FontManager;
-import ninja.trek.GameInfo;
+import ninja.trek.gen.GameInfo;
 import ninja.trek.IntPixelMap;
 import ninja.trek.Items;
 import ninja.trek.MainSpaceCabal;
-import ninja.trek.Planet;
+import ninja.trek.gen.Planet;
 import ninja.trek.PlanetNode;
 import ninja.trek.Quest;
 import ninja.trek.QuestOption;
@@ -66,8 +66,10 @@ public class UI {
 	public static final String[] tileFileLocations = {"balls.png", "bluejunk.png", "chromey.png", "greyJunk.png", "greyShip.png", "redround.png"
 			, "smallred.png", "smallships.png", "sourcegh.png", "weirdgrey.png", "white.png"};
 	private static final int MAX_WEAPON_BUTTONS = 10;
+	public static final int SELL_COST_FACTOR = 3;
 	private final World world;
 	private final Table entityOtherActionTable;
+	private final ProgressBar enemyHealthLabel;
 	private DragAndDrop dnd;
 	public UIActionButton[] entityActionButtons = new UIActionButton[Entity.jobNames.length];
 	public UIActionButton[] entityOtherActionButtons = new UIActionButton[Entity.ButtonType.values().length];
@@ -130,6 +132,9 @@ public class UI {
 	private TextButton solarSystemJumpButton;
 	private Actor mapButtonSpacer;
 	public final String SPACER;
+	private Window shopWindow;
+	private ItemDisplay shopItemDisplay;
+
 	public UI(final Stage stage, final World world,  FontManager fontManager) {
 
 		this.world = world;
@@ -314,6 +319,24 @@ public class UI {
 				super.draw(batch, 1f);
 			}
 		};
+
+		enemyHealthLabel =new ProgressBar(0f, 1f, 0.001f, false, skin){
+			@Override
+			public void draw(Batch batch, float parentAlpha) {
+				//batch.setColor(Color.WHITE);
+				if (ship == null) return;
+				ShipEntity se = //ship.getShipEntity();
+				world.getEnemyShip().getShipEntity();
+
+				if (se == null){
+					return;
+				}
+				setValue(se.health / (float)se.totalHealth);
+
+				super.draw(batch, 1f);
+			}
+		};
+
 		//leftTable.row();
 		
 		 Label infoTextLabel = new Label("", skin){
@@ -1141,7 +1164,8 @@ public class UI {
 		topTable.add(weaponTable).right().colspan(13);//.right();
 		topTable.row();
 		topTable.add(infoTextLabel);//.colspan(3).left();
-		
+
+
 		newGameSelectTable = new Table();
 		final TextButton nextShipButton = new TextButton(SPACER + "Next Ship >>" + SPACER, skin);
 		nextShipButton.addListener(new ClickListener(){
@@ -1239,6 +1263,7 @@ public class UI {
 		table.add(new Actor()).expand();
 		table.add(rightTable);
 		table.row();
+		table.add(enemyHealthLabel).right().row();
 		//table.add(bottomWeaponTable).left();
 		table.add(entityOtherActionTable);
 		table.row();
@@ -1253,6 +1278,7 @@ public class UI {
 		topSpacerActor = new Actor();
 		
 		makeInventoryWindow(skin);
+		makeShopWindow(skin);
 		
 		makeSolarSystemWindow(skin, world);
 		
@@ -1346,6 +1372,32 @@ public class UI {
 		entitiesWindow.setPosition(Gdx.graphics.getWidth()/2, Gdx.graphics.getHeight()/2, Align.center);
 
 	}
+
+
+
+	public void buy(ItemDisplay.ItemButton it, Ship player, Ship shop) {
+		Item def = Items.getDef(it.itemID);
+		if (player.getShipEntity().credits < def.cost) return;
+		player.inventory.add(it.itemID);
+		shop.unequipWeapon(it.index);
+		shop.inventory.removeIndex(it.index);
+		player.getShipEntity().credits -= def.cost;
+		toggleShop(player, shop);
+		toggleShop(player, shop);
+	}
+
+	public void sell(ItemDisplay.ItemButton it, Ship player, Ship shop) {
+		Item def = Items.getDef(it.itemID);
+		if (shop.getShipEntity().credits < def.cost/SELL_COST_FACTOR) return;
+		shop.inventory.add(it.itemID);
+		player.unequipWeapon(it.index);
+		player.inventory.removeIndex(it.index);
+		shop.getShipEntity().credits += def.cost/SELL_COST_FACTOR;
+		player.getShipEntity().credits -= def.cost/SELL_COST_FACTOR;
+		toggleShop(player, shop);
+		toggleShop(player, shop);
+	}
+
 	private static class EntityInfoButton extends TextButton{
 
 		private int index;
@@ -1498,14 +1550,32 @@ public class UI {
 	public void toggleInventory(Ship playerShip) {
 		if (invWindow.getStage() == null){
 			
-			invItemDisplay.setRight(null);
 			invItemDisplay.setLeft(playerShip);
+			invItemDisplay.setRight(null);
 			invWindow.pack();
 			invWindow.setPosition(Gdx.graphics.getWidth()/2, Gdx.graphics.getHeight()/2, Align.center);
 			table.addActor(invWindow);
 		} else invWindow.remove();
 		
 		//Gdx.app.log(TAG, "open inv");
+	}
+
+	private void makeShopWindow(Skin skin) {
+		shopWindow = new Window("Inventory", skin);
+		shopItemDisplay = new ItemDisplay(skin, shopWindow, this);
+		shopWindow.add(shopItemDisplay);
+        shopItemDisplay.setShop();
+	}
+
+	public void toggleShop(Ship playerShip, Ship shopShip) {
+		if (shopWindow.getStage() == null){
+			shopItemDisplay.setLeft(playerShip);
+			shopItemDisplay.setRight(shopShip);
+			shopWindow.pack();
+			shopWindow.setPosition(Gdx.graphics.getWidth()/2, Gdx.graphics.getHeight()/2, Align.center);
+			table.addActor(shopWindow);
+		} else shopWindow.remove();
+
 	}
 
 	public void set(Ship ship) {
@@ -1587,12 +1657,8 @@ public class UI {
 		otherActionTable.clearChildren();
 		if (e != null){
 			UIActionButton[] buttons2 = null;
-
 			buttons2 = entityActionButtons;
-
 			UIActionButton[] otherButtons = entityOtherActionButtons;
-
-
 			if (e.otherButtons != null){
 				for (int i = 0; i < e.otherButtons.length; i++){
 					//buttons2[i].getLabel().setFontScale(fontScale);
@@ -1606,9 +1672,6 @@ public class UI {
 					actionTable.add(buttons2[e.buttonOrder[i]]);
 				}
 			}
-
-
-
 			currentEntity = e;
 			int maxW, total = 0;
 			//float scale = skin.get("default-font", BitmapFont.class).getData().scaleX;
@@ -1625,7 +1688,6 @@ public class UI {
 						total++;
 					}
 				}
-
 			}
 			if (total == 0){
 				maxW = 0;
@@ -1635,7 +1697,6 @@ public class UI {
 			actionTable.layout();
 			table.layout();
 
-
 			for (int i = 0; i < buttons2.length; i++){
 				Cell<UIActionButton> cell = actionTable.getCell(buttons2[i]);
 				if (cell != null){
@@ -1644,20 +1705,14 @@ public class UI {
 				} else {
 					//Gdx.app.log(TAG, "no cell " + i + "  ");
 				}
-
-				//buttons[i].getCell(buttons[i].getLabel()).fill();
-				//if (buttons[i].getLabel().getWidth() >= buttons[i].getWidth() - 3)
 				float sc = (maxW / buttons2[i].getLabel().getWidth()) * .8f;
 				sc = Math.min(1f, sc);
 				sc *= fontScale;
 				buttons2[i].getLabel().setFontScaleX(sc);
-
 				buttons2[i].setChecked(e.disabledButton[i]);;
 			}
 		}
-		
 		actionTable.invalidate();
-		//table.invalidate();
 	}
 	
 	public void reset(){
@@ -1896,7 +1951,7 @@ public class UI {
 		for (int i = 0; i < planet.quests.size; i++) {
 			int questHash = planet.quests.get(i);
 			Quest quest = info.getQuest(questHash);
-			if (quest == null) throw new GdxRuntimeException("!null quest" + questHash);
+			if (quest == null) throw new GdxRuntimeException("null quest" + questHash);
 			if (!info.hasCompleted(questHash, info.currentSystem, info.currentPlanet) && info.isValid(questHash, ship)) {
 
 				showQuestScreen(info, stage, ship, quest, planet, world);
@@ -1917,14 +1972,15 @@ public class UI {
 		questWindow.getTitleLabel().setText(planet.toString());
 		for (Actor a : questWindow.getChildren()) {
 			if (a instanceof QuestOptionDisplay) {
-				questOptionPool.free((QuestOptionDisplay) a);
+
+				//questOptionPool.free((QuestOptionDisplay) a);
 			}
 		}
 		questWindow.clearChildren();
+		questTextLabel.setText(quest.text);
 		questWindow.add(questTextLabel);
 		questWindow.row();
-		
-		questTextLabel.setText(quest.text);
+
 		//Gdx.app.log(TAG, "ADD OPTIONS");
 		if (quest.options.size == 0) {
 			throw new GdxRuntimeException("ndskjfl");
@@ -1935,19 +1991,20 @@ public class UI {
 				QuestOptionDisplay opt = questOptionPool.obtain();
 				opt.set(quest.options.get(k), info, ship, world);
 				questWindow.add(opt);
+				Gdx.app.log(TAG, "ADD OPTION TO WINDOW " + opt.getText());
 				questWindow.row();
-				Gdx.app.log(TAG, "ADD OPTION TO WINDOW");
 			}
 		}
 		if (quest.commands != null)
 			for (int i = 0; i < quest.commands.length; i++){
-				ship.doCommand(quest.commands[i], info, this, world);
+				ship.doCommand(quest.commands[i], info, this, world, stage);
 			}
 		
 		questWindow.pack();
 		questWindow.setPosition(Gdx.graphics.getWidth()/2, Gdx.graphics.getHeight()/2, Align.center);
 		stage.addActor(questWindow);
-		Gdx.app.log(TAG, "DONE WINDOW" + quest.name);
+		questWindow.pack();
+		Gdx.app.log(TAG, "DONE WINDOW" + quest.name + " " + quest.options.size);
 	}
 	public static class QuestOptionDisplay extends TextButton{
 
@@ -1974,7 +2031,7 @@ public class UI {
 		public void selected() {
 			if (questO.commands != null)
 				for (int i = 0; i < questO.commands.length; i++){
-					ship.doCommand(questO.commands[i], info, ui, world);
+					ship.doCommand(questO.commands[i], info, ui, world, mstage);
 				}
 			
 			ui.clearQuestWindow();

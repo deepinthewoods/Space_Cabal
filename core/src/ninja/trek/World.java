@@ -24,6 +24,7 @@ import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.UI;
@@ -38,8 +39,8 @@ import ninja.trek.Ship.Alignment;
 import ninja.trek.Ship.EntityArray;
 import ninja.trek.actions.ADrone;
 import ninja.trek.entity.Entity;
-import ninja.trek.entity.Missile;
 import ninja.trek.entity.ShipEntity;
+import ninja.trek.gen.GameInfo;
 
 public class World {
 	private static final String TAG = "world";
@@ -66,6 +67,9 @@ public class World {
 	public final static float timeStep = 1f/60f;
 	public IndexedAStarPathFinder<PlanetNode> universePath;
 	private float warpShipZoom;
+	private int explosionTime;
+	private Array<Sprite> explosionParticles = new Array<Sprite>();
+	private Array<Vector2> explosionVelocity = new Array<Vector2>();
 
 	public World(FontManager fontManager, ShaderProgram shader, Sprite pixelSprite, PlanetRenderer planet, ModelBatch modelBatch, ShipFcatory shipFactory) {
 		this.modelBatch = modelBatch;
@@ -260,6 +264,7 @@ public class World {
 		for (int i = 0; i < maps.size; i++){
 			Ship map = maps.get(i);
 			map.updateCamera(camera, this, i, warpingToSolarSystemMap | warpingToPlanet);
+			if (map.disableRender) continue;
 			map.enableScissor(this);
 			batch.disableBlending();
 			
@@ -284,13 +289,25 @@ public class World {
 			
 			
 		}
-		batch.getProjectionMatrix().setToOrtho2D(0, 0, 10, 10);
-        batch.begin();
+		batch.getProjectionMatrix().set(getEnemyShip().camera.combined);
 
+		explosionTime += Gdx.graphics.getDeltaTime();
+		if (!warpingToPlanet && !warpingToSolarSystemMap && !warpingBetweenPlanets && !planetSelectOn){
+        	batch.begin();
+			for (int i= 0; i < explosionParticles.size; i++){
+				Sprite s = explosionParticles.get(i);
+				Vector2 v = explosionVelocity.get(i);
+				p2.set(s.getX(), s.getY());
+				p2.add(v.cpy().scl(Gdx.graphics.getDeltaTime()));
+				s.setPosition(p2.x, p2.y);
+				s.draw(batch);
+			}
        // batch.draw(colorIndexBuffer.getColorBufferTexture(), 0, 0, 10, 10);//TODO
-        batch.end();
+        	batch.end();
+
+		}
 	}
-	
+	Vector2 p2 = new Vector2();
 	public void addMap(Ship map){
 		maps.add(map);
 		Gdx.app.log(TAG, "addMap " + maps.size);
@@ -505,7 +522,8 @@ public class World {
 		info.currentOrbitalDepth = orbitType;
 		warpBeta = 0f;
 		warpingBetweenPlanets = true;
-		
+		//getEnemyShip().disableRender = false;
+
 	}
 	public Ship getShipForThread(int index) {
 		if (maps.size <= index) return null;
@@ -513,7 +531,23 @@ public class World {
 	}
 
 
-
-
-
+	public void shipDeath(Ship ship) {
+		Texture tex = ship.hull.getTexture();
+		int xDivs = 10, yDivs = 10;
+		float dx = 1f / xDivs;
+		float dy = 1f / yDivs;
+		for (int x = 0; x < xDivs; x++)
+			for (int y = 0; y < yDivs; y++){
+				Sprite sprite = Pools.obtain(Sprite.class);
+				sprite.setTexture(tex);
+				sprite.setRegion((x) * dx, (y) * dy, (x+1) * dx, (y+1) * dy);
+				sprite.setSize(ship.mapWidth * dx, ship.mapHeight * dy);
+				//sprite.setPosition(getEnemyShip().offsetWorld.x, getEnemyShip().offsetWorld.y);
+				sprite.setPosition(x * ship.mapWidth * dx, ship.mapHeight - (y+1) * ship.mapHeight * dy);
+				explosionParticles.add(sprite);
+				explosionVelocity.add(Pools.obtain(Vector2.class).set(MathUtils.random(-10f, 1f), MathUtils.random(-10f, 10f)));
+			}
+		explosionTime = 0;
+		ship.disableRender = true;
+	}
 }

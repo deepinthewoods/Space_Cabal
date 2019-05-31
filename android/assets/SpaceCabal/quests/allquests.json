@@ -25,21 +25,8 @@
 }
 {
 	class: ninja.trek.Quest
-	name: nextquest
-	text: this is a moon quest
-	requiredAny: [
-		MOON
-	]
-	options: [
-		{
-			text: exit
-		}
-	]
-}
-{
-	class: ninja.trek.Quest
 	name: smallquest
-	text: this is a mars-like planetquest
+	text: this is a mars-like planet. A hostile ship opens fire on you with no warning
 	requiredAny: [
 		MARS_LIKE
 	]
@@ -57,7 +44,7 @@
 	class: ninja.trek.Quest
 	name: start
 	commands: []
-	text: You have reached orbit. Open the Solar System Map to
+	text: You have reached orbit. Open the Solar System Map to start your journey
 	tags: [
 		easy
 	]
@@ -67,6 +54,54 @@
 	options: [
 		{
 			text: Close
+			commands: []
+		}
+	]
+}
+{
+	class: ninja.trek.Quest
+	name: earthfriendly
+	commands: []
+	text: We could trade?
+	options: [
+		{
+			text: exit
+			commands: []
+		}
+		{
+			text: TRADE
+			commands: [
+				shop
+			]
+		}
+	]
+}
+{
+	class: ninja.trek.Quest
+	name: earthquest
+	commands: [
+		spawn test
+	]
+	text: " What is your business here?"
+	requiredAny: [
+		EARTH_LIKE
+	]
+	options: [
+		{
+			text: We come in peace
+			next: [
+				earthfriendly
+			]
+			commands: []
+		}
+		{
+			text: bggf
+			commands: [
+				hostile
+			]
+		}
+		{
+			text: We come in war
 			commands: []
 		}
 	]

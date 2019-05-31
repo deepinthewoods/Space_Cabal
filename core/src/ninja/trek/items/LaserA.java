@@ -8,7 +8,7 @@ public class LaserA extends LaserItem {
         chargeDrawLimit = 50;
 		fireWindDownTime = 0f;
         shieldPiercing = 1;
-        damage = 10;
+        damage = 30;
 	}
 
 }

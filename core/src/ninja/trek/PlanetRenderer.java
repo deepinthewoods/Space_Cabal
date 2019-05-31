@@ -41,6 +41,9 @@ import com.badlogic.gdx.utils.PauseableThread;
 import com.badlogic.gdx.utils.Pool;
 import com.badlogic.gdx.utils.ShortArray;
 
+import ninja.trek.gen.GameInfo;
+import ninja.trek.gen.Planet;
+import ninja.trek.gen.SolarSystem;
 import squidpony.squidgrid.gui.gdx.SColor;
 
 

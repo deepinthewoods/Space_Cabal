@@ -24,6 +24,7 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.UI;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Bits;
@@ -42,6 +43,7 @@ import ninja.trek.entity.Missile;
 import ninja.trek.entity.ShipEntity;
 import ninja.trek.entity.SystemControlEntity;
 import ninja.trek.entity.Weapon;
+import ninja.trek.gen.GameInfo;
 import ninja.trek.ui.ItemDisplay;
 import ninja.trek.ui.ItemDisplay.ItemButton;
 import ninja.trek.ui.UIActionButton;
@@ -70,6 +72,7 @@ public class Ship implements Pool.Poolable {
 	private IntIntMap fireBlockIndices = new IntIntMap();
 	public boolean hasCalculatedConnectivity;
 	private int maxRoomID;
+	public boolean disableRender;
 
 	public void openDoor(Door door) {
 		int s = door.radius, h = s/2;
@@ -132,7 +135,7 @@ public class Ship implements Pool.Poolable {
     public void laserDamage(int x, int y, int damage) {
         map.floodFillMissileDamage(x, y, damage, this);
 		getShipEntity().health -= damage ;
-		Gdx.app.log(TAG, "laser Damage" + damage + " = " + getShipEntity().health);
+		//Gdx.app.log(TAG, "laser Damage" + damage + " = " + getShipEntity().health);
        // Gdx.app.log(TAG, "LASER DAMAGE");
     }
 
@@ -151,6 +154,8 @@ public class Ship implements Pool.Poolable {
 		removeAllEntities();
 
 	}
+
+
 
 
 	public enum Alignment {CENTRE, TOP_RIGHT};
@@ -1523,7 +1528,7 @@ public class Ship implements Pool.Poolable {
 		
 	}
 
-	private void unequipWeapon(int itemIndex) {
+	public void unequipWeapon(int itemIndex) {
 		for (Entity e : entities) {
 			if (e instanceof Weapon){
 				Weapon w = (Weapon) e;
@@ -1533,6 +1538,9 @@ public class Ship implements Pool.Poolable {
 			}
 		}
 	}
+
+
+
 	public Laser[] deployedLasers = new Laser[ItemDisplay.MAX_WEAPONS];
 	
 	public void shoot(WeaponItem weI, GridPoint2 target, Ship targetShip, Weapon w) {
@@ -1695,16 +1703,17 @@ public class Ship implements Pool.Poolable {
 		String glyph = World.letters[nextGlyphIndex++ % World.letters.length];
 		return glyph;
 	}
-	public void doCommand(String cmd, GameInfo info, UI ui, World world) {
-		
+	public void doCommand(String cmd, GameInfo info, UI ui, World world, Stage stage) {
+		String[] split = cmd.split(" ");
 		if (cmd.equals("reward")) {
 			Gdx.app.log(TAG, "REWARD");
 			
-		} else if (cmd.substring(0, 5).contains("spawn")) {
-			String shipName = cmd.split(" ")[1];
+		} else if (split[0].contains("spawn")) {
+			String shipName = split[1];
 			Gdx.app.log(TAG, "SPAWN " + shipName);
 			Ship enemy = world.getEnemyShip();//world.getEnemy(this);
 			world.loadShip(shipName, enemy);
+			enemy.disableRender = false;
 		} else if (cmd.equals("hostile")) {
 			Gdx.app.log(TAG, "HOSTILE");
 			//Ship enemy = world.getEnemy(this);
@@ -1717,6 +1726,12 @@ public class Ship implements Pool.Poolable {
 				enemy.setHostile(true);
 				setHostile(true);
 			}
+		} else if (cmd.equals("quest")){
+			String name = split[1];
+			ui.showQuestScreen(info, stage, this, name, world);
+		} else if (cmd.equals("shop")){
+
+			ui.toggleShop(this, world.getEnemyShip());
 		}
 		
 		

@@ -35,6 +35,11 @@ public class AEnemyShip extends ABaseShip {
             //Gdx.app.log(TAG, "set weapon targets");
         }
         //this.delay(2f);
+        if (ship.getShipEntity().health < 0){
+            world.shipDeath(ship);
+            isFinished = true;
+
+        }
 
         super.update(dt, world, map, ui);
 

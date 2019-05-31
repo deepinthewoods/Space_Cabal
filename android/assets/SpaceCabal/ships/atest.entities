@@ -7,7 +7,7 @@
 	equippedItemIndex: 0
 	equippedItemID: 0
 	totalCharge: 100
-	fireDelay: -657
+	fireDelay: -1501
 }
 {
 	class: ninja.trek.entity.Weapon
@@ -17,49 +17,58 @@
 	index: 1
 	equippedItemIndex: 1
 	equippedItemID: 3
-	totalCharge: 61300
-	fireDelay: -613
+	totalCharge: 100000
+	fireDelay: -1421
 }
 {
 	class: ninja.trek.entity.Entity
-	x: 99
-	y: 75
+	x: 79
+	y: 73
 	glyph: a
+	path: {
+		items: [ 79, 72, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ]
+		size: 2
+	}
 	actionIndexForPath: 6
 	buttonOrder: [ 5, 1, 0, 6, 2, 7, 4, 10, 8, 9, 3 ]
 	fixOrder: [ 2, 3, 7, 1, 9, 6, 8 ]
 	target: {
-		x: 99
-		y: 75
+		x: 79
+		y: 72
 	}
-	delayAccumulator: 60
+	delayAccumulator: 80
 }
 {
 	class: ninja.trek.entity.Entity
-	x: 78
-	y: 70
+	x: 86
+	y: 64
 	glyph: b
 	actionIndexForPath: 6
 	buttonOrder: [ 5, 1, 0, 6, 2, 7, 4, 10, 8, 9, 3 ]
 	fixOrder: [ 2, 3, 7, 1, 9, 6, 8 ]
 	target: {
-		x: 78
-		y: 70
+		x: 86
+		y: 64
 	}
-	delayAccumulator: 10
+	delayAccumulator: 40
 }
 {
 	class: ninja.trek.entity.Entity
-	x: 106
-	y: 94
+	x: 87
+	y: 67
 	glyph: c
+	path: {
+		items: [ 87, 66, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ]
+		size: 2
+	}
 	actionIndexForPath: 6
 	buttonOrder: [ 5, 1, 0, 6, 2, 7, 4, 10, 8, 9, 3 ]
 	fixOrder: [ 2, 3, 7, 1, 9, 6, 8 ]
 	target: {
-		x: 106
-		y: 94
+		x: 87
+		y: 66
 	}
+	delayAccumulator: 40
 }
 {
 	class: ninja.trek.entity.ShipEntity

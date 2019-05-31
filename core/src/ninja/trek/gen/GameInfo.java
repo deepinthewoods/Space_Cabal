@@ -1,4 +1,4 @@
-package ninja.trek;
+package ninja.trek.gen;
 
 import java.util.Iterator;
 
@@ -10,6 +10,11 @@ import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.badlogic.gdx.utils.IntMap;
 import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.Pools;
+
+import ninja.trek.MainSpaceCabal;
+import ninja.trek.Quest;
+import ninja.trek.QuestArray;
+import ninja.trek.Ship;
 
 public class GameInfo {
 
@@ -52,9 +57,10 @@ public class GameInfo {
 		QuestArray all = new QuestArray();
 		FileHandle folder = Gdx.files.external(MainSpaceCabal.QUEST_SAVE_LOCATION);
 		for (FileHandle f : folder.list()) {
+			Gdx.app.log(TAG, "packing " + f.nameWithoutExtension());
+
 			QuestArray arr = json.fromJson(QuestArray.class, f);
 			all.addAll(arr);
-			Gdx.app.log(TAG, "packing " + f.nameWithoutExtension());
 		}
 
 		FileHandle outFile = Gdx.files.absolute(
