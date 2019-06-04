@@ -20,6 +20,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.UI;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.badlogic.gdx.utils.IntIntMap;
 import com.badlogic.gdx.utils.IntMap;
@@ -27,6 +28,7 @@ import com.badlogic.gdx.utils.Pools;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
 import ninja.trek.Ship.Alignment;
+import ninja.trek.entity.Entity;
 import ninja.trek.gen.GameInfo;
 import ninja.trek.ui.UISystemButton;
 
@@ -69,6 +71,10 @@ public class MainSpaceCabal extends ApplicationAdapter {
 	private Sprite pixelSprite;
 	public static boolean paused;
 	private ShipFcatory shipFactory;
+	private Texture backgroundTexture;
+	public static TextureAtlas iconAtlas;
+	private Array<TextureAtlas.AtlasRegion> icons;
+	public int nextIconIndex;
 
 	@Override
 	public void create () {
@@ -90,6 +96,11 @@ public class MainSpaceCabal extends ApplicationAdapter {
 		stage = new Stage(viewport );
 		atlas = new TextureAtlas(Gdx.files.internal("background.atlas"));
 		Sprites.init(atlas);
+		//Sprite iconSprite = new Sprite(iconTexture);
+		backgroundTexture = new Texture(Gdx.files.internal("circle.png"));
+		iconAtlas = new TextureAtlas(Gdx.files.internal("icons.atlas"));
+		icons = iconAtlas.getRegions();
+
 		background = new BackgroundRenderer(atlas);
 		modelBatch = new ModelBatch();;
 		planet = new PlanetRenderer(6, 1f, modelBatch);
@@ -100,6 +111,7 @@ public class MainSpaceCabal extends ApplicationAdapter {
 		InputMultiplexer mux = new InputMultiplexer();
 		mux.addProcessor(stage);
 		mux.addProcessor(new InputProcessor(){
+
 
 			@Override
 			public boolean keyDown(int keycode) {
@@ -127,6 +139,20 @@ public class MainSpaceCabal extends ApplicationAdapter {
 					Gdx.app.log(TAG, "recalc connectivity and systems");
                 } else if (keycode == Keys.D){
 					world.addDrone("dronebasic", world.getPlayerShip());
+				} else if (keycode == Keys.RIGHT){
+					Entity e = ui.getEntity();
+					if (e == null) return false;
+					nextIconIndex++;
+					if (nextIconIndex >= icons.size)
+						nextIconIndex = 60 ;
+					e.setIcon(icons.get(nextIconIndex).name);
+				} else if (keycode == Keys.LEFT){
+					Entity e = ui.getEntity();
+					if (e == null) return false;
+					nextIconIndex--;
+					if (nextIconIndex < 0)
+						nextIconIndex = icons.size-1;
+					e.setIcon(icons.get(nextIconIndex).name);
 				}
 					
 				
@@ -172,6 +198,7 @@ public class MainSpaceCabal extends ApplicationAdapter {
 					//TODO unproject and check for vacuum
 					if (eShip == null) throw new GdxRuntimeException("null ship");
 					ship.setWeaponTarget(world.targettingIndex, (int)v.x, (int)v.y, eShip);
+					ui.set(ship);
 					eShip.zoomOutForTarget();
 					world.targettingIndex = -1;
 					return true;
@@ -426,13 +453,14 @@ public class MainSpaceCabal extends ApplicationAdapter {
 			@Override
 			public boolean scrolled(int amount) {
 				Ship map = world.getMapForScreenPosition(Gdx.input.getX(), Gdx.input.getY());
-				map = world.getPlayerShip();
+				//map = world.getPlayerShip();
 				if (map != null){
 					v.set(Gdx.input.getX(), Gdx.input.getY(), 0);
 					map.camera.unproject(v);
 					//Gdx.app.log(TAG, "unprojected  " + v);
-					map.camera.zoom *= amount<0? 0.9f : 1f/0.9f;
+
 					if (map.alignment == Alignment.CENTRE){
+						map.camera.zoom *= amount<0? 0.9f : 1f/0.9f;
 						map.updateCamera(camera, world, 0, false);
 						map.camera.project(v);
 						//Gdx.app.log(TAG, "projected" + v);
@@ -442,6 +470,8 @@ public class MainSpaceCabal extends ApplicationAdapter {
 						
 						map.offsetForZoom(v2.x, v2.y);
 						
+					} else if (map.alignment == Alignment.TOP_RIGHT){
+						map.zoomedOutEnemyZoom*= amount<0? 0.9f : 1f/0.9f;
 					}
 				}
 				return true;
@@ -461,7 +491,7 @@ public class MainSpaceCabal extends ApplicationAdapter {
 		shipFactory = new ShipFcatory(pixelSprite, fontManager, shader);
 
 
-		world = new World(fontManager, shader, pixelSprite, planet, modelBatch, shipFactory);
+		world = new World(fontManager, shader, pixelSprite, planet, modelBatch, shipFactory, iconAtlas);
 		
 		if (!Gdx.files.internal("lighting.vert").exists()) throw new GdxRuntimeException("kdls");
 
@@ -491,7 +521,7 @@ public class MainSpaceCabal extends ApplicationAdapter {
 		//amap2.offsetSize.set(200, 200);
 		amap2.alignment = Alignment.TOP_RIGHT;
 		
-		ui = new UI(stage, world, fontManager);
+		ui = new UI(stage, world, fontManager, iconAtlas);
 		ui.setEntity(null);
 		ui.set(null);//world.getPlayerShip());
 	}
@@ -510,7 +540,7 @@ public class MainSpaceCabal extends ApplicationAdapter {
 		//batch.draw(img, 0, 0);
 		background.draw(world, paused);
 		planet.draw(batch, shape, paused, pixelSprite, background.rotation);
-		world.draw(batch, camera, shape, ui, paused);
+		world.draw(batch, camera, shape, ui, paused, icons, backgroundTexture);
 		//batch.end();
 		//stage.getBatch().disableBlending();
 		stage.draw();
@@ -539,7 +569,7 @@ public class MainSpaceCabal extends ApplicationAdapter {
 		batch.dispose();
 		atlas.dispose();
 		fontManager.dispose();
-		
+		iconAtlas.dispose();
 		shader.dispose();
 		stage.dispose();
 		ui.dispose();

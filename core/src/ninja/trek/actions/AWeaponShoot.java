@@ -19,7 +19,7 @@ public class AWeaponShoot extends Action {
 		if (w.equippedItemIndex == -1) return;
 
 		WeaponItem weI = (WeaponItem) Items.getDef(parent.e.ship.inventory.get(w.equippedItemIndex));
-		
+		if (w.targetShip == null || w.targetShip.getShipEntity().health < 0) return;
 		w.fireDelay--;
 		if (w.totalCharge >= weI.cost && w.fireDelay <= 0){
 			if (!w.hasTarget) return;

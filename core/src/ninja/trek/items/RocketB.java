@@ -9,6 +9,7 @@ public class RocketB extends MissileItem {
 		chargeDrawLimit = 100;
 		weaponType = WeaponType.missile;
 		variantIndex = 1;
+		icon = "grenade";
 	}
 
 }

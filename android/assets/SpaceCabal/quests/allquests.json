@@ -49,30 +49,78 @@
 		easy
 	]
 	requiredAny: [
-		MOON
+		SUN
 	]
 	options: [
 		{
 			text: Close
-			commands: []
 		}
 	]
 }
 {
 	class: ninja.trek.Quest
 	name: earthfriendly
-	commands: []
+	commands: [
+		planet_friendly
+	]
 	text: We could trade?
 	options: [
 		{
 			text: exit
-			commands: []
 		}
 		{
 			text: TRADE
 			commands: [
 				shop
 			]
+		}
+	]
+}
+{
+	class: ninja.trek.Quest
+	name: earthland
+	commands: [
+		spawn earthland
+	]
+	text: You Land in an empty field. Soon you are surrounded by a group of soldiers.
+	requiredAny: [
+		EARTH_LIKE
+	]
+	orbits: [
+		LAND
+	]
+	options: [
+		{
+			text: Fight them
+			commands: [
+				hostile
+			]
+		}
+		{
+			text: Bribe them
+			commands: [
+				cost 100 credits
+				cost 100 fuel
+			]
+		}
+		{
+			text: We Have an alliance with your government
+			next: [
+				earthlandfriendlyresponse
+			]
+			requireAll: [
+				PLANET_FRIENDLY
+			]
+		}
+	]
+}
+{
+	class: ninja.trek.Quest
+	name: earthlandfriendlyresponse
+	text: The soldiers stand down
+	options: [
+		{
+			text: Leave
 		}
 	]
 }
@@ -92,17 +140,12 @@
 			next: [
 				earthfriendly
 			]
-			commands: []
 		}
 		{
-			text: bggf
+			text: We're looking for a fight
 			commands: [
 				hostile
 			]
-		}
-		{
-			text: We come in war
-			commands: []
 		}
 	]
 }

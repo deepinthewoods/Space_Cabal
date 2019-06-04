@@ -543,8 +543,8 @@ public class PlanetRenderer implements RenderableProvider{
 		lightBDirection.set(-1f, -1, -1);
 		if (!paused && renderPlanet != -1) {
 			if (alpha > .95f){
-				rotation[renderPlanet] += Gdx.graphics.getDeltaTime() * SELECTED_ROTATION_SPEED;			
-			} else
+				rotation[renderPlanet] += Gdx.graphics.getDeltaTime() * SELECTED_ROTATION_SPEED;
+			} else if (info != null && info.currentOrbitalDepth != GameInfo.ORBIT_LANDED)
 				rotation[renderPlanet] += Gdx.graphics.getDeltaTime() * ROTATION_SPEED;
 			lightADirection.rotate(rotation[renderPlanet]*2f * orbitSpeed, 0, 0, 1);
 			lightBDirection.rotate(rotation[renderPlanet]*2 * orbitSpeed, 0, 0, 1);

@@ -30,7 +30,7 @@ void main()
   float shift = (floor(v_texCoords.x * 64.0) / 64.0) + (floor(v_texCoords.y * 64.0) / 64.0);;
 
 
-  float v = rand(floor(v_texCoords.xy * 64.0) + mod(floor(u_time * 8.0), 8000.0)) * 0.139;
+  float v = rand(floor((v_texCoords.xy ) * 64.0) + mod(floor(u_time * 8.0), 8000.0)) * 0.139;
   v = v * v_color.a;
   vec4 color = texture2D(u_index_texture, vec2(DiffuseColor.r, mod(v + u_time + shift, 1.0)));
   //gl_FragColor = v_color * DiffuseColor;
@@ -38,7 +38,7 @@ void main()
   //color = u_colors[index]
   color.r *= DiffuseColor.b + 1.0;
   color.b *= DiffuseColor.b + 1.0;
-  color *= DiffuseColor.g;
+  color.rgb *= DiffuseColor.g;
   //color += vec4(v, 0.0, 0.0, 1.0);
   //color *= v;
 

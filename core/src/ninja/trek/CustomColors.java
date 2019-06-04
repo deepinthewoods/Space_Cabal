@@ -22,7 +22,7 @@ Color
 , SHIELD = new Color(0, .35f, 1, 1f)
 , TELEPORTER = new Color(1, .35f, 1, 1f)
 , SCIENCE = new Color(.25f, 1, .35f, 1f)
-		, DOOR = new Color(Color.DARK_GRAY)
+		, DOOR = new Color(.91f, .91f, .91f, 1f);
 
 ;
 static HSL hc = new HSL();
@@ -71,18 +71,17 @@ public static void init(){
 	color[Ship.DRONE] = DRONE;
 	color[Ship.TELEPORTER] = TELEPORTER;
 	color[Ship.SCIENCE] = SCIENCE;
-	color[Ship.DOOR] = DOOR;
+
 	for (int i = 0; i < color.length; i++){
 		hc.fromRGB(color[i]);
 		//
-		if (i != Ship.FLOOR && i != Ship.WALL){
+		if (i != Ship.FLOOR && i != Ship.WALL && i != Ship.DOOR){
 			hc.s = .5f;
-			//hc.l = .65f;
+			hc.toRGB(color[i]);
 		}
-		
-		hc.toRGB(color[i]);
+
 	}
-	
+	color[Ship.DOOR] = DOOR;
 	Colors.put("vaccuum", Color.WHITE);
 	Colors.put("engine", color[Ship.ENGINE]);
 	Colors.put("shield", color[Ship.SHIELD]);
@@ -96,7 +95,6 @@ public static void init(){
 	Colors.put("science", color[Ship.SCIENCE]);
 	Colors.put("door", color[Ship.DOOR]);
 
-	
 
 	colorFloatArray = new float[512];
 	lerpFloatArray = new float[color.length * 4];
@@ -105,7 +103,8 @@ public static void init(){
 		float index = (float)i / 128f + 1f/128f;
 		mapDrawColors[i] = new Color(index, 1f, 0f, 1f);
 	}
-	
+
+
 	lerpToColorBoost = new Color[16];
 	for (int i = 0; i < lerpToColorBoost.length; i++) {
 		Color c = new Color(color[i]);
@@ -113,8 +112,7 @@ public static void init(){
 		hc.fromRGB(c);
 		hc.s = 1f;
 		hc.toRGB(c);
-		//hc.v = .75f;
-		if (i != Ship.FLOOR && i != Ship.WALL) hc.toRGB(color[i]);
+		if (i != Ship.FLOOR && i != Ship.WALL && i != Ship.DOOR) hc.toRGB(color[i]);
 	}
 	
 	for (int i = 0; i < color.length; i++){

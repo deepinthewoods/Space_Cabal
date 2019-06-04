@@ -4,65 +4,100 @@
 	x: 101
 	y: 83
 	glyph: 0
+	iconName: pistol-gun
 	equippedItemIndex: 0
 	equippedItemID: 0
 	totalCharge: 100
-	fireDelay: -657
+	fireDelay: -7402
 }
 {
 	class: ninja.trek.entity.Weapon
 	x: 79
 	y: 62
 	glyph: 1
+	iconName: grenade
 	index: 1
 	equippedItemIndex: 1
 	equippedItemID: 3
-	totalCharge: 61300
-	fireDelay: -613
+	totalCharge: 100000
+	fireDelay: -7358
 }
 {
 	class: ninja.trek.entity.Entity
-	x: 99
-	y: 75
+	x: 176
+	y: 165
 	glyph: a
-	actionIndexForPath: 6
+	path: {
+		items: [ 176, 167, 176, 166, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ]
+		size: 4
+	}
+	actionIndexForPath: 2
 	buttonOrder: [ 5, 1, 0, 6, 2, 7, 4, 10, 8, 9, 3 ]
+	disabledButton: [
+		false
+		false
+		false
+		false
+		false
+		false
+		true
+		false
+		false
+		false
+		false
+	]
+	iconName: abstract-106
 	fixOrder: [ 2, 3, 7, 1, 9, 6, 8 ]
 	target: {
-		x: 99
-		y: 75
+		x: 176
+		y: 167
 	}
-	delayAccumulator: 60
 }
 {
 	class: ninja.trek.entity.Entity
-	x: 78
-	y: 70
+	x: 84
+	y: 108
 	glyph: b
-	actionIndexForPath: 6
-	buttonOrder: [ 5, 1, 0, 6, 2, 7, 4, 10, 8, 9, 3 ]
-	fixOrder: [ 2, 3, 7, 1, 9, 6, 8 ]
+	ret: [ 4, 5 ]
+	actionIndexForPath: 4
+	buttonOrder: [ 5, 1, 0, 4, 10, 6, 2, 7, 8, 9, 3 ]
+	iconName: abstract-111
+	fixOrder: [ 1, 9, 2, 3, 7, 6, 8 ]
 	target: {
-		x: 78
-		y: 70
+		x: 84
+		y: 108
 	}
 	delayAccumulator: 10
 }
 {
 	class: ninja.trek.entity.Entity
-	x: 106
-	y: 94
+	x: 62
+	y: 51
 	glyph: c
 	actionIndexForPath: 6
 	buttonOrder: [ 5, 1, 0, 6, 2, 7, 4, 10, 8, 9, 3 ]
+	iconName: abstract-102
 	fixOrder: [ 2, 3, 7, 1, 9, 6, 8 ]
 	target: {
-		x: 106
-		y: 94
+		x: 62
+		y: 51
 	}
+	delayAccumulator: 90
 }
 {
-	class: ninja.trek.entity.ShipEntity
-	shield: 0
+	class: ninja.trek.entity.DroneStation
+	x: 190
+	y: 55
+}
+{
+	class: ninja.trek.entity.Engine
+	x: 74
+	y: 159
+	totalCharge: 100
+}
+{
+	class: ninja.trek.entity.Shields
+	x: 180
+	y: 137
 }
 ]

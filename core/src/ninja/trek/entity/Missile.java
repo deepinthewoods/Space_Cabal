@@ -24,6 +24,8 @@ public class Missile extends Entity {
 
 	public Missile() {
 		glyph = " ";
+		otherButtons = new ButtonType[]{ButtonType.DOOR_OPEN, ButtonType.DOOR_CLOSE};
+		buttonOrder = null;
 	}
 
 @Override

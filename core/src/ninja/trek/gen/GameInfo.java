@@ -12,11 +12,14 @@ import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.Pools;
 
 import ninja.trek.MainSpaceCabal;
+import ninja.trek.PlanetNode;
 import ninja.trek.Quest;
 import ninja.trek.QuestArray;
 import ninja.trek.Ship;
 
 public class GameInfo {
+
+
 
 	public GameInfo(int seed) {
 		this.seed = seed;
@@ -81,7 +84,7 @@ public class GameInfo {
 	public int currentOrbitalDepth = 1;
 	public static final int ORBIT_LANDED = 0, ORBIT_ORBIT = 1, ORBIT_ELLIPTICAL = 2;
 	private static final String TAG = "Game Info";
-
+	public PlanetNode.NodeType currentOrbit;
 	public int xp;
 	public transient SolarSystem[] systems = new SolarSystem[2];
 	private IntMap<Quest> quests;
@@ -105,10 +108,6 @@ public class GameInfo {
 	}
 
 
-	public boolean isValid(int questHash, Ship ship) {
-		quests.get(questHash);
-		return true;
-	}
 
 
 	public Quest getQuest(int questHash) {
@@ -136,6 +135,10 @@ public class GameInfo {
 	public void onSpawnQuest(Quest quest) {
 		if (!spawnedQuests.contains(quest.name, false))
 			spawnedQuests.add(quest.name);
+	}
+
+	public Planet getCurrentPlanet() {
+		return systems[currentSystem].planets[currentPlanet];
 	}
 	
 	/*{

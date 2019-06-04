@@ -595,6 +595,7 @@ public class IntPixelMap{
 		map2.set(x, y, nBlock);
 	}
 	public Color getColor(int block, int x, int y, Ship ship) {
+
 		//if (block != 0) Gdx.app.log(TAG, "get color " + block);
 		int damage = ((block & Ship.BLOCK_DAMAGE_MASK) >> Ship.BLOCK_DAMAGE_BITS);
 		int id = (block & Ship.BLOCK_ID_MASK); 
@@ -602,6 +603,7 @@ public class IntPixelMap{
 			tmpC.set(CustomColors.mapDrawColors[(id) + 16]);
 			return tmpC;
 		}*/
+
 		int boost = (block & Ship.BLOCK_BOOST_MASK) >> Ship.BLOCK_BOOST_BITS;
 		if (boost > 0){
 			tmpC.set(CustomColors.mapDrawColors[(id) + 32]);
@@ -620,8 +622,20 @@ public class IntPixelMap{
 			tmpC.b = alpha;
 			return tmpC;
 
-		} 
-		
+		}
+		if (id == Ship.DOOR ){
+			if ((block & Ship.BLOCK_EXTRA_MASK) == 0){
+				tmpC.set(CustomColors.mapDrawColors[Ship.DOOR]);
+
+				//tmpC.b = 1f;
+				return tmpC;
+			} else {
+				tmpC.set(CustomColors.mapDrawColors[Ship.FLOOR]);
+				//Gdx.app.log(TAG, "OPEN DOOR");
+				return tmpC;
+			}
+		}
+
 		tmpC.set(CustomColors.mapDrawColors[id]);
 		
 		

@@ -11,6 +11,7 @@ import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.PixmapIO;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Actor;
@@ -116,11 +117,10 @@ public class UI {
 	private ChangeListener editButtonListener;
 	private Table newGameSelectTable;
 	private Window solarSystemWindow;
-	private TextButton geoOrbitButton;
-	private TextButton landOrbitButton;
-	private TextButton ellOrbitButton;
+	private OrbitButton geoOrbitButton;
+	private OrbitButton landOrbitButton;
+	private OrbitButton ellOrbitButton;
 	GameInfo info;
-	private Label planetInfoLabel;
 	public CheckBox randomFillButton;
 	private Window entitiesWindow;
 	private Table entitiesTable;
@@ -135,7 +135,7 @@ public class UI {
 	private Window shopWindow;
 	private ItemDisplay shopItemDisplay;
 
-	public UI(final Stage stage, final World world,  FontManager fontManager) {
+	public UI(final Stage stage, final World world, FontManager fontManager, TextureAtlas iconAtlas) {
 
 		this.world = world;
 		if (Gdx.app.getType() == ApplicationType.Android) {
@@ -774,7 +774,7 @@ public class UI {
 
 				EntityArray entities = Pools.obtain(EntityArray.class);
 				Ship sh = world.getPlayerShip();
-				sh.load(new IntPixelMap(64, 64), entities, sh.hull.getTexture(), sh.inventory);
+				sh.load(new IntPixelMap(64, 64), entities, sh.hull.getTexture(), sh.inventory, iconAtlas);
 				sh.categorizeSystems();
                // world.newPlayerShip();
                 super.clicked(event, x, y);
@@ -789,7 +789,7 @@ public class UI {
 
 				EntityArray entities = Pools.obtain(EntityArray.class);
 				Ship sh = world.getPlayerShip();
-				sh.load(new IntPixelMap(256, 256), entities, sh.hull.getTexture(), sh.inventory);
+				sh.load(new IntPixelMap(256, 256), entities, sh.hull.getTexture(), sh.inventory, iconAtlas);
 				sh.categorizeSystems();
                 //world.newPlayerShip();
                 super.clicked(event, x, y);
@@ -804,7 +804,7 @@ public class UI {
 
                 EntityArray entities = Pools.obtain(EntityArray.class);
 				Ship sh = world.getPlayerShip();
-                sh.load(new IntPixelMap(512, 512), entities, sh.hull.getTexture(), sh.inventory);
+                sh.load(new IntPixelMap(512, 512), entities, sh.hull.getTexture(), sh.inventory, iconAtlas);
                 sh.categorizeSystems();
                // world.newPlayerShip();
                 super.clicked(event, x, y);
@@ -997,7 +997,7 @@ public class UI {
 		
 		//leftTable.add(infoLabel).left();
 		//leftTable.add(new Label("", skin)).expandX();
-		shipControlWindow = new Window("Ship controls", skin);
+		shipControlWindow = new Window("", skin);
 		shipControlButton = new TextButton("SHIP", skin);
 
 		editButton = new CheckBox("edit", skin);
@@ -1160,7 +1160,7 @@ public class UI {
 		topTable.add(infoLabel).top().left();
 		topTable.add(shipSystemTable);
 		topTable.row();
-		topTable.add(shipControlButton);
+		topTable.add(shipControlButton).left();
 		topTable.add(weaponTable).right().colspan(13);//.right();
 		topTable.row();
 		topTable.add(infoTextLabel);//.colspan(3).left();
@@ -1379,7 +1379,7 @@ public class UI {
 		Item def = Items.getDef(it.itemID);
 		if (player.getShipEntity().credits < def.cost) return;
 		player.inventory.add(it.itemID);
-		shop.unequipWeapon(it.index);
+		shop.unequipWeaponByID(it.itemID);
 		shop.inventory.removeIndex(it.index);
 		player.getShipEntity().credits -= def.cost;
 		toggleShop(player, shop);
@@ -1391,7 +1391,7 @@ public class UI {
 		Item def = Items.getDef(it.itemID);
 		if (shop.getShipEntity().credits < def.cost/SELL_COST_FACTOR) return;
 		shop.inventory.add(it.itemID);
-		player.unequipWeapon(it.index);
+        player.unequipWeaponByID(it.itemID);
 		player.inventory.removeIndex(it.index);
 		shop.getShipEntity().credits += def.cost/SELL_COST_FACTOR;
 		player.getShipEntity().credits -= def.cost/SELL_COST_FACTOR;
@@ -1420,50 +1420,46 @@ public class UI {
 	static Color col = new Color();
 	private void makeSolarSystemWindow(Skin skin2, final World world) {
 		solarSystemWindow = new Window("Planet Name", skin);
+
 		Table solarButtonsTable = new Table();
-		geoOrbitButton = new TextButton("Low Orbit", skin);
+		geoOrbitButton = new OrbitButton("Low Orbit", skin);
 		geoOrbitButton.addListener(new ClickListener(){
 			@Override
 			public void clicked(InputEvent event, float x, float y) {
 				geoOrbitButton.setChecked(false);
-				world.goToOrbit(GameInfo.ORBIT_ORBIT);
+				world.goToOrbit(GameInfo.ORBIT_ORBIT, geoOrbitButton.cost);
 				solarSystemWindow.remove();
-				planetInfoLabel.remove();
 				super.clicked(event, x, y);
 			}
 		});
-		landOrbitButton = new TextButton("Land", skin);
+		landOrbitButton = new OrbitButton("Land", skin);
 		landOrbitButton.addListener(new ClickListener(){
 			@Override
 			public void clicked(InputEvent event, float x, float y) {
 				landOrbitButton.setChecked(false);
-				world.goToOrbit(GameInfo.ORBIT_LANDED);
+				world.goToOrbit(GameInfo.ORBIT_LANDED, landOrbitButton.cost);
 				solarSystemWindow.remove();
-				planetInfoLabel.remove();
 				super.clicked(event, x, y);
 			}
 		});
 		
-		ellOrbitButton = new TextButton("Elliptical Orbit", skin);
+		ellOrbitButton = new OrbitButton("Elliptical Orbit", skin);
 		ellOrbitButton.addListener(new ClickListener(){
 			@Override
 			public void clicked(InputEvent event, float x, float y) {
 				ellOrbitButton.setChecked(false);
-				world.goToOrbit(GameInfo.ORBIT_ELLIPTICAL);
+				world.goToOrbit(GameInfo.ORBIT_ELLIPTICAL, ellOrbitButton.cost);
 				solarSystemWindow.remove();
-				planetInfoLabel.remove();
 				super.clicked(event, x, y);
 			}
 		});
+		solarButtonsTable.add(ellOrbitButton);
+		solarButtonsTable.row();
 		solarButtonsTable.add(landOrbitButton);
 		solarButtonsTable.row();
 		solarButtonsTable.add(geoOrbitButton);
-		solarButtonsTable.row();
-		solarButtonsTable.add(ellOrbitButton);
-		
-		planetInfoLabel = new Label("dsjfk ljafsdk;l ;lkfsdj ;lks df;l kdj s;lka djsjd ;kljljks jfdjf;ldj fldjsf fj sdj f", skin);
-		planetInfoLabel.setWidth(Gdx.graphics.getWidth());
-		planetInfoLabel.setWrap(true);
+
+
 		//solarSystemWindow.add(planetInfoLabel).width(Gdx.graphics.getWidth());;
 		//solarSystemWindow.row();
 		solarSystemWindow.add(solarButtonsTable );
@@ -1483,15 +1479,15 @@ public class UI {
 		//geoOrbitButton.setDisabled(true);
 		//ellOrbitButton.setDisabled(true);
 		stage.addActor(solarSystemWindow);
-		planetInfoLabel.setWidth(Gdx.graphics.getWidth()/2);
-		stage.addActor(planetInfoLabel);
-		planetInfoLabel.setPosition(0, 0, Align.bottomLeft);
+
+		//stage.addActor(planetInfoLabel);
+		//planetInfoLabel.setPosition(0, 0, Align.bottomLeft);
 	}
 	public void setPlanetInfo(int selectedPlanet) {
 		if (selectedPlanet == -1) {
-			planetInfoLabel.setText(info.systems[info.currentSystem].sun.toString());
+			solarSystemWindow.getTitleLabel().setText(info.systems[info.currentSystem].sun.toString());
 		} else {
-			planetInfoLabel.setText(info.systems[info.currentSystem].planets[selectedPlanet].toString());
+			solarSystemWindow.getTitleLabel().setText(info.systems[info.currentSystem].planets[selectedPlanet].toString());
 		}
 		setPathCost(geoOrbitButton, "Orbit ", selectedPlanet, PlanetNode.NodeType.ORBIT);
 		setPathCost(ellOrbitButton, "Elliptical orbit ", selectedPlanet, PlanetNode.NodeType.ELLIPTICAL);
@@ -1502,7 +1498,7 @@ public class UI {
 		//ellOrbitButton;
 	}
 
-	private void setPathCost(TextButton button, String text, int selectedPlanet, PlanetNode.NodeType type) {
+	private int setPathCost(TextButton button, String text, int selectedPlanet, PlanetNode.NodeType type) {
 		PlanetNode startNode;
 		Planet planet;
 		if (info.currentPlanet == -1){
@@ -1541,6 +1537,7 @@ public class UI {
 		} else {
 			button.setDisabled(false);
 		}
+		return orbitCost;
 	}
 
 	private void makeInventoryWindow(Skin skin) {
@@ -1955,8 +1952,7 @@ public class UI {
 			int questHash = planet.quests.get(i);
 			Quest quest = info.getQuest(questHash);
 			if (quest == null) throw new GdxRuntimeException("null quest" + questHash);
-			if (!info.hasCompleted(questHash, info.currentSystem, info.currentPlanet) && info.isValid(questHash, ship)) {
-
+			if (!info.hasCompleted(questHash, info.currentSystem, info.currentPlanet) && quest.isValidForPlaying(planet, info.currentOrbit)) {
 				showQuestScreen(info, stage, ship, quest, planet, world);
 				break;
 			}
@@ -1989,8 +1985,11 @@ public class UI {
 			throw new GdxRuntimeException("ndskjfl");
 		}
 		{
-			
 			for (int k = 0; k < quest.options.size; k++) {
+				if (!quest.options.get(k).isValid(info, planet, ship)){
+					Gdx.app.log(TAG, "skip  OPTION TO WINDOW " + quest.options.get(k).text);
+					continue;
+				}
 				QuestOptionDisplay opt = questOptionPool.obtain();
 				opt.set(quest.options.get(k), info, ship, world);
 				questWindow.add(opt);
@@ -2026,7 +2025,7 @@ public class UI {
 		public void set(QuestOption questOption, GameInfo info, Ship ship, World world) {
 			this.questO = questOption;
 			this.world = world;
-			setText(questOption.text);
+			setText(questOption.getText(info, ship));
 			this.info = info;
 			this.ship = ship;
 		}
@@ -2103,5 +2102,12 @@ public class UI {
 	public void closeQuestWindow() {
 		questWindow.remove();
 		
+	}
+
+	public class OrbitButton extends TextButton{
+		public int cost;
+		public OrbitButton(String text, Skin skin) {
+			super(text, skin);
+		}
 	}
 }

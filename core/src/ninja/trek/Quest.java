@@ -13,13 +13,14 @@ public class Quest {
 	public String[] tags = {};
 	public boolean isOneOff = false;
 	public QuestSpawnRequirement[] requiredAny = {};
+	public PlanetNode.NodeType[] orbits = {PlanetNode.NodeType.ORBIT};
 	public Array<QuestOption> options = new Array<QuestOption>();
 	@Override
 	public int hashCode() {
 		return name.hashCode();
 	}
 	
-	public boolean isValidFor(Planet planet) {
+	public boolean isValidFor(Planet planet, PlanetNode.NodeType orbit) {
 		boolean valid = false;
 		for (QuestSpawnRequirement req : requiredAny) {
 			switch (req) {
@@ -46,8 +47,18 @@ public class Quest {
 					break;
 			}
 		}
+		boolean orbitValid = false;
+
+		for (int i = 0; i < orbits.length; i++){
+			if (orbits[i] == orbit) orbitValid = true;
+		}
+
 		
-		return valid;
+		return valid && orbitValid;
 		
+	}
+
+	public boolean isValidForPlaying(Planet planet, PlanetNode.NodeType orbit) {
+		return isValidFor(planet, orbit);
 	}
 }

@@ -14,6 +14,7 @@ import com.badlogic.gdx.graphics.Texture.TextureFilter;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.FrameBuffer;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
@@ -36,14 +37,17 @@ import com.badlogic.gdx.utils.Pools;
 import com.badlogic.gdx.utils.ScreenUtils;
 
 import ninja.trek.entity.Door;
+import ninja.trek.entity.DroneStation;
 import ninja.trek.entity.Engine;
 import ninja.trek.entity.Entity;
 import ninja.trek.entity.Laser;
 import ninja.trek.entity.Missile;
+import ninja.trek.entity.Shields;
 import ninja.trek.entity.ShipEntity;
 import ninja.trek.entity.SystemControlEntity;
 import ninja.trek.entity.Weapon;
 import ninja.trek.gen.GameInfo;
+import ninja.trek.gen.Planet;
 import ninja.trek.ui.ItemDisplay;
 import ninja.trek.ui.ItemDisplay.ItemButton;
 import ninja.trek.ui.UIActionButton;
@@ -61,6 +65,9 @@ public class Ship implements Pool.Poolable {
 
 	public static final int MAX_DAMAGE = 15
 			, MAX_FIRE_SPRITES = 170;
+	private static final String DOOR_CLOSED_GLYPH = "#";
+	private static final String DOOR_OPEN_GLYPH = "::";
+
 	private final Sprite[] chunkSprites;
 	public boolean placeDoor;
 	public boolean deleteDoor;
@@ -75,6 +82,7 @@ public class Ship implements Pool.Poolable {
 	public boolean disableRender;
 
 	public void openDoor(Door door) {
+		door.glyph = DOOR_OPEN_GLYPH;
 		int s = door.radius, h = s/2;
 		int x = door.x;
 		int y = door.y;
@@ -94,11 +102,12 @@ public class Ship implements Pool.Poolable {
 				map.set(bx, by, block);
 			}
 		}
-		hasCalculatedConnectivity = false;//TODO maybe precompute
-		Gdx.app.log(TAG, "open door " +x+"," +y);
+		hasCalculatedConnectivity = false;
+		//Gdx.app.log(TAG, "open door " +x+"," +y);
 	}
 
 	public void closeDoor(Door door) {
+		door.glyph = DOOR_CLOSED_GLYPH;
 		int s = door.radius, h = s/2;
 		int x = door.x;
 		int y = door.y;
@@ -114,8 +123,9 @@ public class Ship implements Pool.Poolable {
 					//block |= id;
 					block &= ~BLOCK_BOOST_MASK;
 					block &= ~BLOCK_EXTRA_MASK;
-
+					//block = DOOR;
 					map.set(bx, by, block);
+
 				}
 			}
 		hasCalculatedConnectivity = false;
@@ -237,7 +247,7 @@ public class Ship implements Pool.Poolable {
 	public float[][] cacheVerts;
 	private int[] cacheDrawCount;
 	private float maxZoomForCentering;
-	private float zoomedOutEnemyZoom;
+	public float zoomedOutEnemyZoom;
 	private float zoomInTarget;
 	private float zoomAlpha;
 	GridPoint2 point = new GridPoint2();
@@ -707,14 +717,16 @@ public class Ship implements Pool.Poolable {
 			Gdx.gl.glScissor(width, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		}
 	}
-	public void drawEntities(SpriteBatch batch, World world, boolean forceHullOver, boolean isPlayer){
+	public void drawEntities(SpriteBatch batch, World world, boolean forceHullOver, boolean isPlayer, Array<TextureAtlas.AtlasRegion> icons, Texture backgroundTexture){
 		//if (true) return;
+		batch.begin();
 		fonts.setZoom(camera);
 		//camera.update();
 		//Gdx.app.log(TAG, "draw entities " + entities.size + "  "  + camera.position);
 		//batch.setProjectionMatrix(camera.combined);//.translate(offset.x, offset.y, 0);
 		//batch.setShader(null);
 		if (forceHullOver){
+			batch.end();
 			return;
 		}
 
@@ -724,15 +736,28 @@ public class Ship implements Pool.Poolable {
             }
 		
 		
-		//batch.enableBlending();
-		for (Entity e : entities){
-			e.draw(batch, camera, world);
-		}
+
 
 		if (editMode) fonts.drawSpawn(map.spawn, batch);
 		//batch.disableBlending();
 		//batch.end();
-		
+
+		for (Entity e : entities){
+			e.draw(batch, camera, world);
+		}
+
+		batch.end();
+		batch.begin();
+        for (Entity e : entities){
+            e.drawBackground(batch, camera, world, backgroundTexture);
+        }
+		batch.end();
+		batch.begin();
+		for (Entity e : entities){
+			e.drawIcon(batch, camera, world, icons);
+		}
+
+		batch.end();
 	}
 	
 
@@ -821,18 +846,18 @@ public class Ship implements Pool.Poolable {
 		Gdx.gl.glLineWidth(3f);
 		if (selectedEntity != null){
 			Entity e = selectedEntity;
-			float w = 20 * camera.zoom, h = w;
+			float w = 60 * camera.zoom, h = w;
 			//shape.rect(e.x-w , e.y-h , w*2, h*2);
 
-			w = e.glyphLayout.width/2;
-			h = e.glyphLayout.height/2;
+			//w = 20;
+			//h = 20;
 
 			//w *= camera.zoom;
 			//h *= camera.zoom;
 
 			BitmapFont font = fonts.getFont(e.font);
 
-			shape.rect(e.x-w -6 * camera.zoom, e.y-h - 6 * camera.zoom , w*2 + 4*camera.zoom, h*2 + 4 * camera.zoom );
+			shape.rect(e.x-w/2, e.y-h/2 , w, h );
 			//Gdx.app.log(TAG, "SELECTED " + camera.zoom);
 		}
 		shape.end();
@@ -1087,7 +1112,7 @@ public class Ship implements Pool.Poolable {
 		
 	}
 
-	public void load(IntPixelMap map2, EntityArray entities2, Texture hull2, IntArray inv) {
+	public void load(IntPixelMap map2, EntityArray entities2, Texture hull2, IntArray inv, TextureAtlas iconAtlas) {
 		Gdx.app.log(TAG, "loadddd");
 		for (Entity e : entities){
 			Pools.free(e);
@@ -1132,6 +1157,7 @@ public class Ship implements Pool.Poolable {
 			{
 				e.ship = this;
 				e.setDefaultAI();
+				e.setIcon();
                 //if (e instanceof Door)
                    // Gdx.app.log(TAG, "DEFAULT AI " + e.getClass() + e.glyph);
 			}
@@ -1184,8 +1210,35 @@ public class Ship implements Pool.Poolable {
 		switch (id){
 			case WEAPON:addGun(x, y);break;
 			case ENGINE:addEngine(x, y);break;
+			case DRONE:addDroneStation(x, y);break;
+			case SHIELD:addShield(x, y);break;
 		}
 	}
+
+	private void addShield(int x, int y) {
+		Shields entity = Pools.obtain(Shields.class);
+		entity.clear();
+		entity.x = x;
+		entity.y = y;
+		entity.setDefaultAI();
+		addEntity(entity);
+		//int currentWeaponCount = 0;
+		//for (Entity e : entities) if (e instanceof Weapon) ((Weapon)e).setIndex(currentWeaponCount++);
+		Gdx.app.log(TAG, "ADD shield CONTROL");
+	}
+
+	private void addDroneStation(int x, int y) {
+		DroneStation entity = Pools.obtain(DroneStation.class);
+		entity.clear();
+		entity.x = x;
+		entity.y = y;
+		entity.setDefaultAI();
+		addEntity(entity);
+		//int currentWeaponCount = 0;
+		//for (Entity e : entities) if (e instanceof Weapon) ((Weapon)e).setIndex(currentWeaponCount++);
+		Gdx.app.log(TAG, "ADD drone CONTROL");
+	}
+
 	public void addGun(int x, int y) {
 		Weapon weapon = Pools.obtain(Weapon.class);
 		weapon.clear();
@@ -1449,6 +1502,7 @@ public class Ship implements Pool.Poolable {
 		vec2.set(x, y);
 		for (Entity e : entities) {
 			if (e.isHostile) continue;
+			if (e instanceof ShipEntity) continue;
 			float d = vec2.dst2(e.x, e.y);
 			if (d < dst){
 				dst = d;
@@ -1465,7 +1519,7 @@ public class Ship implements Pool.Poolable {
 			}
 		}
 		//Gdx.app.log(TAG, "select closest e");
-		if (w != null){
+		if (w != null  ){
 			selectEntity(w, ui);
 		}
 	}
@@ -1483,7 +1537,7 @@ public class Ship implements Pool.Poolable {
 			w.targetShip = targetShip;
 			w.hasTarget = true;
 		}
-		
+
 		//Gdx.app.log(TAG, "zoom out for missileTarget");
 	}
 	
@@ -1492,6 +1546,12 @@ public class Ship implements Pool.Poolable {
 		Weapon w = getWeapon(index);
 		if (w != null){
 			w.hasTarget = false;
+		}
+	}
+
+	public void cancelAllWeaponTargets(){
+		for (int i = 0; i < 16; i++){
+			cancelWeaponTarget(i);
 		}
 	}
 
@@ -1743,6 +1803,10 @@ public class Ship implements Pool.Poolable {
 		} else if (cmd.equals("shop")){
 
 			ui.toggleShop(this, world.getEnemyShip());
+		} else if (cmd.equals("planet_friendly")){
+
+			Planet planet = info.getCurrentPlanet();
+			planet.isFriendly = true;
 		}
 		
 		

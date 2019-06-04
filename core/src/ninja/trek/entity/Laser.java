@@ -26,7 +26,8 @@ public class Laser extends Missile {
     public Laser() {
     	super();
 		glyph = " ";
-		
+		otherButtons = new ButtonType[]{ButtonType.DOOR_OPEN, ButtonType.DOOR_CLOSE};
+		buttonOrder = null;
 	}
 	@Override
 	public Entity setDefaultAI() {

@@ -18,6 +18,7 @@ import com.badlogic.gdx.graphics.VertexAttribute;
 import com.badlogic.gdx.graphics.VertexAttributes.Usage;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g3d.ModelBatch;
 import com.badlogic.gdx.graphics.glutils.FrameBuffer;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
@@ -46,6 +47,7 @@ public class World {
 	private static final String TAG = "world";
 	public final SolarSystemGraph solarSystemGraph;
 	private final ShipFcatory shipFactory;
+	private final TextureAtlas iconAtlas;
 	private Array<Ship> maps = new Array<Ship>(true, 4);
 	private FontManager fonts;
 	private float accum = 0f;
@@ -71,7 +73,8 @@ public class World {
 	private Array<Sprite> explosionParticles = new Array<Sprite>();
 	private Array<Vector2> explosionVelocity = new Array<Vector2>();
 
-	public World(FontManager fontManager, ShaderProgram shader, Sprite pixelSprite, PlanetRenderer planet, ModelBatch modelBatch, ShipFcatory shipFactory) {
+	public World(FontManager fontManager, ShaderProgram shader, Sprite pixelSprite, PlanetRenderer planet, ModelBatch modelBatch, ShipFcatory shipFactory, TextureAtlas icons) {
+		iconAtlas = icons;
 		this.modelBatch = modelBatch;
 		this.planet = planet;
 		this.shader = shader;
@@ -239,7 +242,7 @@ public class World {
 		planet.sunFromSide = false;
 	}
 	boolean hasMadeIndexPNG = false;
-	public void draw(SpriteBatch batch, OrthographicCamera camera, ShapeRenderer shape, UI ui, boolean paused){
+	public void draw(SpriteBatch batch, OrthographicCamera camera, ShapeRenderer shape, UI ui, boolean paused, Array<TextureAtlas.AtlasRegion> icons, Texture backgroundTexture){
 		
 		colorIndexBuffer.begin();
 		batch.getProjectionMatrix().setToOrtho2D(0, 0, colorIndexBuffer.getWidth(), colorIndexBuffer.getHeight());
@@ -272,9 +275,9 @@ public class World {
 			batch.setProjectionMatrix(map.camera.combined);
 			batch.enableBlending();
 			batch.setShader(null);
-			batch.begin();
-			map.drawEntities(batch, this, warpingToPlanet || warpingToSolarSystemMap, i == 0);
-			batch.end();
+
+			map.drawEntities(batch, this, warpingToPlanet || warpingToSolarSystemMap, i == 0, icons, backgroundTexture);
+
 			batch.begin();
 			map.drawLines(shape, ui, targettingIndex != -1, camera, this);
 			if (map.alignment == Alignment.TOP_RIGHT)
@@ -481,7 +484,7 @@ public class World {
 		
 		IntArray inv = json.fromJson(IntArray.class, invFile.readString());
 		
-		ship.load(map, entities, hull, inv);
+		ship.load(map, entities, hull, inv, iconAtlas);
 		
 		Data.jsonPool.free(json);
 		ship.categorizeSystems();
@@ -516,13 +519,18 @@ public class World {
 			maps.get(i).dispose();
 		
 	}
-	public void goToOrbit(int orbitType) {
+	public void goToOrbit(int orbitType, int cost) {
 		int planetI = planet.selectedPlanet;
 		info.currentPlanet = planetI;
 		info.currentOrbitalDepth = orbitType;
+		switch (orbitType){
+			case GameInfo.ORBIT_LANDED: info.currentOrbit = PlanetNode.NodeType.LAND;break;
+			case GameInfo.ORBIT_ELLIPTICAL: info.currentOrbit = PlanetNode.NodeType.ELLIPTICAL;break;
+			case GameInfo.ORBIT_ORBIT: info.currentOrbit = PlanetNode.NodeType.ORBIT;break;
+		}
 		warpBeta = 0f;
 		warpingBetweenPlanets = true;
-		//getEnemyShip().disableRender = false;
+
 
 	}
 	public Ship getShipForThread(int index) {

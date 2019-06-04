@@ -1,5 +1,6 @@
 package ninja.trek.entity;
 
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.GridPoint2;
 import com.badlogic.gdx.utils.Pools;
 
@@ -19,10 +20,14 @@ public class Engine extends SystemControlEntity {
 
 	public Engine(){
 		glyph = "En";
+		setIcon("gears");
+		//otherButtons = new ButtonType[]{ButtonType.DOOR_OPEN, ButtonType.DOOR_CLOSE};
 		//otherButtons = new ButtonType[]{ButtonType.DOOR_OPEN, ButtonType.DOOR_CLOSE};
 		buttonOrder = null;
 	}
-	
+
+
+
 	public void clear() {
 	}
 

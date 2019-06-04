@@ -1,68 +1,69 @@
 [
 {
 	class: ninja.trek.entity.Entity
-	x: 234
-	y: 36
+	x: 58
+	y: 157
 	glyph: a
-	actionIndexForPath: 7
+	actionIndexForPath: 6
 	buttonOrder: [ 5, 1, 0, 6, 2, 7, 4, 10, 8, 9, 3 ]
+	iconName: angry-eyes
 	fixOrder: [ 2, 3, 7, 1, 9, 6, 8 ]
 	target: {
-		x: 234
-		y: 36
+		x: 58
+		y: 157
 	}
+	delayAccumulator: 60
 }
 {
 	class: ninja.trek.entity.Entity
-	x: 191
-	y: 196
+	x: 22
+	y: 29
 	glyph: b
 	font: 1
 	ret: [ 4, 5 ]
-	actionIndexForPath: 4
+	actionIndexForPath: 2
 	buttonOrder: [ 5, 1, 0, 2, 10, 4, 7, 6, 8, 9, 3 ]
+	iconName: calavera
 	fixOrder: [ 3, 9, 1, 7, 2, 6, 8 ]
 	target: {
-		x: 191
-		y: 196
+		x: 22
+		y: 29
 	}
-	delayAccumulator: 20
+	delayAccumulator: 70
 }
 {
 	class: ninja.trek.entity.Entity
-	x: 225
-	y: 13
+	x: 188
+	y: 30
 	glyph: c
 	font: 2
 	ret: [ 6, 7 ]
-	actionIndexForPath: 7
+	actionIndexForPath: 9
 	buttonOrder: [ 5, 1, 0, 9, 7, 2, 10, 4, 8, 6, 3 ]
+	iconName: cracked-mask
 	fixOrder: [ 8, 7, 3, 9, 1, 6, 2 ]
 	target: {
-		x: 225
-		y: 13
+		x: 188
+		y: 30
 	}
-	delayAccumulator: 40
+	delayAccumulator: 80
 }
 {
 	class: ninja.trek.entity.Entity
-	x: 219
-	y: 174
+	x: 175
+	y: 140
 	glyph: d
 	font: 3
 	ret: [ 4, 5 ]
 	actionIndexForPath: 4
 	buttonOrder: [ 5, 1, 0, 4, 7, 2, 10, 6, 8, 9, 3 ]
+	iconName: armoured-shell
 	fixOrder: [ 1, 7, 3, 9, 2, 6, 8 ]
 	target: {
-		x: 219
-		y: 174
+		x: 175
+		y: 140
 	}
-	delayAccumulator: 80
-}
-{
-	class: ninja.trek.entity.ShipEntity
-	shield: 0
+	delayAccumulator: 50
 }
 {
 	class: ninja.trek.entity.Door
@@ -93,5 +94,33 @@
 	x: 172
 	y: 109
 	radius: 10
+}
+{
+	class: ninja.trek.entity.Weapon
+	x: 56
+	y: 199
+	glyph: 0
+	iconName: grenade
+	equippedItemIndex: 0
+	equippedItemID: 3
+	totalCharge: 90300
+	fireDelay: -903
+}
+{
+	class: ninja.trek.entity.Weapon
+	x: 106
+	y: 180
+	glyph: 1
+	iconName: pistol-gun
+	index: 1
+	equippedItemIndex: 1
+	equippedItemID: 0
+	totalCharge: 100
+	fireDelay: -843
+}
+{
+	class: ninja.trek.entity.ShipEntity
+	shield: 0
+	credits: 80
 }
 ]

@@ -1,16 +1,23 @@
 package ninja.trek.entity;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
+import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureAtlas;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.GridPoint2;
 import com.badlogic.gdx.scenes.scene2d.ui.UI;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.IntArray;
 import com.badlogic.gdx.utils.Pools;
 import com.badlogic.gdx.utils.Pool.Poolable;
 
 import ninja.trek.EntityAI;
+import ninja.trek.MainSpaceCabal;
 import ninja.trek.Ship;
 import ninja.trek.World;
 import ninja.trek.action.ActionList;
@@ -34,6 +41,7 @@ public class Entity implements Poolable {
 	public static int RACE_HUMAN = 0, RACE_REPTOID = 1, RACE_SLOTH = 2, RACE_MECHANOID = 3, RACE_SYSTEM = 4;
 	public int x, y;
 	public String glyph = "A";
+
 	public int font = 0;
 
 	int[] ret = new int[2];
@@ -46,8 +54,29 @@ public class Entity implements Poolable {
 	public boolean[] disabledButton = new boolean[jobNames.length];
 	public transient GlyphLayout glyphLayout = new GlyphLayout()
 			;
+	private String iconName;
+	public transient TextureAtlas.AtlasRegion icon;
+	public Color iconColor = new Color(Color.WHITE);
 
-
+	public void setIcon(String name) {
+		iconName = name;
+		if (name == null){
+			icon = null;
+			return;
+		}
+		Gdx.app.log(TAG, "Icon change " + name);
+		icon = MainSpaceCabal.iconAtlas.findRegion(name);
+	}
+	public void setIcon(String name, Color color) {
+		setIcon(name);
+		iconColor.set(color);
+	}
+	public void setIcon() {
+		setIcon(iconName);
+	}
+	public void setIconColor(Color c){
+		iconColor.set(c);
+	}
 
 	public enum ButtonType {DOOR_OPEN, DOOR_CLOSE, SHIELD_UP, SHIELD_DOWN };
 	public ButtonType[] otherButtons = null;
@@ -183,9 +212,23 @@ public class Entity implements Poolable {
 		return this;
 	}
 
-	public void draw(SpriteBatch batch, OrthographicCamera camera, World world) {
-		// TODO Auto-generated method stub
-		
+	public void draw(SpriteBatch batch, OrthographicCamera camera, World world){};
+
+	public void drawIcon(SpriteBatch batch, OrthographicCamera camera, World world, Array<TextureAtlas.AtlasRegion> icons) {
+		if (icon == null) return;
+		if (iconColor != null){
+			batch.setColor(iconColor);
+		}
+			else batch.setColor(Color.WHITE);
+		float w = 50 * camera.zoom, h = 50 * camera.zoom;
+		batch.draw(icon, x-w/2, y - h/2, w, h);
+
 	}
-	
+
+	public void drawBackground(SpriteBatch batch, OrthographicCamera camera, World world, Texture backgroundTexture) {
+		if (icon == null) return;
+		float w = 70 * camera.zoom, h = 70 * camera.zoom;
+		batch.draw(backgroundTexture, x-w/2, y - h/2, w, h);
+	}
+
 }

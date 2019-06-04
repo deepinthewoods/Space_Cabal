@@ -3,18 +3,14 @@ package ninja.trek.entity;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.math.GridPoint2;
-import com.badlogic.gdx.utils.Pools;
 
 import ninja.trek.Items;
 import ninja.trek.Ship;
 import ninja.trek.World;
 import ninja.trek.action.ActionList;
-import ninja.trek.actions.AWeaponCharge;
-import ninja.trek.actions.AWeaponShoot;
 import ninja.trek.ui.ItemDisplay.ItemButton;
 
-public class Weapon extends SystemControlEntity {
+public class Shields extends SystemControlEntity {
 	public int index;
 	//public GridPoint2 target = new GridPoint2();
 
@@ -24,9 +20,12 @@ public class Weapon extends SystemControlEntity {
 	public int totalCharge;
 	public int fireDelay;
 	public transient Ship targetShip;
-	public Weapon(){
-
+	public Shields(){
+		setIcon("shield");
+		otherButtons = new ButtonType[]{ButtonType.DOOR_OPEN, ButtonType.DOOR_CLOSE};
+		buttonOrder = null;
 	}
+
 	public void clear() {
 	}
 
@@ -39,8 +38,8 @@ public class Weapon extends SystemControlEntity {
 	public Entity setDefaultAI() {
 		resetAI();
 		ActionList playerAction = new ActionList();
-		playerAction.addToStart(Pools.obtain(AWeaponShoot.class));
-		playerAction.addToStart(Pools.obtain(AWeaponCharge.class));
+		//playerAction.addToStart(Pools.obtain(AWeaponShoot.class));
+		//playerAction.addToStart(Pools.obtain(AWeaponCharge.class));
 		setAI(playerAction);
 		return this;
 	}
@@ -63,5 +62,8 @@ public void reset() {
 	super.reset();
 }
 
+	@Override
+	public void drawBackground(SpriteBatch batch, OrthographicCamera camera, World world, Texture backgroundTexture) {
 
+	}
 }

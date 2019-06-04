@@ -1,0 +1,59 @@
+[
+{
+	class: ninja.trek.entity.Entity
+	x: 124
+	y: 104
+	glyph: a
+	font: 2
+	path: {
+		items: [ 117, 105, 118, 104, 119, 104, 120, 104, 121, 104, 122, 104, 123, 104, 0, 0 ]
+		size: 14
+	}
+	actionIndexForPath: 3
+	buttonOrder: [ 5, 1, 0, 6, 2, 7, 4, 10, 8, 9, 3 ]
+	fixOrder: [ 2, 3, 7, 1, 9, 6, 8 ]
+	target: {
+		x: 117
+		y: 105
+	}
+	delayAccumulator: 30
+}
+{
+	class: ninja.trek.entity.Entity
+	x: 240
+	y: 147
+	glyph: b
+	font: 2
+	path: {
+		items: [ 233, 154, 234, 153, 235, 152, 236, 151, 237, 150, 238, 149, 239, 148, 240, 147, 240, 146, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ]
+		size: 18
+	}
+	actionIndexForPath: 3
+	buttonOrder: [ 5, 1, 0, 6, 2, 7, 4, 10, 8, 9, 3 ]
+	fixOrder: [ 2, 3, 7, 1, 9, 6, 8 ]
+	target: {
+		x: 233
+		y: 154
+	}
+	delayAccumulator: 40
+}
+{
+	class: ninja.trek.entity.Entity
+	x: 135
+	y: 34
+	glyph: c
+	font: 2
+	path: {
+		items: [ 134, 35, 135, 34, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ]
+		size: 4
+	}
+	actionIndexForPath: 3
+	buttonOrder: [ 5, 1, 0, 6, 2, 7, 4, 10, 8, 9, 3 ]
+	fixOrder: [ 2, 3, 7, 1, 9, 6, 8 ]
+	target: {
+		x: 134
+		y: 35
+	}
+	delayAccumulator: 70
+}
+]

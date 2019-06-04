@@ -34,10 +34,10 @@ public class Planet {
 	public int mountainTopColor = 0;
 	public boolean exponentialHeightScaling = true;
 	public boolean hasMountains = false;
+	public boolean isFriendly = false;
 
 
-
-	public enum Type {INNER, EARTH_LIKE, MARS_LIKE, GAS_GIANT, METEOR, MOON, STAR};
+    public enum Type {INNER, EARTH_LIKE, MARS_LIKE, GAS_GIANT, METEOR, MOON, STAR};
 	public Type planetType;
 	public IntArray quests = new IntArray();
 	public IntArray completed = new IntArray();

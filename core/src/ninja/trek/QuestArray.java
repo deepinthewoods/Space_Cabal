@@ -10,4 +10,11 @@ public class QuestArray extends Array<Quest> implements Poolable{
 		clear();
 	}
 
+	public String[] toStringArray() {
+		String[] s = new String[size];
+		for (int i = 0; i < s.length; i++){
+			s[i] = get(i).name;
+		}
+		return s;
+	}
 }

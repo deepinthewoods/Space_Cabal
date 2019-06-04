@@ -96,7 +96,7 @@ void main()
   //gl_FragColor = v_color * DiffuseColor;
   //if (index == 0) discard;
   vec4 color = u_colors[index];// * DiffuseColor.g;
-  if (index != 4 && index != 5){
+  if (index != 4 && index != 5 && index != 10){
   	  	  		  vec3 c = rgb2hsv(color.xyz);
   	  	  		  c.y = .5f ;
   	  	  		  color = vec4(hsv2rgb(c), color.a);

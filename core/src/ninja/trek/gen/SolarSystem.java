@@ -9,6 +9,7 @@ import com.badlogic.gdx.utils.IntMap;
 import com.badlogic.gdx.utils.IntMap.Entry;
 import com.badlogic.gdx.utils.Pools;
 
+import ninja.trek.PlanetNode;
 import ninja.trek.Quest;
 import ninja.trek.QuestArray;
 import ninja.trek.gen.Planet.Type;
@@ -65,62 +66,95 @@ public class SolarSystem {
 			
 			planets[i].init();
 			
-			makeQuest(planets[i], gameInfo, questList);
+			makeQuests(planets[i], gameInfo, questList);
 		}
 		
 		//sun
 		sun = new Planet(MathUtils.random(Integer.MAX_VALUE-1), -1, Type.STAR);
 		sunVariantID = MathUtils.random(SUN_VARIANTS_TOTAL-1);
 		sun.init();
-		makeQuest(sun, gameInfo, questList);
+		makeQuests(sun, gameInfo, questList);
 
 	}
-	private void makeQuest(Planet planet, GameInfo gameInfo, IntMap<Quest> questList) {
-		String questName = findAQuest(planet, gameInfo, questList);
+	private void makeQuests(Planet planet, GameInfo gameInfo, IntMap<Quest> questList) {
+		String[] questName = findAQuest(planet, gameInfo, questList);
 		if (questName != null) {
-			planet.quests.add(questName.hashCode());
+			for (int i = 0; i < questName.length; i++){
+				planet.quests.add(questName[i].hashCode());
+			}
+
+
 		} else {
 			Gdx.app.log(TAG, "didn't add quest, " + planet.planetType);
 		}
 		
 	}
-	private String findAQuest(Planet planet, GameInfo gameInfo, IntMap<Quest> quests) {
+	private String[] findAQuest(Planet planet, GameInfo gameInfo, IntMap<Quest> quests) {
 		//IntMap<Quest> quests = gameInfo.getQuests();
 		Iterator<Entry<Quest>> iter = quests.iterator();
 		QuestArray validQuests = Pools.obtain(QuestArray.class);
+		QuestArray validLandQuests = Pools.obtain(QuestArray.class);
 		//Gdx.app.log(TAG, "find a quest " + quests.size);
+		QuestArray returnQuests = Pools.obtain(QuestArray.class);
 
 		Quest quest = null;
 		while (iter.hasNext()){
 			Entry<Quest> e = iter.next();
 			quest = e.value;
 			//Gdx.app.log(TAG, "look at quest first" + quest.name);
-			if (quest.isValidFor(planet)) {
+			if (quest.isValidFor(planet, PlanetNode.NodeType.ORBIT))
 				validQuests.add(quest);
-				//Gdx.app.log(TAG, "add valid" + quest.name);
-			} else {
-				//Gdx.app.log(TAG, "not valid " + quest.name);
-			}
+			if (quest.isValidFor(planet, PlanetNode.NodeType.LAND))
+				validLandQuests.add(quest);
+
 		}
 		boolean found = false;
-		if (validQuests.size == 0) return null;
-		while (!found){
-			quest = validQuests.get(MathUtils.random(validQuests.size-1));
-			//Gdx.app.log(TAG, "looking at valid " + quest.name);
-			if (quest.isOneOff) {
-				if (gameInfo.hasSpawnedQuest(quest)) continue;
-				gameInfo.onSpawnQuest(quest);
+		if (validQuests.size > 0){
+			while (!found){
+				quest = validQuests.get(MathUtils.random(validQuests.size-1));
+				//Gdx.app.log(TAG, "looking at valid " + quest.name);
+				if (quest.isOneOff) {
+					if (gameInfo.hasSpawnedQuest(quest)) continue;
+					gameInfo.onSpawnQuest(quest);
+					returnQuests.add(quest);
+					found = true;
+					//Gdx.app.log(TAG, "spawn quest " + quest.name + quest.name.hashCode());
+					//return quest.name;
+				}
 				//Gdx.app.log(TAG, "spawn quest " + quest.name + quest.name.hashCode());
 
-				return quest.name;
+				gameInfo.onSpawnQuest(quest);
+				returnQuests.add(quest);
+				found = true;
+				//return quest.name;
 			}
-			//Gdx.app.log(TAG, "spawn quest " + quest.name + quest.name.hashCode());
-
-			gameInfo.onSpawnQuest(quest);
-			return quest.name;
 		}
+
+		//LAND QUESTS
+		found = false;
+		if (validLandQuests.size > 0){
+			while (!found){
+				quest = validLandQuests.get(MathUtils.random(validLandQuests.size-1));
+				//Gdx.app.log(TAG, "looking at valid " + quest.name);
+				if (quest.isOneOff) {
+					if (gameInfo.hasSpawnedQuest(quest)) continue;
+					gameInfo.onSpawnQuest(quest);
+					returnQuests.add(quest);
+					found = true;
+					//Gdx.app.log(TAG, "spawn quest " + quest.name + quest.name.hashCode());
+					//return quest.name;
+				}
+				//Gdx.app.log(TAG, "spawn quest " + quest.name + quest.name.hashCode());
+
+				gameInfo.onSpawnQuest(quest);
+				returnQuests.add(quest);
+				found = true;
+				//return quest.name;
+			}
+		}
+
 		
-		return null;
+		return returnQuests.toStringArray();
 	}
 
 }

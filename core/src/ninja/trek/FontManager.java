@@ -73,6 +73,7 @@ public class FontManager {
 	}
 
 	public void draw(Entity e, SpriteBatch batch, OrthographicCamera cam) {
+		if (true) return;
 		BitmapFont font = fonts[e.font];
 		float w2 = font.getData().getGlyph(e.glyph.charAt(0)).width * cam.zoom;
 		//e.glyphLayout =
