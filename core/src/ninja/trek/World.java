@@ -46,7 +46,7 @@ import ninja.trek.gen.GameInfo;
 public class World {
 	private static final String TAG = "world";
 	public final SolarSystemGraph solarSystemGraph;
-	private final ShipFcatory shipFactory;
+	private final ShipFactory shipFactory;
 	private final TextureAtlas iconAtlas;
 	private Array<Ship> maps = new Array<Ship>(true, 4);
 	private FontManager fonts;
@@ -73,7 +73,7 @@ public class World {
 	private Array<Sprite> explosionParticles = new Array<Sprite>();
 	private Array<Vector2> explosionVelocity = new Array<Vector2>();
 
-	public World(FontManager fontManager, ShaderProgram shader, Sprite pixelSprite, PlanetRenderer planet, ModelBatch modelBatch, ShipFcatory shipFactory, TextureAtlas icons) {
+	public World(FontManager fontManager, ShaderProgram shader, Sprite pixelSprite, PlanetRenderer planet, ModelBatch modelBatch, ShipFactory shipFactory, TextureAtlas icons) {
 		iconAtlas = icons;
 		this.modelBatch = modelBatch;
 		this.planet = planet;
@@ -176,7 +176,8 @@ public class World {
 				warpingToSolarSystemMap = false;
 				planetSelectOn = true;
 				warpAlpha = 0f;
-				ui.addSolarSystemWindow(stage);
+				ui.addSolarSystemWindow(stage, planet.selectedPlanet);
+				planet.doneZoomingOut();
 			}
 		}
 		if (warpingToPlanet){
@@ -376,7 +377,7 @@ public class World {
 	private boolean warpingToSolarSystemMap, warpingToPlanet, warpingBetweenPlanets;
 	
 	public void startNewGameMenu() {
-
+		isNewGameMenu = true;
 		currentNewGameShipIndex = 0;
 		loadShipForNew(playerShipNames[currentNewGameShipIndex], getPlayerShip());
 		getPlayerShip().removeEntity(getPlayerShip().getShipEntity());
@@ -407,6 +408,7 @@ public class World {
 	}
 	
 	public GameInfo startNewGame(){
+		isNewGameMenu = false;
 		//startTestBattle();
 		MathUtils.random.setSeed(System.currentTimeMillis());
 		GameInfo info = new GameInfo(MathUtils.random(Integer.MAX_VALUE-1));
@@ -428,12 +430,15 @@ public class World {
 		info.currentPlanet = -1;
 		planet.selectedPlanet = -1;
 		planet.sunFromSide = true;
+
 		return info;
 	}
 
 	public void showSolarSystemView(UI ui){
 		ui.set(null);
 		ui.setEntity(null);
+
+		//planet.reClick(ui);
 		warpAlpha = 0f;
 		warpingToSolarSystemMap = true;
 		warpShipZoom = getPlayerShip().camera.zoom;
@@ -519,7 +524,13 @@ public class World {
 			maps.get(i).dispose();
 		
 	}
-	public void goToOrbit(int orbitType, int cost) {
+	public boolean goToOrbit(int orbitType, int cost) {
+
+		ShipEntity shipE = getPlayerShip().getShipEntity();
+		if (shipE.fuel < cost) return false;
+		shipE.fuel -= cost;
+		Gdx.app.log(TAG, "sub fuel " + shipE.fuel + " cost " + cost);
+
 		int planetI = planet.selectedPlanet;
 		info.currentPlanet = planetI;
 		info.currentOrbitalDepth = orbitType;
@@ -530,7 +541,7 @@ public class World {
 		}
 		warpBeta = 0f;
 		warpingBetweenPlanets = true;
-
+		return true;
 
 	}
 	public Ship getShipForThread(int index) {
@@ -557,5 +568,13 @@ public class World {
 			}
 		explosionTime = 0;
 		ship.disableRender = true;
+	}
+
+	public boolean isPlayingView() {
+		return !warpingBetweenPlanets && !warpingToSolarSystemMap && !warpingToPlanet;
+	}
+
+	public boolean isNewGameScreen() {
+		return isNewGameMenu;
 	}
 }

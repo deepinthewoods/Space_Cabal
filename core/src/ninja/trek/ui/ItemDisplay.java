@@ -55,7 +55,7 @@ public class ItemDisplay extends Table {
     private Label rNoItemsLabel, lNoItemsLabel;
 
 
-    public ItemDisplay(Skin skin, final Window window, UI ui){
+    public ItemDisplay(Skin skin, final Window window, final UI ui){
 
 		leftTable = new Table();
 		add(leftTable).left();

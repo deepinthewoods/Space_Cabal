@@ -70,7 +70,7 @@ public class MainSpaceCabal extends ApplicationAdapter {
 	private ModelBatch modelBatch;
 	private Sprite pixelSprite;
 	public static boolean paused;
-	private ShipFcatory shipFactory;
+	private ShipFactory shipFactory;
 	private Texture backgroundTexture;
 	public static TextureAtlas iconAtlas;
 	private Array<TextureAtlas.AtlasRegion> icons;
@@ -488,7 +488,7 @@ public class MainSpaceCabal extends ApplicationAdapter {
 		shader = new ShaderProgram(Gdx.files.internal("lighting.vert"), Gdx.files.internal("lighting.frag"));
 		if (!shader.isCompiled()) throw new GdxRuntimeException("shader \n"  + shader.getLog());
 
-		shipFactory = new ShipFcatory(pixelSprite, fontManager, shader);
+		shipFactory = new ShipFactory(pixelSprite, fontManager, shader);
 
 
 		world = new World(fontManager, shader, pixelSprite, planet, modelBatch, shipFactory, iconAtlas);

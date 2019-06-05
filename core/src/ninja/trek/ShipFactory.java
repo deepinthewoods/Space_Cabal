@@ -5,12 +5,12 @@ import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.utils.Pool;
 import com.badlogic.gdx.utils.Pools;
 
-class ShipFcatory {
+class ShipFactory {
     private final ShaderProgram shader;
     private final FontManager fontManager;
     private final Sprite pixelSprite;
 
-    public ShipFcatory(Sprite pixelSprite, final FontManager fontManager, ShaderProgram shader) {
+    public ShipFactory(final Sprite pixelSprite, final FontManager fontManager, final ShaderProgram shader) {
 
         this.shader = shader;
 

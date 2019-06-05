@@ -134,8 +134,10 @@ public class UI {
 	public final String SPACER;
 	private Window shopWindow;
 	private ItemDisplay shopItemDisplay;
+	private Label solarSystemFuelLabel;
+	private int goeCost, orbitCost, landCost;
 
-	public UI(final Stage stage, final World world, FontManager fontManager, TextureAtlas iconAtlas) {
+	public UI(final Stage stage, final World world, final FontManager fontManager, final TextureAtlas iconAtlas) {
 
 		this.world = world;
 		if (Gdx.app.getType() == ApplicationType.Android) {
@@ -204,7 +206,7 @@ public class UI {
 		}
 
 		for (int i = 0; i < entityOtherActionButtons.length; i++){
-			UIOtherActionButton btn = new UIOtherActionButton(i, skin, entityActionTable, Entity.ButtonType.values()[i]);
+			final UIOtherActionButton btn = new UIOtherActionButton(i, skin, entityActionTable, Entity.ButtonType.values()[i]);
 			entityOtherActionButtons[i] = btn;
 			//Gdx.app.log(TAG, "CREATE UI OTHER ACTION " + i + " " + btn.type + " " );
 			if (btn.type.ordinal() != i) throw new GdxRuntimeException("" + btn.type + btn.type.ordinal());
@@ -861,7 +863,7 @@ public class UI {
 			}
 		});
 		
-		UI ui = this;
+		final UI ui = this;
 		final TextButton solarSystemButton = new TextButton("SS map", skin);
 		solarSystemButton.addListener(new ClickListener(){
 			@Override
@@ -881,6 +883,7 @@ public class UI {
 			@Override
 			public void clicked(InputEvent event, float x, float y) {
 				solarSystemJumpButton.setChecked(false);
+
 				world.showSolarSystemView(ui);
 				super.clicked(event, x, y);
 			}
@@ -888,7 +891,7 @@ public class UI {
 		
 		
 		makeEntitiesWindow(stage, fontManager);
-		TextButton entitiesButton = new TextButton("Entities", skin);
+		final TextButton entitiesButton = new TextButton("Entities", skin);
 		entitiesButton.addListener(new ClickListener() {
 			@Override
 			public void clicked(InputEvent event, float x, float y) {
@@ -1202,6 +1205,7 @@ public class UI {
 			public void clicked(InputEvent event, float x, float y) {
 				startNewGameButton.setChecked(false);
 				info = world.startNewGame();
+				set(world.getPlayerShip());
 				newGameSelectTable.remove();
 				super.clicked(event, x, y);
 			}
@@ -1279,18 +1283,18 @@ public class UI {
 		
 		makeInventoryWindow(skin);
 		makeShopWindow(skin);
-		
+
 		makeSolarSystemWindow(skin, world);
 		
 		makeQuestWindow(skin);
 
 
 	}
-	private void makeEntitiesWindow(Stage stage, FontManager fontManager) {
+	private void makeEntitiesWindow(final Stage stage, final FontManager fontManager) {
 		entitiesWindow = new Window("Entities", skin);
-		Window entityAddWindow = new Window("Add Entity", skin);
+		final Window entityAddWindow = new Window("Add Entity", skin);
 		entitiesTable = new Table();
-		TextButton entityAddButton = new TextButton("Add", skin);
+		final TextButton entityAddButton = new TextButton("Add", skin);
 		entityAddButton.addListener(new ClickListener() {
 			@Override
 			public void clicked(InputEvent event, float x, float y) {
@@ -1306,7 +1310,7 @@ public class UI {
 		
 		entityAddButtonRace = new TextButton[Entity.raceNames.length];
 		for (int i = 0; i < Entity.raceNames.length; i++) {
-			int raceIndex = i;
+			final int raceIndex = i;
 			entityAddButtonRace[i] = new TextButton(Entity.raceNames[i], skin);
 			entityAddWindow.add(entityAddButtonRace[i]);
 			entityAddButtonRace[i].addListener(new ClickListener() {
@@ -1319,7 +1323,7 @@ public class UI {
 				}
 			});
 		}
-		TextButton entityAddWindoCloseButton = new TextButton("close", skin);
+		final TextButton entityAddWindoCloseButton = new TextButton("close", skin);
 		entityAddWindoCloseButton.addListener(new ClickListener() {
 			@Override
 			public void clicked(InputEvent event, float x, float y) {
@@ -1330,7 +1334,7 @@ public class UI {
 		});
 		entityAddWindow.add(entityAddWindoCloseButton);
 		
-		TextButton entityWindowCloseButton = new TextButton("close", skin);
+		final TextButton entityWindowCloseButton = new TextButton("close", skin);
 		entityWindowCloseButton.addListener(new ClickListener() {
 			@Override
 			public void clicked(InputEvent event, float x, float y) {
@@ -1419,16 +1423,23 @@ public class UI {
 	}
 	static Color col = new Color();
 	private void makeSolarSystemWindow(Skin skin2, final World world) {
-		solarSystemWindow = new Window("Planet Name", skin);
 
+		solarSystemWindow = new Window("Planet Name", skin);
+		solarSystemWindow.setTouchable(Touchable.enabled);
+		solarSystemWindow.addListener(new ClickListener(){
+			@Override
+			public void clicked(InputEvent event, float x, float y) {
+				event.handle();
+			}
+		});
 		Table solarButtonsTable = new Table();
 		geoOrbitButton = new OrbitButton("Low Orbit", skin);
 		geoOrbitButton.addListener(new ClickListener(){
 			@Override
 			public void clicked(InputEvent event, float x, float y) {
 				geoOrbitButton.setChecked(false);
-				world.goToOrbit(GameInfo.ORBIT_ORBIT, geoOrbitButton.cost);
-				solarSystemWindow.remove();
+				if (world.goToOrbit(GameInfo.ORBIT_ORBIT, geoOrbitButton.cost))
+					solarSystemWindow.remove();
 				super.clicked(event, x, y);
 			}
 		});
@@ -1437,8 +1448,8 @@ public class UI {
 			@Override
 			public void clicked(InputEvent event, float x, float y) {
 				landOrbitButton.setChecked(false);
-				world.goToOrbit(GameInfo.ORBIT_LANDED, landOrbitButton.cost);
-				solarSystemWindow.remove();
+				if (world.goToOrbit(GameInfo.ORBIT_LANDED, landOrbitButton.cost))
+					solarSystemWindow.remove();
 				super.clicked(event, x, y);
 			}
 		});
@@ -1448,11 +1459,15 @@ public class UI {
 			@Override
 			public void clicked(InputEvent event, float x, float y) {
 				ellOrbitButton.setChecked(false);
-				world.goToOrbit(GameInfo.ORBIT_ELLIPTICAL, ellOrbitButton.cost);
-				solarSystemWindow.remove();
+				if (world.goToOrbit(GameInfo.ORBIT_ELLIPTICAL, ellOrbitButton.cost))
+					solarSystemWindow.remove();
 				super.clicked(event, x, y);
 			}
 		});
+		solarSystemFuelLabel = new Label("Fuel: 99999", skin);
+
+
+		solarButtonsTable.add(solarSystemFuelLabel).row();
 		solarButtonsTable.add(ellOrbitButton);
 		solarButtonsTable.row();
 		solarButtonsTable.add(landOrbitButton);
@@ -1460,11 +1475,12 @@ public class UI {
 		solarButtonsTable.add(geoOrbitButton);
 
 
+
 		//solarSystemWindow.add(planetInfoLabel).width(Gdx.graphics.getWidth());;
 		//solarSystemWindow.row();
 		solarSystemWindow.add(solarButtonsTable );
 		solarSystemWindow.pack();
-		
+		Gdx.app.log(TAG, "make SS window" + solarSystemFuelLabel);
 		
 		solarSystemWindow.setPosition(Gdx.graphics.getWidth(), 0, Align.bottomRight);
 	}
@@ -1474,12 +1490,14 @@ public class UI {
 	private Window questWindow;
 	private Label questTextLabel;
 
-	public void addSolarSystemWindow(Stage stage) {
+	public void addSolarSystemWindow(Stage stage, int selectedPlanet) {
 		//landOrbitButton.setDisabled(true);
 		//geoOrbitButton.setDisabled(true);
 		//ellOrbitButton.setDisabled(true);
-		stage.addActor(solarSystemWindow);
 
+		stage.addActor(solarSystemWindow);
+		setPlanetInfo(selectedPlanet);
+		//solarSystemWindow.pack();
 		//stage.addActor(planetInfoLabel);
 		//planetInfoLabel.setPosition(0, 0, Align.bottomLeft);
 	}
@@ -1498,7 +1516,7 @@ public class UI {
 		//ellOrbitButton;
 	}
 
-	private int setPathCost(TextButton button, String text, int selectedPlanet, PlanetNode.NodeType type) {
+	private int setPathCost(OrbitButton button, String text, int selectedPlanet, PlanetNode.NodeType type) {
 		PlanetNode startNode;
 		Planet planet;
 		if (info.currentPlanet == -1){
@@ -1532,10 +1550,13 @@ public class UI {
 		Gdx.app.log(TAG, "found path " + startNode.type + " " + endNode.type);
 		int orbitCost = (int) outPath.cost();
 		button.setText(text + orbitCost);
+		button.cost = orbitCost;
 		if (outPath.getCount() == 0){
 			button.setDisabled(true);
+			button.setTouchable(Touchable.disabled);
 		} else {
 			button.setDisabled(false);
+			button.setTouchable(Touchable.enabled);
 		}
 		return orbitCost;
 	}
@@ -1594,7 +1615,7 @@ public class UI {
 			//currentEntity = e;
 			shipSystemTable.layout();
 			
-			weaponTable.add(solarSystemJumpButton).left();
+			if (!world.isNewGameScreen())weaponTable.add(solarSystemJumpButton).left();
 			weaponTable.add(mapButtonSpacer).expandX().fillX();
 			//weaponTable.add(new Label("  ", skin)).fillX().expandX();
 
@@ -1642,6 +1663,13 @@ public class UI {
 			
 			weaponTable.row();
 			weaponTable.layout();
+
+			if (ship.getShipEntity() != null){
+				solarSystemFuelLabel.setText("Fuel:"+ship.getShipEntity().fuel);
+				//Gdx.app.log(TAG, "update fuel label " + ship.getShipEntity().fuel);
+			}
+
+
 		}else {
 			shipSystemTable.add(topSpacerActor).expandX();
 		}
@@ -2076,7 +2104,7 @@ public class UI {
 		}
 		@Override
 		protected QuestOptionDisplay newObject() {
-			QuestOptionDisplay d = new QuestOptionDisplay("fjsdklj", skin, ui);
+			final QuestOptionDisplay d = new QuestOptionDisplay("fjsdklj", skin, ui);
 			d.addListener(new ClickListener() {
 				@Override
 				public void clicked(InputEvent event, float x, float y) {

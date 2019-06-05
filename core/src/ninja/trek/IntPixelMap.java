@@ -83,6 +83,7 @@ public class IntPixelMap{
 					GridPoint2 roomBlock = ship.systemRoomBlocks[roomID];
 					int destX=roomBlock.x, destY=roomBlock.y;
 					vec.set(destX, destY).sub(x, y).rotate(90 + MathUtils.random(-90, 90));
+					//Gdx.app.log(TAG, "boosted " + maxAddedDepletion);
 
 					ray.trace(x, y, vec);
 					boolean tracing = true;

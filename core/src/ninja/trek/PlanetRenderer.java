@@ -160,6 +160,7 @@ public class PlanetRenderer implements RenderableProvider{
 	private Texture[] planetTextures;
 
 	private FrameBuffer[] surfaceTextureBuffer;
+	private float prevClickX, prevClickY;
 
 	//private Pixmap[] planetPix;
 
@@ -649,7 +650,10 @@ public class PlanetRenderer implements RenderableProvider{
 		shape.setProjectionMatrix(screenBatch.getProjectionMatrix());
 		shape.begin(ShapeType.Line);
 		float ew = .7f, eh = .2f;;
-		if (info.currentOrbitalDepth == GameInfo.ORBIT_ORBIT){
+		if (info.currentOrbitalDepth == GameInfo.ORBIT_ORBIT ){
+			ew = eh;
+		} else if (info.currentOrbitalDepth == GameInfo.ORBIT_LANDED){
+			eh /= 2;
 			ew = eh;
 		}
 		if (currentPlanet >= 0) {
@@ -666,8 +670,15 @@ public class PlanetRenderer implements RenderableProvider{
 				
 				if (info.currentOrbitalDepth == GameInfo.ORBIT_ORBIT){
 					shape.ellipse(ex , ey , ew, eh, rot, 24);
-				} else 
+				} else if (info.currentOrbitalDepth == GameInfo.ORBIT_LANDED){
+					//shape.ellipse(ex , ey , ew, eh, rot, 24);
+					shape.line(ex, ey+eh, ex+ew/2, ey+eh/2);
+					shape.line(ex+ew/2, ey+eh/2, ex+ew, ey+eh);
+					shape.line(ex+ew/2, ey+eh/2, ex+ew/2, ey+eh*1.5f);
+					//shape.line(ex, ey, ex+ew, ey);
+				} else
 					shape.ellipse(ex + dv.x, ey + dv.y, ew, eh, rot, 24);
+
 				
 			};
 		} else {//around sun
@@ -751,8 +762,14 @@ public class PlanetRenderer implements RenderableProvider{
 		}
 		this.modelBatch.dispose();
 	}
+	public void reClick(UI ui){
+		//selectedPlanet++;
+		//click(prevClickX, prevClickY, ui);
+	}
 
 	public void click(float x, float y, UI ui) {
+		prevClickX = x;
+		prevClickY = y;
 		y = 1f - y;
 		dv.set(x, y);
 		float dist = 10000000;
@@ -791,7 +808,11 @@ public class PlanetRenderer implements RenderableProvider{
 	public void unSelect() {
 		lerpingOut.add(selectedPlanet);
 	}
- 
+
+	public void doneZoomingOut() {
+		lerpingIn.add(selectedPlanet);
+	}
+
 	private static class CachePlanetRunnable implements Runnable{
 		private PlanetRenderer planet;
 		public CachePlanetRunnable(PlanetRenderer planet) {

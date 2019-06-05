@@ -164,8 +164,26 @@ public class Ship implements Pool.Poolable {
 		removeAllEntities();
 
 	}
-
-
+	/*
+	returns true if e has no air
+	 */
+	public boolean breathe(Entity e) {
+		int amount = 10;
+		int block = map.get(e.x, e.y);
+		int air = (block & BLOCK_AIR_MASK) >> BLOCK_AIR_BITS;
+		if (air < amount){
+			air = 0;
+			block &= ~BLOCK_AIR_MASK;
+			block |= air << BLOCK_AIR_BITS;
+			map.set(e.x, e.y, block);
+			return true;
+		}
+		air-= amount;
+		block &= ~BLOCK_AIR_MASK;
+		block |= air << BLOCK_AIR_BITS;
+		map.set(e.x, e.y, block);
+		return false;
+	}
 
 
 	public enum Alignment {CENTRE, TOP_RIGHT};
@@ -844,7 +862,7 @@ public class Ship implements Pool.Poolable {
 			//shape.line(0,0,0, 1000);
 		}
 		Gdx.gl.glLineWidth(3f);
-		if (selectedEntity != null){
+		if (selectedEntity != null && world.isPlayingView()){
 			Entity e = selectedEntity;
 			float w = 60 * camera.zoom, h = w;
 			//shape.rect(e.x-w , e.y-h , w*2, h*2);
