@@ -22,6 +22,7 @@ import ninja.trek.Ship;
 import ninja.trek.World;
 import ninja.trek.action.ActionList;
 import ninja.trek.actions.ABase;
+import ninja.trek.actions.ABreathe;
 
 public class Entity implements Poolable {
 	private static final String TAG = "entity";
@@ -186,6 +187,8 @@ public class Entity implements Poolable {
 	public Entity setDefaultAI() {
 		ActionList playerAction = new ActionList();
 		playerAction.addToStart(Pools.obtain(ABase.class));
+		playerAction.addToStart(Pools.obtain(ABreathe.class));
+
 		setAI(playerAction);
 		return this;
 	}
