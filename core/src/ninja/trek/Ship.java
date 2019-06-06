@@ -737,16 +737,17 @@ public class Ship implements Pool.Poolable {
 	}
 	public void drawEntities(SpriteBatch batch, World world, boolean forceHullOver, boolean isPlayer, Array<TextureAtlas.AtlasRegion> icons, Texture backgroundTexture){
 		//if (true) return;
+		if (forceHullOver){
+
+			return;
+		}
 		batch.begin();
 		fonts.setZoom(camera);
 		//camera.update();
 		//Gdx.app.log(TAG, "draw entities " + entities.size + "  "  + camera.position);
 		//batch.setProjectionMatrix(camera.combined);//.translate(offset.x, offset.y, 0);
 		//batch.setShader(null);
-		if (forceHullOver){
-			batch.end();
-			return;
-		}
+
 
 		if (isPlayer)
             for (Entity e : entities){
@@ -1138,10 +1139,10 @@ public class Ship implements Pool.Poolable {
 		entities.clear();
 		Pools.free(entities);
 		entities = entities2;
-		Gdx.app.log(TAG, "size " + entities.size);
+		//Gdx.app.log(TAG, "size " + entities.size);
 
-		for (Entity e : entities)
-			Gdx.app.log(TAG, "ENTITY " + e);
+		//f//or (Entity e : entities)
+			//Gdx.app.log(TAG, "ENTITY " + e);
 		map = map2;
 		if (mapWidth != map.width || mapHeight != map.height){
 			fill = new IntPixelMap(map);
@@ -1795,16 +1796,16 @@ public class Ship implements Pool.Poolable {
 	public void doCommand(String cmd, GameInfo info, UI ui, World world, Stage stage) {
 		String[] split = cmd.split(" ");
 		if (cmd.equals("reward")) {
-			Gdx.app.log(TAG, "REWARD");
+			//Gdx.app.log(TAG, "REWARD");
 			
 		} else if (split[0].contains("spawn")) {
 			String shipName = split[1];
-			Gdx.app.log(TAG, "SPAWN " + shipName);
+			//Gdx.app.log(TAG, "SPAWN " + shipName);
 			Ship enemy = world.getEnemyShip();//world.getEnemy(this);
 			world.loadShip(shipName, enemy);
 			enemy.disableRender = false;
 		} else if (cmd.equals("hostile")) {
-			Gdx.app.log(TAG, "HOSTILE");
+			//Gdx.app.log(TAG, "HOSTILE");
 			//Ship enemy = world.getEnemy(this);
 			Ship enemy = world.getEnemyShip();
 			//enemy.removeEntity(enemy.getShipEntity());

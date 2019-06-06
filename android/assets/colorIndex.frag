@@ -110,12 +110,12 @@ void main()
 	  //alpha *= alpha;
 	  //float alphar = abs(sin(v_texCoords.y * PI * 22.0));
 	  float alpha = (rand(vec2(v_texCoords * 23.0))) ;
-	  alpha = max(0.0, alpha * 2 - 1.0);
+	  alpha = max(0.0, alpha * 2.0 - 1.0);
 	  alpha = sin(v_texCoords.y * PI * 13.0 ) * 0.5 + 0.5;
 
 	  //float alphar = rand(v_texCoords);
 	  //alphar = mod(v_texCoords.y * 8.0, 2.0) * 0.5;
-	  float alphar = sin(v_texCoords.y * PI * 6) * 0.5 + 0.5;
+	  float alphar = sin(v_texCoords.y * PI * 6.0) * 0.5 + 0.5;
 
 	  vec4 rc = vec4(1.0, 0.0, 0.0, 1.0);
 	  rc =  mix(rc, vec4(1.0, 1.0, 0.0, 1.0), alphar);
@@ -142,17 +142,17 @@ void main()
 	  //alpha *= alpha;
 	  //float alphar = abs(sin(v_texCoords.y * PI * 22.0));
 	  float alpha = (rand(vec2(v_texCoords * 32.0))) ;
-	  alpha = max(0.0, alpha * 2 - 1.0);
+	  alpha = max(0.0, alpha * 2.0 - 1.0);
 	  alpha = sin(v_texCoords.y * PI * 16.0 ) * 0.5 + 0.5;
-      alpha = mod(v_texCoords.y * 2, 1.0);
+      alpha = mod(v_texCoords.y * 2.0, 1.0);
 	  //float alphar = rand(v_texCoords);
 	  //alphar = mod(v_texCoords.y * 8.0, 2.0) * 0.5;
-	  float alphar = sin(v_texCoords.y * PI * 1) * 0.5 + 0.5;
+	  float alphar = sin(v_texCoords.y * PI ) * 0.5 + 0.5;
 
 	  vec4 rc = vec4(1.0, 0.0, 1.0, 1.0);
 	  rc =  mix(rc, vec4(1.0, 0.0, 1.0, 1.0), alphar);
 
-	  color = mix(rc, color, floor(alpha * 2));
+	  color = mix(rc, color, floor(alpha * 2.0));
 
 
   }

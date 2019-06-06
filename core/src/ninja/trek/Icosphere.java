@@ -235,14 +235,14 @@ protected void init(boolean createVBOs) {
 	}
 
 	//setData(vertices, normals, textureCoords, colors, indices, createVBOs);
-	Gdx.app.log(TAG, "verts pre " +  " / " + this.vertices.size);
+	//Gdx.app.log(TAG, "verts pre " +  " / " + this.vertices.size);
 	//this.vertices.clear();
 	//this.vertices.addAll(vertices);
 	this.indices.addAll(indices);;
 	if (mCreateTextureCoords)
 		this.textureCoords.addAll(textureCoords);
 	
-	Gdx.app.log(TAG, "verts " +  " / " + this.vertices.size);
+	//Gdx.app.log(TAG, "verts " +  " / " + this.vertices.size);
 
 	
 }

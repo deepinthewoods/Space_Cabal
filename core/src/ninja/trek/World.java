@@ -43,6 +43,8 @@ import ninja.trek.entity.Entity;
 import ninja.trek.entity.ShipEntity;
 import ninja.trek.gen.GameInfo;
 
+import static ninja.trek.Ship.GAP;
+
 public class World {
 	private static final String TAG = "world";
 	public final SolarSystemGraph solarSystemGraph;
@@ -333,7 +335,14 @@ public class World {
 	public Ship getMapForScreenPosition(int x, int y) {
 		int closestDist = 1000070;
 		Ship closest = null;
-		for (Ship map : maps){
+		v.set(-GAP, 0, 0);
+		Ship otherShip = getEnemyShip();
+		otherShip.camera.project(v);
+
+		int width = (int) v.x;
+		if (x < width) return getPlayerShip();
+		else return otherShip;
+		/*for (Ship map : maps){
 			v.set(x, y, 0);
 			map.camera.unproject(v);
 			if (v.x > 0 && v.y > 0 && v.x < map.mapWidth && v.y < map.mapHeight) return map;
@@ -350,7 +359,7 @@ public class World {
 			}
 		}
 		
-		return closest;
+		return closest;*/
 	}
 	private Vector3 v = new Vector3(), v2 = new Vector3();
 	public int targettingIndex = -1;
@@ -442,6 +451,7 @@ public class World {
 		warpAlpha = 0f;
 		warpingToSolarSystemMap = true;
 		warpShipZoom = getPlayerShip().camera.zoom;
+
 		//MainSpaceCabal.paused = true;
 	}
 	
@@ -529,7 +539,7 @@ public class World {
 		ShipEntity shipE = getPlayerShip().getShipEntity();
 		if (shipE.fuel < cost) return false;
 		shipE.fuel -= cost;
-		Gdx.app.log(TAG, "sub fuel " + shipE.fuel + " cost " + cost);
+		//Gdx.app.log(TAG, "sub fuel " + shipE.fuel + " cost " + cost);
 
 		int planetI = planet.selectedPlanet;
 		info.currentPlanet = planetI;

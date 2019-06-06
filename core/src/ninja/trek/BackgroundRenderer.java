@@ -62,7 +62,7 @@ public class BackgroundRenderer {
 			int width = (int) v3.x;
 			Gdx.gl.glScissor(0, 0, width, Gdx.graphics.getHeight());
 		}
-		//batch.disableBlending();
+		if (widthMod < 1.01f)batch.disableBlending();
 		batch.setProjectionMatrix(cam.combined);
 		batch.begin();
 		if (paused)
@@ -96,7 +96,6 @@ public class BackgroundRenderer {
 		cam.update();
 		if (alignment == Alignment.CENTRE){
 			Gdx.gl.glDisable(GL20.GL_SCISSOR_TEST);
-			
 		}
 		if (rotateAlpha < 1f) {
 			rotateAlpha += Gdx.graphics.getDeltaTime();
@@ -115,6 +114,13 @@ public class BackgroundRenderer {
 		rotateAlpha = 0f;
 		oldRotation = rotation;
 		Gdx.app.log(TAG, "rotate " + r + "  rotation " + rotation);
+	}
+	public void unRotate() {
+		rotationQueue = 360 - rotation;
+		if (rotationQueue > 180) rotationQueue -= 360;
+		rotateAlpha = 0f;
+		oldRotation = rotation;
+		Gdx.app.log(TAG, "unrotate "  + "  rotation " + rotation);
 	}
 	public void resize(int width, int height) {
 		MAX = (int) (width * 1.2f);

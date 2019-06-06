@@ -38,6 +38,7 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.util.zip.GZIPOutputStream;
 
+import ninja.trek.BackgroundRenderer;
 import ninja.trek.Item;
 import ninja.trek.entity.Entity;
 import ninja.trek.FontManager;
@@ -137,7 +138,7 @@ public class UI {
 	private Label solarSystemFuelLabel;
 	private int goeCost, orbitCost, landCost;
 
-	public UI(final Stage stage, final World world, final FontManager fontManager, final TextureAtlas iconAtlas) {
+	public UI(final Stage stage, final World world, final FontManager fontManager, final TextureAtlas iconAtlas, final BackgroundRenderer background) {
 
 		this.world = world;
 		if (Gdx.app.getType() == ApplicationType.Android) {
@@ -883,7 +884,7 @@ public class UI {
 			@Override
 			public void clicked(InputEvent event, float x, float y) {
 				solarSystemJumpButton.setChecked(false);
-
+				background.unRotate();
 				world.showSolarSystemView(ui);
 				super.clicked(event, x, y);
 			}

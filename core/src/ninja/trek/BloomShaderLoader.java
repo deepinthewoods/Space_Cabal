@@ -20,7 +20,7 @@ public final class BloomShaderLoader {
 			System.out.println(shader.getLog());
 			Gdx.app.exit();
 		} else
-			Gdx.app.log("shader compiled", shader.getLog());
+			;//Gdx.app.log("shader compiled", shader.getLog());
 		return shader;
 	}
 }

@@ -65,7 +65,7 @@ public class Entity implements Poolable {
 			icon = null;
 			return;
 		}
-		Gdx.app.log(TAG, "Icon change " + name);
+		//Gdx.app.log(TAG, "Icon change " + name);
 		icon = MainSpaceCabal.iconAtlas.findRegion(name);
 	}
 	public void setIcon(String name, Color color) {
@@ -98,7 +98,7 @@ public class Entity implements Poolable {
 	}
 	public void update(World world, UI ui){
 		if (ai == null){
-			Gdx.app.log(TAG, "no ai " + glyph);
+			//Gdx.app.log(TAG, "no ai " + glyph);
 			return;
 		}
 		ai.update(world, ship, ui);

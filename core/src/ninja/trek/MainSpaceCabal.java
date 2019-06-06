@@ -136,7 +136,7 @@ public class MainSpaceCabal extends ApplicationAdapter {
 				} else if (keycode == Keys.C){
                     world.getPlayerShip().categorizeSystems();
                     world.getPlayerShip().calculateConnectivity(world);
-					Gdx.app.log(TAG, "recalc connectivity and systems");
+					//Gdx.app.log(TAG, "recalc connectivity and systems");
                 } else if (keycode == Keys.D){
 					world.addDrone("dronebasic", world.getPlayerShip());
 				} else if (keycode == Keys.RIGHT){
@@ -521,7 +521,7 @@ public class MainSpaceCabal extends ApplicationAdapter {
 		//amap2.offsetSize.set(200, 200);
 		amap2.alignment = Alignment.TOP_RIGHT;
 		
-		ui = new UI(stage, world, fontManager, iconAtlas);
+		ui = new UI(stage, world, fontManager, iconAtlas, background);
 		ui.setEntity(null);
 		ui.set(null);//world.getPlayerShip());
 	}
