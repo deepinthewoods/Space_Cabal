@@ -635,6 +635,10 @@ public class PlanetRenderer implements RenderableProvider{
     			sun.setOriginCenter();
     			sun.setRotation(sunRotation);
     		}
+			camera.setToOrtho(false, wh, 1f);
+			//camera.rotate(-backgroundRotation);
+			camera.update();
+			screenBatch.setProjectionMatrix(camera.combined);
     		sun.draw(screenBatch);;
     	}
     	
@@ -793,9 +797,11 @@ public class PlanetRenderer implements RenderableProvider{
 			index = -1;
 		}
 		if (index != -2 && index != selectedPlanet){
+			lerpingOut.removeValue(index);
 			lerpingOut.add(selectedPlanet);
+			lerpingIn.removeValue(selectedPlanet);
+			lerpingIn.add(index);
 			selectedPlanet = index;
-			lerpingIn.add(selectedPlanet);
 		}
 		//selectedPlanet = SolarSystem.MAX_PLANETS_PER_SYSTEM-1 - selectedPlanet;
 		ui.setPlanetInfo(selectedPlanet);
