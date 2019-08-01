@@ -25,7 +25,7 @@ public class Weapon extends SystemControlEntity {
 	public int fireDelay;
 	public transient Ship targetShip;
 	public Weapon(){
-
+		reset();
 	}
 	public void clear() {
 	}
@@ -54,7 +54,7 @@ public class Weapon extends SystemControlEntity {
 	public void unequip() {
 		equippedItemIndex = -1;//item.index;
 		equippedItemID = -1;//item.itemID;
-		
+		setIcon("reticule");
 	}
 @Override
 public void reset() {

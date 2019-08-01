@@ -50,17 +50,22 @@ public class BackgroundRenderer {
 			rotationQueue = 0f, oldRotation;
 	public float rotation = 0f;
 	public void draw(World world, boolean paused) {
+		//if (true) return;
 		widthMod = MathUtils.lerp(1f, maxWidth, alpha);
 		//if (true)return;
 		Alignment alignment = Alignment.CENTRE;
 		if (alignment  == Alignment.CENTRE){
-			Gdx.gl.glEnable(GL20.GL_SCISSOR_TEST);
+
 			v3.set(-Ship.GAP, 0, 0);
 			Ship otherShip = world.getEnemyShip();
 			otherShip.camera.project(v3);
 		
 			int width = (int) v3.x;
-			Gdx.gl.glScissor(0, 0, width, Gdx.graphics.getHeight());
+			if (world.isPlayingView()){
+				//Gdx.app.log(TAG, "scissoring");
+				Gdx.gl.glEnable(GL20.GL_SCISSOR_TEST);
+				Gdx.gl.glScissor(0, 0, width, Gdx.graphics.getHeight());
+			}
 		}
 		if (widthMod < 1.01f)batch.disableBlending();
 		batch.setProjectionMatrix(cam.combined);
@@ -113,14 +118,14 @@ public class BackgroundRenderer {
 		rotationQueue = r;
 		rotateAlpha = 0f;
 		oldRotation = rotation;
-		Gdx.app.log(TAG, "rotate " + r + "  rotation " + rotation);
+		//Gdx.app.log(TAG, "rotate " + r + "  rotation " + rotation);
 	}
 	public void unRotate() {
 		rotationQueue = 360 - rotation;
 		if (rotationQueue > 180) rotationQueue -= 360;
 		rotateAlpha = 0f;
 		oldRotation = rotation;
-		Gdx.app.log(TAG, "unrotate "  + "  rotation " + rotation);
+		//Gdx.app.log(TAG, "unrotate "  + "  rotation " + rotation);
 	}
 	public void resize(int width, int height) {
 		MAX = (int) (width * 1.2f);

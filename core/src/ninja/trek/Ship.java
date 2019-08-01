@@ -186,6 +186,8 @@ public class Ship implements Pool.Poolable {
 	}
 
 
+
+
 	public enum Alignment {CENTRE, TOP_RIGHT};
 	public Alignment alignment = Alignment.CENTRE;
 	public int[] systemButtonOrder = new int[systemNames.length];
@@ -575,6 +577,7 @@ public class Ship implements Pool.Poolable {
 		shader.end();
 		drawn.clear();
 		batch.enableBlending();
+		//batch.disableBlending();
 		//col.set(Color.WHITE);
 		//col.a = .5f;
 		batch.setColor(Color.WHITE);
@@ -687,9 +690,9 @@ public class Ship implements Pool.Poolable {
 		Sprite s = chunkSprites[x + y * chunksX];
 		if (texx != null) {
 			indexColors.bind(1);
-			batch.getShader().setUniformi("u_index_texture", 1);
+			//batch.getShader().setUniformi("u_index_texture", 1);
 			texx.bind(0);
-			batch.getShader().setUniformi("u_texture", 0);
+			//batch.getShader().setUniformi("u_texture", 0);
 			batch.setColor(1f, 1f, 1f, .25f);
 			//batch.draw(texx, (float)x * CHUNKSIZE, y * CHUNKSIZE, CHUNKSIZE, CHUNKSIZE);
 			s.setBounds((float)x * CHUNKSIZE, y * CHUNKSIZE, CHUNKSIZE, CHUNKSIZE);
@@ -858,7 +861,8 @@ public class Ship implements Pool.Poolable {
 			//v2.set(mapWidth, mapHeight, 0);\
 			if (isSettingTarget) 
 				shape.line(-GAP-2,-10000,-GAP-2, 1000);
-			shape.line(-GAP,-10000,-GAP, 1000);
+
+			if (world.isPlayingView())shape.line(-GAP,-10000,-GAP, 1000);
 			
 			//shape.line(0,0,0, 1000);
 		}

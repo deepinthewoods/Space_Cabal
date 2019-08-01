@@ -28,6 +28,7 @@ import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.glutils.FrameBuffer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
+import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
@@ -163,13 +164,15 @@ public class PlanetRenderer implements RenderableProvider{
 	private float prevClickX, prevClickY;
 
 	//private Pixmap[] planetPix;
-
+	Vector2[] offset = new Vector2[MAX_PLANET_VERT_ARRAYS];
 
 	
     public PlanetRenderer(int recursionLevel, float size, ModelBatch batch) {
     	for (int i = 0; i < sizeModifier.length; i++)
     		sizeModifier[i] = 1f;
-    	
+
+    	for (int i = 0; i < offset.length; i++)
+    		offset[i] = new Vector2(3f, 0).rotate(MathUtils.random(360));
     	//texture = new Texture(Gdx.files.internal("biomes.png"));
     	
     	pixmap = new Pixmap(Gdx.files.internal("biomes.png"));
@@ -459,10 +462,11 @@ public class PlanetRenderer implements RenderableProvider{
 
 	private float sunRotation;
 	OrthographicCamera camera = new OrthographicCamera();
-	public void draw(SpriteBatch screenBatch, ShapeRenderer shape, boolean paused, Sprite pixelSprite, float backgroundRotation){
+	public void draw(SpriteBatch screenBatch, ShapeRenderer shape, boolean paused, Sprite pixelSprite, float backgroundRotation, boolean show){
 		//cam.position.rotate(10, 0, 0, 1);
 		//if (info == null) return;
-		
+		if (!show) return;
+
 		for (int i = lerpingOut.size-1; i >= 0; i--){
 			if (lerpingOut.get(i) == -1) continue;
 			if (lerpingIn.contains(lerpingOut.get(i))){
@@ -554,13 +558,11 @@ public class PlanetRenderer implements RenderableProvider{
 			
 		}
 		//Gdx.gl.glClearColor(.1f, 0, 0, 1f);
-		Gdx.gl.glDisable( GL20.GL_CULL_FACE| GL20.GL_BLEND);
+		Gdx.gl.glDisable(  GL20.GL_BLEND);
 
     	cam.update();
     	float w = Gdx.graphics.getWidth(), h = Gdx.graphics.getHeight();
-    	float s = 1.1f, ox = -.1f, y = .3f;
-    	float toS = .1f;
-    	s = MathUtils.lerp(s, toS, alpha);
+
     	if (renderPlanet != -1) {
     		//planetTextures[renderPlanet].draw(planetPix[renderPlanet], 0, 0);
     		buffer[renderPlanet].begin();
@@ -594,7 +596,8 @@ public class PlanetRenderer implements RenderableProvider{
     	camera.rotate(-backgroundRotation);
     	camera.update();
     	screenBatch.setProjectionMatrix(camera.combined);
-    	screenBatch.enableBlending();
+    	//screenBatch.enableBlending();
+    	screenBatch.disableBlending();
     	screenBatch.begin();
     	//Gdx.app.log(TAG, "s " + s + "  alpha " + alpha);
     	//if (alpha > .99f)
@@ -602,12 +605,22 @@ public class PlanetRenderer implements RenderableProvider{
     		SolarSystem currentSystem = info.systems[info.currentSystem];
     		for (int i = 0; i < MAX_PLANET_VERT_ARRAYS && i < currentSystem.planets.length; i++){
     			if (toY[i] <= 0.0001f) continue;
-    			if ( (alpha < .998f && i != renderPlanet ) ) continue;
+    			if ( (alpha < .02998f && i != renderPlanet ) ) continue;
     			if (buffered) continue;
     			if (hasBufferQueue) continue;
     			Planet planet = currentSystem.planets[i];
+
+    			float s = 1.1f, ox = -.1f, y = .3f;
+				float toS = .1f;
+				if (i != selectedPlanet) s = 0.3f;
+				s = MathUtils.lerp(s, toS, alpha);
+
+
     			float x = toX[i];
-    			y = MathUtils.lerp(.3f, toY[i], alpha);
+    			if (i == selectedPlanet) x = MathUtils.lerp(0f, x, alpha);
+				else x = Interpolation.pow2Out.apply(offset[i].x, x, alpha);
+				if (i == selectedPlanet) y = MathUtils.lerp(.3f , toY[i], alpha);
+    			else y = Interpolation.pow2Out.apply(.3f + offset[i].y, toY[i], alpha);
     			//if (alpha < .98f) continue;
     			Sprite spr = sprite[i];
     			spr.setSize(s * sizeModifier[i] * planet.size, -s * sizeModifier[i] * planet.size);
@@ -647,7 +660,7 @@ public class PlanetRenderer implements RenderableProvider{
 		
 		
 		if (alpha < .9f || info == null){
-			Gdx.gl.glDisable(GL20.GL_DEPTH_TEST | GL20.GL_BLEND | GL20.GL_CULL_FACE);
+			Gdx.gl.glDisable( GL20.GL_BLEND );
 			return;
 		}
 		
@@ -667,7 +680,9 @@ public class PlanetRenderer implements RenderableProvider{
 			float planetY = ey;;
 			dv.sub(toX[currentPlanet], planetY);
 			rot = dv.angle();
-			
+			float s = 1.1f, ox = -.1f, y = .3f;
+			float toS = .1f;
+			s = MathUtils.lerp(s, toS, alpha);
 			dv.set(ew/2f - s/2 - .07f, 0);
 			dv.rotate(rot);
 			if (toY[currentPlanet] > 0.0001f){
@@ -702,7 +717,7 @@ public class PlanetRenderer implements RenderableProvider{
 		
 		shape.end();
 		
-		Gdx.gl.glDisable(GL20.GL_DEPTH_TEST | GL20.GL_BLEND | GL20.GL_CULL_FACE);
+		Gdx.gl.glDisable(GL20.GL_BLEND);
     }
 	
 	int nextCachePlanet = 0;

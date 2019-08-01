@@ -5,8 +5,8 @@ import com.badlogic.gdx.utils.Pool;
 import com.badlogic.gdx.utils.Pools;
 
 import ninja.trek.ADoor;
+import ninja.trek.World;
 import ninja.trek.action.ActionList;
-import ninja.trek.entity.Entity;
 
 /**
  * Created by n on 22/11/2017.
@@ -35,7 +35,7 @@ public class Door extends Entity implements Pool.Poolable {
     public static final String OPEN_NAME = "secret-door";
     public static final String CLOSED_NAME = "wooden-door";
     @Override
-    public void handleOtherButton(ButtonType type) {
+    public void handleOtherButton(ButtonType type, World world) {
         switch (type){
             case DOOR_OPEN:
                 Gdx.app.log(TAG, "OPEN");

@@ -9,6 +9,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinder;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Camera;
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Pixmap.Format;
@@ -75,7 +76,7 @@ public class World {
 	private Array<Sprite> explosionParticles = new Array<Sprite>();
 	private Array<Vector2> explosionVelocity = new Array<Vector2>();
 
-	public World(FontManager fontManager, ShaderProgram shader, Sprite pixelSprite, PlanetRenderer planet, ModelBatch modelBatch, ShipFactory shipFactory, TextureAtlas icons) {
+	public World(FontManager fontManager, ShaderProgram shader, Sprite pixelSprite, PlanetRenderer planet, ModelBatch modelBatch, ShipFactory shipFactory, TextureAtlas icons, SpriteBatch batch) {
 		iconAtlas = icons;
 		this.modelBatch = modelBatch;
 		this.planet = planet;
@@ -121,7 +122,7 @@ public class World {
 		}
 
 		
-		colorIndexBuffer = new FrameBuffer(Format.RGBA8888, 128, 32, false);
+		colorIndexBuffer = new FrameBuffer(Format.RGBA8888, 128, 16, false);
 		
 		colorIndexShader = new ShaderProgram(Gdx.files.internal("colorIndex.vert"), Gdx.files.internal("colorIndex.frag"));
 		
@@ -129,6 +130,10 @@ public class World {
 			throw new GdxRuntimeException("index shader error " + colorIndexShader.getLog());
 		}
 		colorIndexBuffer.getColorBufferTexture().setFilter(TextureFilter.Nearest, TextureFilter.Nearest);
+
+
+
+
 	}
 	public ShaderProgram createDefaultShader () {
 		String vertexShader = "attribute vec4 " + ShaderProgram.POSITION_ATTRIBUTE + ";\n" //
@@ -178,6 +183,7 @@ public class World {
 				warpingToSolarSystemMap = false;
 				planetSelectOn = true;
 				warpAlpha = 0f;
+				onSolarSystemMap = true;
 				ui.addSolarSystemWindow(stage, planet.selectedPlanet);
 				planet.doneZoomingOut();
 			}
@@ -227,7 +233,7 @@ public class World {
 				maps.get(i).updateEntities(this, ui);
 			
 		}
-		
+		Gdx.gl.glDisable(GL20.GL_BLEND);
 		for (Ship map : maps)
 			map.updateDraw(mesh, cacheShader);
 		
@@ -246,7 +252,6 @@ public class World {
 	}
 	boolean hasMadeIndexPNG = false;
 	public void draw(SpriteBatch batch, OrthographicCamera camera, ShapeRenderer shape, UI ui, boolean paused, Array<TextureAtlas.AtlasRegion> icons, Texture backgroundTexture){
-		
 		colorIndexBuffer.begin();
 		batch.getProjectionMatrix().setToOrtho2D(0, 0, colorIndexBuffer.getWidth(), colorIndexBuffer.getHeight());
 		batch.setShader(colorIndexShader);
@@ -255,6 +260,7 @@ public class World {
 		batch.draw(pixelSprite.getTexture(), 0, 0, colorIndexBuffer.getWidth(), colorIndexBuffer.getHeight());
 		batch.end();
 		colorIndexBuffer.end();
+
 		if (!hasMadeIndexPNG) {
 			//hasMadeIndexPNG = true;
 			//Pixmap pix;
@@ -271,6 +277,7 @@ public class World {
 			Ship map = maps.get(i);
 			map.updateCamera(camera, this, i, warpingToSolarSystemMap | warpingToPlanet);
 			if (map.disableRender) continue;
+			//if (this.isPlayingView())
 			map.enableScissor(this);
 			batch.disableBlending();
 			
@@ -287,8 +294,9 @@ public class World {
 				map.drawTargettedLines(shape, ui, getPlayerShip());
 			batch.end();
 			
+		//*/
 		}
-//		for (Ship map : maps) 
+//		for (Ship map : maps)
 		Ship.disableScissor();
 		for (int i = 0; i < maps.size; i++){
 			Ship map = maps.get(i);
@@ -383,7 +391,7 @@ public class World {
 	private Ship oldShip;
 	private int currentNewGameShipIndex;
 	private GameInfo info;
-	private boolean warpingToSolarSystemMap, warpingToPlanet, warpingBetweenPlanets;
+	private boolean warpingToSolarSystemMap, warpingToPlanet, warpingBetweenPlanets, onSolarSystemMap;
 	
 	public void startNewGameMenu() {
 		isNewGameMenu = true;
@@ -551,14 +559,22 @@ public class World {
 		}
 		warpBeta = 0f;
 		warpingBetweenPlanets = true;
+		onSolarSystemMap = false;
+		clearParticles();
 		return true;
 
 	}
+
+
+
 	public Ship getShipForThread(int index) {
 		if (maps.size <= index) return null;
 		return maps.get(index);
 	}
 
+	private void clearParticles() {
+		while (explosionParticles.size > 0) Pools.free(explosionParticles.pop());
+	}
 
 	public void shipDeath(Ship ship) {
 		Texture tex = ship.hull.getTexture();
@@ -581,7 +597,7 @@ public class World {
 	}
 
 	public boolean isPlayingView() {
-		return !warpingBetweenPlanets && !warpingToSolarSystemMap && !warpingToPlanet;
+		return !warpingBetweenPlanets && !warpingToSolarSystemMap && !warpingToPlanet && !onSolarSystemMap && !isNewGameMenu;
 	}
 
 	public boolean isNewGameScreen() {

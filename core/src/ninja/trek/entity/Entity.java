@@ -1,14 +1,11 @@
 package ninja.trek.entity;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
-import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.GridPoint2;
 import com.badlogic.gdx.scenes.scene2d.ui.UI;
 import com.badlogic.gdx.utils.Array;
@@ -16,7 +13,6 @@ import com.badlogic.gdx.utils.IntArray;
 import com.badlogic.gdx.utils.Pools;
 import com.badlogic.gdx.utils.Pool.Poolable;
 
-import ninja.trek.EntityAI;
 import ninja.trek.MainSpaceCabal;
 import ninja.trek.Ship;
 import ninja.trek.World;
@@ -79,7 +75,7 @@ public class Entity implements Poolable {
 		iconColor.set(c);
 	}
 
-	public enum ButtonType {DOOR_OPEN, DOOR_CLOSE, SHIELD_UP, SHIELD_DOWN };
+	public enum ButtonType {DOOR_OPEN, DOOR_CLOSE, SHIELD_UP, SHIELD_0, SHIELD_1, SHIELD_2, SHIELD_3, SHIELD_4, SHIELD_5, SHIELD_6, LAUNCH_DRONE_0, LAUNCH_DRONE_1, LAUNCH_DRONE_2, LAUNCH_DRONE_3,STOP_DRONE_0, STOP_DRONE_1, STOP_DRONE_2,  STOP_DRONE_3, SHIELD_DOWN };
 	public ButtonType[] otherButtons = null;
 	public int[] fixOrder = new int[FIX_ACTIONS_LENGTH];//block ids
 	public static final int FIX_ACTIONS_LENGTH = 7;
@@ -103,7 +99,7 @@ public class Entity implements Poolable {
 		}
 		ai.update(world, ship, ui);
 	};
-	public void handleOtherButton(ButtonType type) {
+	public void handleOtherButton(ButtonType type, World world) {
 
 	}
 	

@@ -72,6 +72,7 @@ public class UI {
 	private final World world;
 	private final Table entityOtherActionTable;
 	private final ProgressBar enemyHealthLabel;
+	public final CheckBox showBackgroundPlanet;
 	private DragAndDrop dnd;
 	public UIActionButton[] entityActionButtons = new UIActionButton[Entity.jobNames.length];
 	public UIActionButton[] entityOtherActionButtons = new UIActionButton[Entity.ButtonType.values().length];
@@ -218,7 +219,7 @@ public class UI {
 					//UIActionButton uiBtn = (UIActionButton) event.getListenerActor();
 					//entity.disabledButton[uiBtn.index] = uiBtn.isChecked();
 					//Gdx.app.log(TAG, "entity disable " + uiBtn.index + entity.disabledButton[uiBtn.index]);
-					entity.handleOtherButton(btn.type);
+					entity.handleOtherButton(btn.type, world);
 					super.clicked(event, x, y);
 				}
 			});
@@ -904,7 +905,9 @@ public class UI {
 
 			
 		});
-		
+
+		showBackgroundPlanet = new CheckBox("draw BG", skin);
+		showBackgroundPlanet.setChecked(true);
 		
 		editTable.add(saveButton).left();
 		editTable.row();
@@ -972,6 +975,7 @@ public class UI {
 		editTable.row();
 		editTable.add(hullBackToggleButton).left();
 		editTable.row();
+		editTable.add(showBackgroundPlanet).left().row();
 		editTable.add(openHullButton).left();
 		editTable.row();
 		
@@ -1548,7 +1552,7 @@ public class UI {
 		Heuristic<PlanetNode> heur = SolarSystemGraph.heuristic;
 		SystemPath outPath = new SystemPath();
 		world.universePath.searchConnectionPath(startNode, endNode, heur, outPath);
-		Gdx.app.log(TAG, "found path " + startNode.type + " " + endNode.type);
+		//Gdx.app.log(TAG, "found path " + startNode.type + " " + endNode.type);
 		int orbitCost = (int) outPath.cost();
 		button.setText(text + orbitCost);
 		button.cost = orbitCost;

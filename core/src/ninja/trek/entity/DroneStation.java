@@ -3,14 +3,11 @@ package ninja.trek.entity;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.utils.Pools;
 
 import ninja.trek.Items;
 import ninja.trek.Ship;
 import ninja.trek.World;
 import ninja.trek.action.ActionList;
-import ninja.trek.actions.AWeaponCharge;
-import ninja.trek.actions.AWeaponShoot;
 import ninja.trek.ui.ItemDisplay.ItemButton;
 
 public class DroneStation extends SystemControlEntity {
@@ -25,8 +22,20 @@ public class DroneStation extends SystemControlEntity {
 	public transient Ship targetShip;
 	public DroneStation(){
 		setIcon("delivery-drone");
-		otherButtons = new ButtonType[]{ButtonType.DOOR_OPEN, ButtonType.DOOR_CLOSE};
+		otherButtons = new ButtonType[]{ButtonType.LAUNCH_DRONE_0, ButtonType.STOP_DRONE_0, ButtonType.LAUNCH_DRONE_1, ButtonType.STOP_DRONE_1
+				, ButtonType.LAUNCH_DRONE_2, ButtonType.STOP_DRONE_2, ButtonType.LAUNCH_DRONE_3, ButtonType.STOP_DRONE_3};
 		buttonOrder = null;
+	}
+
+	@Override
+	public void handleOtherButton(ButtonType type, World world) {
+		ShipEntity shipE = ship.getShipEntity();
+		switch (type) {
+			case LAUNCH_DRONE_0: world.addDrone("dronebasic", ship); break;
+			case STOP_DRONE_0: break;
+			case LAUNCH_DRONE_1: world.addDrone("dronebasic", ship); break;
+			case STOP_DRONE_1: break;
+		}
 	}
 
 	public void clear() {

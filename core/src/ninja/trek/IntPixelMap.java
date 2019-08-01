@@ -6,6 +6,7 @@ import com.badlogic.gdx.math.GridPoint2;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.badlogic.gdx.utils.IntArray;
 import com.badlogic.gdx.utils.IntIntMap;
 import com.badlogic.gdx.utils.Pools;
@@ -132,10 +133,10 @@ public class IntPixelMap{
 	public IntPixelMap(int w, int h){
 		width = w;
 		height = h;
-		chunksX = width / Ship.CHUNKSIZE + 1;
-		chunksY = height / Ship.CHUNKSIZE + 1;
+		chunksX = width / Ship.CHUNKSIZE +1;
+		chunksY = height / Ship.CHUNKSIZE +1;
 		map = new int[chunksX * Ship.CHUNKSIZE * chunksY * Ship.CHUNKSIZE];
-
+		//if (map.length < 384 * 384) throw new GdxRuntimeException(("wrong size ship " + chunksX + " len:" + map.length));
 		for (int i = 0; i < 100; i++){
 			//set(MathUtils.random(width), MathUtils.random(10), MathUtils.random(4));
 		}
@@ -160,14 +161,18 @@ public class IntPixelMap{
 		}
 	}
 	public int get(int x, int y) {
-		//Gdx.app.log(TAG, "get " + x + ", " + y);
+		//Gdx.app.log(TAG, "get " + x + ", " + y + " / " + (chunksX * Ship.CHUNKSIZE * chunksY * Ship.CHUNKSIZE) + "  " + map.length);
 		if (x >= width || y >= height || x < 0 || y < 0) return Ship.VACCUUM;
-		int blockIndex = (x) + (y) * chunksX * Ship.CHUNKSIZE;
+		int blockIndex = x + y * chunksX * Ship.CHUNKSIZE;
 		
 		
 		
-
-		return map[blockIndex];
+        try {
+            return map[blockIndex];
+        } catch (ArrayIndexOutOfBoundsException ex){
+            Gdx.app.log(TAG, "get " + x + ", " + y + " / " + (chunksX * Ship.CHUNKSIZE * chunksY * Ship.CHUNKSIZE) + "  " + map.length + " " + blockIndex);
+        }
+        return Ship.VACCUUM;
 	}
 	public void set(int x, int y, int b) {
 		if (x >= width || y >= height || x < 0 || y < 0) return ;

@@ -11,7 +11,7 @@ class UIOtherActionButton extends UIActionButton {
     public final Entity.ButtonType type;
 
     public UIOtherActionButton(int i, Skin skin, Table entityActionTable, Entity.ButtonType t) {
-        super(i, skin, entityActionTable);
+        super(i, "", skin, entityActionTable);
         setText("" + t);
         type = t;
     }

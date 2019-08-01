@@ -15,6 +15,7 @@ import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g3d.ModelBatch;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.graphics.profiling.GLProfiler;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
@@ -78,6 +79,7 @@ public class MainSpaceCabal extends ApplicationAdapter {
 
 	@Override
 	public void create () {
+		GLProfiler.enable();
 		String[] args = {""};
 		try {
 			//WFC.makeOverlapping();
@@ -138,7 +140,7 @@ public class MainSpaceCabal extends ApplicationAdapter {
                     world.getPlayerShip().calculateConnectivity(world);
 					//Gdx.app.log(TAG, "recalc connectivity and systems");
                 } else if (keycode == Keys.D){
-					world.addDrone("dronebasic", world.getPlayerShip());
+
 				} else if (keycode == Keys.RIGHT){
 					Entity e = ui.getEntity();
 					if (e == null) return false;
@@ -491,7 +493,7 @@ public class MainSpaceCabal extends ApplicationAdapter {
 		shipFactory = new ShipFactory(pixelSprite, fontManager, shader);
 
 
-		world = new World(fontManager, shader, pixelSprite, planet, modelBatch, shipFactory, iconAtlas);
+		world = new World(fontManager, shader, pixelSprite, planet, modelBatch, shipFactory, iconAtlas, batch);
 		
 		if (!Gdx.files.internal("lighting.vert").exists()) throw new GdxRuntimeException("kdls");
 
@@ -538,8 +540,8 @@ public class MainSpaceCabal extends ApplicationAdapter {
 		
 		//batch.begin();
 		//batch.draw(img, 0, 0);
-		background.draw(world, paused);
-		planet.draw(batch, shape, paused, pixelSprite, background.rotation);
+		//background.draw(world, paused);
+		planet.draw(batch, shape, paused, pixelSprite, background.rotation, ui.showBackgroundPlanet.isChecked());
 		world.draw(batch, camera, shape, ui, paused, icons, backgroundTexture);
 		//batch.end();
 		//stage.getBatch().disableBlending();
@@ -548,6 +550,11 @@ public class MainSpaceCabal extends ApplicationAdapter {
 		batch.setShader(null);
 		batch.begin();
 		Texture tex = world.colorIndexBuffer.getColorBufferTexture();
+		//if (world.getPlayerShip() != null)
+			//Gdx.app.log(TAG, ""+ "  " + world.getPlayerShip().mapWidth);
+		Gdx.app.log(TAG, ""+GLProfiler.textureBindings + "  " + GLProfiler.drawCalls );
+		GLProfiler.textureBindings = 0;
+		GLProfiler.drawCalls = 0;
 		//batch.draw(tex, .005f, 0, 2f, 2f);
 		batch.end();
 	}
